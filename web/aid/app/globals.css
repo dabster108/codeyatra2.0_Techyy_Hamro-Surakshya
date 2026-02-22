@@ -1,0 +1,25 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #f1f5f9;
+  --foreground: #0f172a;
+  --sidebar: #002d75;
+  --sidebar-foreground: #ffffff;
+  --primary: #003893;
+  --accent: #DC143C;
+  --border: #e2e8f0;
+}
+
+@layer base {
+  body {
+    @apply bg-slate-100 text-slate-900 font-sans;
+  }
+}
+
+@layer components {
+  .dashboard-card {
+    @apply bg-white border border-slate-300 rounded shadow-none p-4;
+  }
+}
