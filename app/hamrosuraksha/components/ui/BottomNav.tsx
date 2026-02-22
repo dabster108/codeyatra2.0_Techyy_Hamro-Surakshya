@@ -57,10 +57,13 @@ export default function BottomNav({ activeTab }: BottomNavProps) {
           </Text>
         </TouchableOpacity>
 
-        {/* Center FAB */}
+        {/* Center FAB — opens Budget Dashboard */}
         <View style={styles.fabWrapper}>
-          <TouchableOpacity style={styles.fab}>
-            <Ionicons name="alert-circle-outline" size={28} color="#fff" />
+          <TouchableOpacity
+            style={styles.fab}
+            onPress={() => router.push("/dashboard" as any)}
+          >
+            <Ionicons name="stats-chart" size={26} color="#fff" />
           </TouchableOpacity>
         </View>
 

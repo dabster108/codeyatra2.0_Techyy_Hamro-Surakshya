@@ -133,6 +133,21 @@ const ne: Translations = {
   settingsTerms: "सेवाका सर्तहरू",
   settingsLogout: "लग आउट",
   settingsLogoutSub: "आफ्नो खाताबाट साइन आउट गर्नुस्",
+
+  // ── Dashboard ─────────────────────────────────────────
+  dashboardTitle: "बजेट ड्यासबोर्ड",
+  dashboardSubtitle: "राष्ट्रिय प्रकोप अनुदान (NDRRMA)",
+  dashboardLoading: "ताजा डेटा लोड हुँदैछ...",
+  dashboardError: "डेटा लोड गर्न सकिएन। ब्याकएन्ड चलिरहेको छ?",
+  dashboardRetry: "फेरि प्रयास गर्नुस्",
+  dashboardAllocated: "विनियोजित",
+  dashboardUsed: "खर्च भएको",
+  dashboardRemaining: "बाँकी",
+  dashboardBeneficiaries: "लाभार्थी",
+  dashboardUtilization: "उपयोग",
+  dashboardProvinces: "प्रदेशगत विवरण",
+  dashboardLastUpdated: "ताजा डेटा",
+  dashboardNoData: "कुनै प्रदेश डेटा बाचिएन",
 };
 
 export default ne;
