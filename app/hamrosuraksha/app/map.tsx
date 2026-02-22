@@ -18,6 +18,7 @@ import Animated, {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import BottomNav from "@/components/ui/BottomNav";
+import { useLang } from "@/context/LanguageContext";
 
 type EvacuationType = "Police" | "Hospital" | "Area 3" | null;
 type DisasterType = "Flood" | "Landslide" | "Fire" | "Other" | null;
@@ -25,6 +26,7 @@ type DisasterType = "Flood" | "Landslide" | "Fire" | "Other" | null;
 export default function MapScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { t, lang, toggleLang } = useLang();
 
   // State
   const [evacuationFilter, setEvacuationFilter] =
@@ -209,7 +211,19 @@ export default function MapScreen() {
           >
             <Ionicons name="arrow-back" size={24} color="#333" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Maps</Text>
+          <Text style={styles.headerTitle}>{t.maps}</Text>
+          <View style={styles.headerRight}>
+            <TouchableOpacity style={styles.langButton} onPress={toggleLang}>
+              <Ionicons name="globe-outline" size={18} color="#4CAF50" />
+              <Text style={styles.langLabel}>
+                {lang === "en" ? "EN" : "NE"}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.notificationButton}>
+              <View style={styles.notificationBadge} />
+              <Ionicons name="notifications-outline" size={24} color="#333" />
+            </TouchableOpacity>
+          </View>
         </View>
       )}
 
@@ -226,10 +240,10 @@ export default function MapScreen() {
                   onPress={toggleEvacDropdown}
                   activeOpacity={0.8}
                 >
-                  <Text style={styles.filterLabel}>Evacuation Areas</Text>
+                  <Text style={styles.filterLabel}>{t.evacAreaLabel}</Text>
                   <View style={styles.filterValueRow}>
                     <Text style={styles.filterValue}>
-                      {evacuationFilter || "Select Area"}
+                      {evacuationFilter || t.selectArea}
                     </Text>
                     <Ionicons
                       name={isEvacDropdownOpen ? "chevron-up" : "chevron-down"}
@@ -240,27 +254,25 @@ export default function MapScreen() {
                 </TouchableOpacity>
 
                 <Animated.View style={[styles.dropdownList, animatedEvacStyle]}>
-                  {(["Police", "Hospital", "Area 3"] as string[]).map(
-                    (type) => (
-                      <TouchableOpacity
-                        key={type}
+                  {([t.police, t.hospital, t.area3] as string[]).map((type) => (
+                    <TouchableOpacity
+                      key={type}
+                      style={[
+                        styles.dropdownItem,
+                        evacuationFilter === type && styles.activeItem,
+                      ]}
+                      onPress={() => onSelectEvac(type as EvacuationType)}
+                    >
+                      <Text
                         style={[
-                          styles.dropdownItem,
-                          evacuationFilter === type && styles.activeItem,
+                          styles.itemText,
+                          evacuationFilter === type && styles.activeItemText,
                         ]}
-                        onPress={() => onSelectEvac(type as EvacuationType)}
                       >
-                        <Text
-                          style={[
-                            styles.itemText,
-                            evacuationFilter === type && styles.activeItemText,
-                          ]}
-                        >
-                          {type}
-                        </Text>
-                      </TouchableOpacity>
-                    ),
-                  )}
+                        {type}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
                 </Animated.View>
               </View>
 
@@ -271,10 +283,10 @@ export default function MapScreen() {
                   onPress={toggleDisasterDropdown}
                   activeOpacity={0.8}
                 >
-                  <Text style={styles.filterLabel}>Disaster Type</Text>
+                  <Text style={styles.filterLabel}>{t.disasterType}</Text>
                   <View style={styles.filterValueRow}>
                     <Text style={styles.filterValue}>
-                      {disasterFilter || "Select Type"}
+                      {disasterFilter || t.selectType}
                     </Text>
                     <Ionicons
                       name={
@@ -289,7 +301,7 @@ export default function MapScreen() {
                 <Animated.View
                   style={[styles.dropdownList, animatedDisasterStyle]}
                 >
-                  {(["Flood", "Landslide", "Fire", "Other"] as string[]).map(
+                  {([t.flood, t.landslide, t.fire, t.other] as string[]).map(
                     (type) => (
                       <TouchableOpacity
                         key={type}
@@ -316,7 +328,7 @@ export default function MapScreen() {
               {/* Date Picker (Visible when Disaster Type is selected) */}
               {disasterFilter && (
                 <View style={styles.datePickerContainer}>
-                  <Text style={styles.dateLabel}>Select Date:</Text>
+                  <Text style={styles.dateLabel}>{t.selectDate}</Text>
                   <TouchableOpacity
                     style={styles.dateButton}
                     onPress={() => setShowDatePicker(true)}
@@ -423,6 +435,46 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "bold",
     color: "#333",
+    flex: 1,
+  },
+  headerRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  langButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    paddingHorizontal: 9,
+    paddingVertical: 8,
+    backgroundColor: "#f0faf0",
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#c8e6c9",
+  },
+  langLabel: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#4CAF50",
+  },
+  notificationButton: {
+    padding: 10,
+    backgroundColor: "#f5f5f5",
+    borderRadius: 12,
+    position: "relative",
+  },
+  notificationBadge: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#FF5252",
+    borderWidth: 1.5,
+    borderColor: "#f5f5f5",
+    zIndex: 1,
   },
   contentContainer: {
     flex: 1,

@@ -1,0 +1,138 @@
+import { Translations } from "./en";
+
+const ne: Translations = {
+  // ── Home ──────────────────────────────────────────────
+  appName: "हाम्रो सुरक्षा",
+  appSubtitle: "सुरक्षा",
+  welcomeLine1: "सुरक्षित रहनुस्,",
+  welcomeLine2: "सुरक्षित रहनुस्",
+  welcomeDesc: "वास्तविक समयको सुरक्षा र निगरानी।",
+  realtimeAlerts: "तत्काल सतर्कताहरू",
+  viewAll: "सबै हेर्नुस्",
+  evacuationAreas: "निकासी क्षेत्रहरू",
+  seeMap: "नक्सा हेर्नुस्",
+
+  // alert items on home
+  alert1Title: "भारी वर्षाको चेतावनी",
+  alert1Sub: "काठमाडौं उपत्यका • २ मिनेट अघि",
+  alert2Title: "यातायात जाम",
+  alert2Sub: "कोटेश्वर - टिंकुने • १५ मिनेट अघि",
+  alert3Title: "प्रणाली मर्मत",
+  alert3Sub: "राति १२:०० बजे निर्धारित • १ घण्टा अघि",
+
+  // evacuation places on home
+  evac1Name: "तुँडिखेल मैदान",
+  evac2Name: "दशरथ रंगशाला",
+  evac3Name: "यूएन पार्क",
+
+  // ── Map ───────────────────────────────────────────────
+  maps: "नक्सा",
+  evacAreaLabel: "निकासी क्षेत्रहरू",
+  selectArea: "क्षेत्र छान्नुस्",
+  disasterType: "प्रकोपको प्रकार",
+  selectType: "प्रकार छान्नुस्",
+  selectDate: "मिति छान्नुस्:",
+  police: "प्रहरी",
+  hospital: "अस्पताल",
+  area3: "क्षेत्र ३",
+  flood: "बाढी",
+  landslide: "पहिरो",
+  fire: "आगो",
+  other: "अन्य",
+
+  // ── Alert Screen ──────────────────────────────────────
+  alertsTitle: "सतर्कताहरू",
+  filterByLocation: "स्थानद्वारा फिल्टर",
+  filterByDate: "मितिद्वारा फिल्टर",
+  province: "प्रदेश",
+  district: "जिल्ला",
+  municipality: "नगरपालिका",
+  selectProvince: "प्रदेश छान्नुस्",
+  selectDistrict: "जिल्ला छान्नुस्",
+  selectMunicipality: "नगरपालिका छान्नुस्",
+  from: "देखि",
+  to: "सम्म",
+  all: "सबै",
+  clearFilters: "फिल्टर हटाउनुस्",
+  noAlertsFound: "कुनै सतर्कता फेला परेन",
+  alertsFound: (n: number) => `${n} सतर्कता${n !== 1 ? "हरू" : ""} भेटियो`,
+  noAlertsTitle: "कुनै सतर्कता छैन",
+  noAlertsSub:
+    "छानिएको फिल्टरसँग मेल खाने सतर्कता छैन।\nस्थान वा मिति दायरा समायोजन गर्नुहोस्।",
+
+  // severity
+  high: "उच्च",
+  medium: "मध्यम",
+  low: "न्यून",
+
+  // categories
+  catFlood: "बाढी",
+  catLandslide: "पहिरो",
+  catFire: "आगो",
+  catEarthquake: "भूकम्प",
+  catStorm: "आँधी",
+  catDisease: "रोग",
+
+  // mock alert content
+  a1Title: "तराई क्षेत्रमा भीषण बाढी",
+  a1Loc: "बर्दिया, लुम्बिनी प्रदेश",
+  a1Desc: "भारी वर्षाले गम्भीर बाढी आएको छ। निकासी सल्लाह दिइएको छ।",
+  a2Title: "पहिरोको जोखिम सतर्कता",
+  a2Loc: "सिन्धुपाल्चोक, बागमती प्रदेश",
+  a2Desc: "उत्तरी भिरालोमा माटोको संतृप्ति गम्भीर स्तरमा पुगेको छ।",
+  a3Title: "वन आगलागी फैलिँदै",
+  a3Loc: "चितवन, बागमती प्रदेश",
+  a3Desc: "बफर क्षेत्र नजिक जंगल आगो फैलिरहेको छ। समुदाय तयारीमा छ।",
+  a4Title: "सामान्य भूकम्प रिपोर्ट भयो",
+  a4Loc: "कास्की, गण्डकी प्रदेश",
+  a4Desc:
+    "पोखरा नजिक ३.८ म्याग्निच्युडको भूकम्प रेकर्ड भयो। कुनै क्षति रिपोर्ट भएन।",
+  a5Title: "मनसुन आँधी चेतावनी",
+  a5Loc: "सुनसरी, कोशी प्रदेश",
+  a5Desc: "तेज हावा अपेक्षित छ। बासिन्दाहरूलाई भित्र बस्न सल्लाह दिइएको छ।",
+  a6Title: "रोग प्रकोप सतर्कता",
+  a6Loc: "कैलाली, सुदूरपश्चिम प्रदेश",
+  a6Desc:
+    "कलेरा केसहरू बढिरहेका छन्। चिकित्सा टोलीहरू खटिएका छन्। पानी उमालेर प्रयोग गर्नुस्।",
+  a7Title: "अचानक बाढी सल्लाह",
+  a7Loc: "हुम्ला, कर्णाली प्रदेश",
+  a7Desc: "हिमताल ओभरफ्लो जोखिम। तल्लो बस्तीका समुदायहरूले तयारी गर्नुपर्छ।",
+  a8Title: "भूकम्पका परकम्प जारी",
+  a8Loc: "बाजहाङ, सुदूरपश्चिम प्रदेश",
+  a8Desc: "परकम्प जारी छ। ३ गाउँ विकास समितिमा संरचनागत क्षति रिपोर्ट भएको छ।",
+
+  // ── Settings ──────────────────────────────────────────
+  settingsTitle: "सेटिङ्स",
+  settingsPreferences: "प्राथमिकताहरू",
+  settingsLanguage: "भाषा",
+  settingsLanguageSub: "अंग्रेजी र नेपाली बीच स्विच गर्नुस्",
+  settingsNotifications: "सूचनाहरू",
+  settingsNotificationsSub: "प्रकोप सतर्कता र अपडेट प्राप्त गर्नुस्",
+  settingsAlertSounds: "सतर्कता आवाज",
+  settingsAlertSoundsSub: "महत्वपूर्ण सतर्कताका लागि आवाज बजाउनुस्",
+  settingsVibration: "कम्पन",
+  settingsVibrationSub: "नयाँ सतर्कतामा कम्पन गर्नुस्",
+  settingsSafety: "सुरक्षा",
+  settingsEmergencySOS: "आपतकालीन SOS",
+  settingsEmergencySOSSub: "आपतकालीन सेवाहरूमा छिटो पहुँच",
+  settingsEmergencyContacts: "आपतकालीन सम्पर्कहरू",
+  settingsEmergencyContactsSub: "आफ्ना आपतकालीन सम्पर्कहरू व्यवस्थापन गर्नुस्",
+  settingsLocationSharing: "स्थान साझेदारी",
+  settingsLocationSharingSub: "आपतकालीन सम्पर्कहरूसँग स्थान साझा गर्नुस्",
+  settingsAccount: "खाता",
+  settingsProfile: "प्रोफाइल सेटिङ्स",
+  settingsProfileSub: "आफ्नो नाम र फोटो अपडेट गर्नुस्",
+  settingsChangePassword: "पासवर्ड परिवर्तन",
+  settingsChangePasswordSub: "आफ्नो खाता पासवर्ड अपडेट गर्नुस्",
+  settingsAbout: "बारेमा",
+  settingsAppVersion: "एप संस्करण",
+  settingsAppVersionVal: "१.०.०",
+  settingsRateApp: "एप मूल्याङ्कन",
+  settingsRateAppSub: "स्टोरमा आफ्नो प्रतिक्रिया दिनुस्",
+  settingsPrivacy: "गोपनीयता नीति",
+  settingsTerms: "सेवाका सर्तहरू",
+  settingsLogout: "लग आउट",
+  settingsLogoutSub: "आफ्नो खाताबाट साइन आउट गर्नुस्",
+};
+
+export default ne;

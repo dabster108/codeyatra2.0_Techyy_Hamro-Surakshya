@@ -6,91 +6,145 @@ import {
   TouchableOpacity,
   ScrollView,
   Dimensions,
+  Alert,
 } from "react-native";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
   withSpring,
-  withDelay,
+  withRepeat,
+  withSequence,
 } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { useRouter } from "expo-router";
 import BottomNav from "@/components/ui/BottomNav";
+import { useLang } from "@/context/LanguageContext";
 
 const { width } = Dimensions.get("window");
 
 export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { t, lang, toggleLang } = useLang();
 
-  // Animation values
-  const headerOpacity = useSharedValue(0);
-  const headerTranslateY = useSharedValue(-20);
-  const contentTranslateY = useSharedValue(50);
-  const contentOpacity = useSharedValue(0);
+  const welcomeOpacity = useSharedValue(0);
+  const welcomeTranslateY = useSharedValue(24);
+  const sosScale = useSharedValue(1);
+  const sosGlow = useSharedValue(1);
 
   useEffect(() => {
-    headerOpacity.value = withTiming(1, { duration: 800 });
-    headerTranslateY.value = withSpring(0);
-    contentTranslateY.value = withDelay(200, withSpring(0, { damping: 15 }));
-    contentOpacity.value = withDelay(200, withTiming(1, { duration: 800 }));
+    welcomeOpacity.value = withTiming(1, { duration: 700 });
+    welcomeTranslateY.value = withSpring(0, { damping: 14, stiffness: 90 });
+    // Pulse the SOS ring endlessly
+    sosScale.value = withRepeat(
+      withSequence(
+        withTiming(1.13, { duration: 700 }),
+        withTiming(1, { duration: 700 }),
+      ),
+      -1,
+      false,
+    );
+    sosGlow.value = withRepeat(
+      withSequence(
+        withTiming(0.35, { duration: 700 }),
+        withTiming(0.12, { duration: 700 }),
+      ),
+      -1,
+      false,
+    );
   }, []);
 
-  const headerStyle = useAnimatedStyle(() => ({
-    opacity: headerOpacity.value,
-    transform: [{ translateY: headerTranslateY.value }],
+  const welcomeStyle = useAnimatedStyle(() => ({
+    opacity: welcomeOpacity.value,
+    transform: [{ translateY: welcomeTranslateY.value }],
   }));
 
-  const contentStyle = useAnimatedStyle(() => ({
-    opacity: contentOpacity.value,
-    transform: [{ translateY: contentTranslateY.value }],
+  const sosRingStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: sosScale.value }],
+    opacity: sosGlow.value,
   }));
+
+  const handleSOS = () => {
+    Alert.alert(
+      "🚨 Emergency SOS",
+      "Do you want to send an emergency alert to your contacts and nearby services?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Send SOS",
+          style: "destructive",
+          onPress: () => {},
+        },
+      ],
+    );
+  };
 
   return (
     <View style={styles.container}>
       <StatusBar style="dark" />
 
       {/* Header Section */}
-      <Animated.View
-        style={[styles.header, { paddingTop: insets.top + 10 }, headerStyle]}
-      >
+      <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
         <View style={styles.headerLeft}>
-          <TouchableOpacity style={styles.menuButton}>
-            <Ionicons name="menu" size={24} color="#333" />
-          </TouchableOpacity>
           <View>
-            <Text style={styles.headerTitle}>Hamro Suraksha</Text>
-            <Text style={styles.headerSubtitle}>सुरक्षा</Text>
+            <Text style={styles.headerTitle}>{t.appName}</Text>
+            <Text style={styles.headerSubtitle}>{t.appSubtitle}</Text>
           </View>
         </View>
-        <TouchableOpacity style={styles.notificationButton}>
-          <View style={styles.notificationBadge} />
-          <Ionicons name="notifications-outline" size={24} color="#333" />
-        </TouchableOpacity>
-      </Animated.View>
+        <View style={styles.headerRight}>
+          {/* Language Toggle */}
+          <TouchableOpacity style={styles.langButton} onPress={toggleLang}>
+            <Ionicons name="globe-outline" size={18} color="#4CAF50" />
+            <Text style={styles.langLabel}>{lang === "en" ? "EN" : "NE"}</Text>
+          </TouchableOpacity>
+          {/* Notification */}
+          <TouchableOpacity style={styles.notificationButton}>
+            <View style={styles.notificationBadge} />
+            <Ionicons name="notifications-outline" size={24} color="#333" />
+          </TouchableOpacity>
+        </View>
+      </View>
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
         {/* Welcome Section */}
-        <Animated.View style={[styles.welcomeSection, contentStyle]}>
-          <Text style={styles.welcomeTitle}>Stay Safe,</Text>
-          <Text style={styles.welcomeTitleHighlight}>Stay Secure</Text>
-          <Text style={styles.welcomeDesc}>
-            Real-time protection and monitoring.
-          </Text>
+        <Animated.View style={[styles.welcomeSection, welcomeStyle]}>
+          <View style={styles.welcomeRow}>
+            {/* Text left */}
+            <View style={styles.welcomeTextBlock}>
+              <Text style={styles.welcomeTitle}>{t.welcomeLine1}</Text>
+              <Text style={styles.welcomeTitleHighlight}>{t.welcomeLine2}</Text>
+              <Text style={styles.welcomeDesc}>{t.welcomeDesc}</Text>
+            </View>
+
+            {/* SOS button right */}
+            <TouchableOpacity
+              style={styles.sosButton}
+              onPress={handleSOS}
+              activeOpacity={0.85}
+            >
+              {/* Pulsing ring behind */}
+              <Animated.View style={[styles.sosRing, sosRingStyle]} />
+              {/* Circle */}
+              <View style={styles.sosCircle}>
+                <Ionicons name="flash" size={28} color="#fff" />
+                <Text style={styles.sosLabel}>SOS</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
         </Animated.View>
 
         {/* Real-time Alerts */}
-        <Animated.View style={[styles.sectionContainer, contentStyle]}>
+        <View style={styles.sectionContainer}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Real-time Alerts</Text>
+            <Text style={styles.sectionTitle}>{t.realtimeAlerts}</Text>
             <TouchableOpacity>
-              <Text style={styles.seeAllText}>View All</Text>
+              <Text style={styles.seeAllText}>{t.viewAll}</Text>
             </TouchableOpacity>
           </View>
 
@@ -106,10 +160,8 @@ export default function HomeScreen() {
                 <Ionicons name="warning" size={24} color="#FF5252" />
               </View>
               <View style={styles.alertContent}>
-                <Text style={styles.alertTitle}>Heavy Rainfall Warning</Text>
-                <Text style={styles.alertSubtitle}>
-                  Kathmandu Valley • 2m ago
-                </Text>
+                <Text style={styles.alertTitle}>{t.alert1Title}</Text>
+                <Text style={styles.alertSubtitle}>{t.alert1Sub}</Text>
               </View>
               <Ionicons name="chevron-forward" size={20} color="#ccc" />
             </View>
@@ -125,10 +177,8 @@ export default function HomeScreen() {
                 <Ionicons name="car" size={24} color="#FF9800" />
               </View>
               <View style={styles.alertContent}>
-                <Text style={styles.alertTitle}>Traffic Congestion</Text>
-                <Text style={styles.alertSubtitle}>
-                  Koteshwor - Tinkune • 15m ago
-                </Text>
+                <Text style={styles.alertTitle}>{t.alert2Title}</Text>
+                <Text style={styles.alertSubtitle}>{t.alert2Sub}</Text>
               </View>
               <Ionicons name="chevron-forward" size={20} color="#ccc" />
             </View>
@@ -144,22 +194,20 @@ export default function HomeScreen() {
                 <Ionicons name="information-circle" size={24} color="#2196F3" />
               </View>
               <View style={styles.alertContent}>
-                <Text style={styles.alertTitle}>System Maintenance</Text>
-                <Text style={styles.alertSubtitle}>
-                  Scheduled for 12:00 AM • 1h ago
-                </Text>
+                <Text style={styles.alertTitle}>{t.alert3Title}</Text>
+                <Text style={styles.alertSubtitle}>{t.alert3Sub}</Text>
               </View>
               <Ionicons name="chevron-forward" size={20} color="#ccc" />
             </View>
           </View>
-        </Animated.View>
+        </View>
 
-        {/* Evacuation Areas - Compact Modern Scrollable List */}
-        <Animated.View style={[styles.sectionContainer, contentStyle]}>
+        {/* Evacuation Areas */}
+        <View style={styles.sectionContainer}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Evacuation Areas</Text>
+            <Text style={styles.sectionTitle}>{t.evacuationAreas}</Text>
             <TouchableOpacity>
-              <Text style={styles.seeAllText}>See Map</Text>
+              <Text style={styles.seeAllText}>{t.seeMap}</Text>
             </TouchableOpacity>
           </View>
 
@@ -168,14 +216,13 @@ export default function HomeScreen() {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.evacuationList}
           >
-            {/* Evacuation Item 1 */}
             <TouchableOpacity style={styles.evacuationCard}>
               <View style={styles.imagePlaceholder}>
                 <Ionicons name="image-outline" size={32} color="#ccc" />
                 <Text style={styles.placeholderLabel}>Tudikhel</Text>
               </View>
               <View style={styles.evacuationInfo}>
-                <Text style={styles.evacuationName}>Tudikhel Ground</Text>
+                <Text style={styles.evacuationName}>{t.evac1Name}</Text>
                 <View style={styles.evacuationMeta}>
                   <Ionicons name="location-sharp" size={14} color="#4CAF50" />
                   <Text style={styles.evacuationDistance}>0.5 km</Text>
@@ -183,14 +230,13 @@ export default function HomeScreen() {
               </View>
             </TouchableOpacity>
 
-            {/* Evacuation Item 2 */}
             <TouchableOpacity style={styles.evacuationCard}>
               <View style={styles.imagePlaceholder}>
                 <Ionicons name="image-outline" size={32} color="#ccc" />
                 <Text style={styles.placeholderLabel}>Dasharath</Text>
               </View>
               <View style={styles.evacuationInfo}>
-                <Text style={styles.evacuationName}>Dasharath Stadium</Text>
+                <Text style={styles.evacuationName}>{t.evac2Name}</Text>
                 <View style={styles.evacuationMeta}>
                   <Ionicons name="location-sharp" size={14} color="#4CAF50" />
                   <Text style={styles.evacuationDistance}>2.1 km</Text>
@@ -198,14 +244,13 @@ export default function HomeScreen() {
               </View>
             </TouchableOpacity>
 
-            {/* Evacuation Item 3 */}
             <TouchableOpacity style={styles.evacuationCard}>
               <View style={styles.imagePlaceholder}>
                 <Ionicons name="image-outline" size={32} color="#ccc" />
                 <Text style={styles.placeholderLabel}>UN Park</Text>
               </View>
               <View style={styles.evacuationInfo}>
-                <Text style={styles.evacuationName}>UN Park</Text>
+                <Text style={styles.evacuationName}>{t.evac3Name}</Text>
                 <View style={styles.evacuationMeta}>
                   <Ionicons name="location-sharp" size={14} color="#4CAF50" />
                   <Text style={styles.evacuationDistance}>3.4 km</Text>
@@ -213,7 +258,7 @@ export default function HomeScreen() {
               </View>
             </TouchableOpacity>
           </ScrollView>
-        </Animated.View>
+        </View>
       </ScrollView>
 
       {/* Shared Bottom Nav */}
@@ -237,14 +282,30 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   headerLeft: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
   },
-  menuButton: {
-    padding: 10,
-    backgroundColor: "#f5f5f5",
-    borderRadius: 12,
+  headerRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  langButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    paddingHorizontal: 9,
+    paddingVertical: 8,
+    backgroundColor: "#f0faf0",
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#c8e6c9",
+  },
+  langLabel: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#4CAF50",
   },
   headerTitle: {
     fontSize: 20,
@@ -282,6 +343,15 @@ const styles = StyleSheet.create({
     marginTop: 10,
     marginBottom: 20,
   },
+  welcomeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  welcomeTextBlock: {
+    flex: 1,
+    paddingRight: 12,
+  },
   welcomeTitle: {
     fontSize: 28,
     fontWeight: "300",
@@ -296,7 +366,41 @@ const styles = StyleSheet.create({
   welcomeDesc: {
     fontSize: 15,
     color: "#666",
-    maxWidth: "80%",
+    maxWidth: "90%",
+  },
+  // SOS
+  sosButton: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  sosRing: {
+    position: "absolute",
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    borderWidth: 3,
+    borderColor: "#FF3B30",
+    backgroundColor: "rgba(255,59,48,0.08)",
+  },
+  sosCircle: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: "#FF3B30",
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#FF3B30",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.45,
+    shadowRadius: 10,
+    elevation: 8,
+    gap: 1,
+  },
+  sosLabel: {
+    color: "#fff",
+    fontSize: 11,
+    fontWeight: "900",
+    letterSpacing: 1.5,
   },
   sectionContainer: {
     marginBottom: 25,
@@ -329,12 +433,12 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: "#f0f0f0",
+    borderColor: "#e8e8e8",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.03,
+    shadowOpacity: 0.08,
     shadowRadius: 8,
-    elevation: 2,
+    elevation: 3,
   },
   alertIconBg: {
     width: 44,
