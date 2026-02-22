@@ -1,0 +1,583 @@
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ActivityIndicator,
+  Platform,
+} from "react-native";
+import { WebView } from "react-native-webview";
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+} from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import BottomNav from "@/components/ui/BottomNav";
+
+type EvacuationType = "Police" | "Hospital" | "Area 3" | null;
+type DisasterType = "Flood" | "Landslide" | "Fire" | "Other" | null;
+
+export default function MapScreen() {
+  const router = useRouter();
+  const insets = useSafeAreaInsets();
+
+  // State
+  const [evacuationFilter, setEvacuationFilter] =
+    useState<EvacuationType>(null);
+  const [disasterFilter, setDisasterFilter] = useState<DisasterType>(null);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
+
+  // UI State
+  const [isEvacDropdownOpen, setIsEvacDropdownOpen] = useState(false);
+  const [isDisasterDropdownOpen, setIsDisasterDropdownOpen] = useState(false);
+  const [isMapFullscreen, setIsMapFullscreen] = useState(false);
+
+  // Animations
+  const evacDropdownHeight = useSharedValue(0);
+  const disasterDropdownHeight = useSharedValue(0);
+
+  // Direct close helpers — avoid cross-calling toggles which causes stale-closure animation glitches
+  const closeEvacDropdown = () => {
+    evacDropdownHeight.value = withTiming(0, { duration: 250 });
+    setIsEvacDropdownOpen(false);
+  };
+
+  const closeDisasterDropdown = () => {
+    disasterDropdownHeight.value = withTiming(0, { duration: 250 });
+    setIsDisasterDropdownOpen(false);
+  };
+
+  // Toggle Evacuation Dropdown
+  const toggleEvacDropdown = () => {
+    if (isEvacDropdownOpen) {
+      closeEvacDropdown();
+    } else {
+      closeDisasterDropdown();
+      evacDropdownHeight.value = withTiming(180, { duration: 300 });
+      setIsEvacDropdownOpen(true);
+    }
+  };
+
+  // Toggle Disaster Dropdown
+  const toggleDisasterDropdown = () => {
+    if (isDisasterDropdownOpen) {
+      closeDisasterDropdown();
+    } else {
+      closeEvacDropdown();
+      disasterDropdownHeight.value = withTiming(220, { duration: 300 });
+      setIsDisasterDropdownOpen(true);
+    }
+  };
+
+  const animatedEvacStyle = useAnimatedStyle(() => ({
+    height: evacDropdownHeight.value,
+    opacity: evacDropdownHeight.value === 0 ? 0 : 1,
+    overflow: "hidden",
+  }));
+
+  const animatedDisasterStyle = useAnimatedStyle(() => ({
+    height: disasterDropdownHeight.value,
+    opacity: disasterDropdownHeight.value === 0 ? 0 : 1,
+    overflow: "hidden",
+  }));
+
+  // Generating Leaflet HTML based on filters
+  const getLeafletHtml = () => {
+    // Icons as SVGs
+    const svgs = {
+      hospital: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#F44336" width="24px" height="24px"><path d="M0 0h24v24H0z" fill="none"/><path d="M19 3H5c-1.1 0-1.99.9-1.99 2L3 19c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-1 11h-4v4h-4v-4H6v-4h4V6h4v4h4v4z"/></svg>`,
+      police: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#2196F3" width="24px" height="24px"><path d="M0 0h24v24H0z" fill="none"/><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>`,
+      area3: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#4CAF50" width="24px" height="24px"><path d="M0 0h24v24H0z" fill="none"/><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>`,
+      flood: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#00BCD4" width="24px" height="24px"><path d="M0 0h24v24H0z" fill="none"/><path d="M12 2L2 22h20L12 2zm0 3.99L19.53 19H4.47L12 5.99zM13 18h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>`,
+      landslide: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#795548" width="24px" height="24px"><g><path d="M12,2L2.5,19h19L12,2z M13,16h-2v-2h2V16z M13,12h-2V7h2V12z"/></g></svg>`,
+      fire: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#FF5722" width="24px" height="24px"><path d="M0 0h24v24H0z" fill="none"/><path d="M19.48 12.35c-1.57-4.08-7.16-4.3-5.81-10.23.1-.44-.37-.78-.75-.55C9.29 3.71 6.68 8 8.87 13.62c.18.46-.36.89-.75.59-1.81-1.37-2-3.34-1.84-4.75.06-.52-.62-.77-.91-.34C4.69 10.16 4 11.84 4 14.37c.38 5.6 5.11 7.32 6.81 7.54 2.43.31 5.06-.14 6.95-1.87 2.98-2.73 2.85-5.84 1.72-7.69zM12 20c-2.35-.57-4.26-2.89-3.32-5.74 0 0 1.25 1.57 2.12 1.45.71-.1 1.2-1.46 1.25-1.5.05.04 1.13 2.58 2.37 2.03 0 0-.8 2.76-2.42 3.76z"/></svg>`,
+    };
+
+    return `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+        <style>
+          body { margin: 0; padding: 0; }
+          #map { width: 100%; height: 100vh; background: #e0e0e0; }
+          .custom-icon {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.25);
+          }
+        </style>
+      </head>
+      <body>
+        <div id="map"></div>
+        <script>
+          try {
+            const map = L.map('map', { zoomControl: false }).setView([27.7172, 85.3240], 13);
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+              attribution: '© OpenStreetMap',
+              maxZoom: 19
+            }).addTo(map);
+
+            const locations = [
+              { lat: 27.7172, lng: 85.3240, type: 'Teaching Hospital', category: 'Hospital', icon: '${svgs.hospital}' },
+              { lat: 27.6915, lng: 85.3420, type: 'Civil Hospital', category: 'Hospital', icon: '${svgs.hospital}' },
+              { lat: 27.7100, lng: 85.3300, type: 'Police HQ', category: 'Police', icon: '${svgs.police}' },
+              { lat: 27.7050, lng: 85.3150, type: 'Durbar Marg Police', category: 'Police', icon: '${svgs.police}' },
+              { lat: 27.6710, lng: 85.3230, type: 'Jawalakhel Area', category: 'Area 3', icon: '${svgs.area3}' },
+              { lat: 27.7000, lng: 85.3000, type: 'Severe Flood', category: 'Disaster', subType: 'Flood', icon: '${svgs.flood}' },
+              { lat: 27.7400, lng: 85.3500, type: 'Landslide Zone', category: 'Disaster', subType: 'Landslide', icon: '${svgs.landslide}' },
+              { lat: 27.6800, lng: 85.2900, type: 'Factory Fire', category: 'Disaster', subType: 'Fire', icon: '${svgs.fire}' }
+            ];
+
+            const activeEvacFilter = "${evacuationFilter || ""}";
+            const activeDisasterFilter = "${disasterFilter || ""}";
+
+            const filtered = locations.filter(loc => {
+                if (activeDisasterFilter && loc.category === 'Disaster') {
+                    return loc.subType === activeDisasterFilter;
+                }
+                if (activeEvacFilter && loc.category === activeEvacFilter) {
+                    return true;
+                }
+                // If filters are active, strict mode
+                if (activeDisasterFilter || activeEvacFilter) return false;
+                
+                // If no filters, show all
+                return true;
+            });
+
+            if (filtered.length > 0) {
+                const group = new L.featureGroup();
+                filtered.forEach(loc => {
+                  const icon = L.divIcon({
+                    className: 'custom-icon',
+                    html: loc.icon,
+                    iconSize: [40, 40],
+                    iconAnchor: [20, 20]
+                  });
+                  const marker = L.marker([loc.lat, loc.lng], { icon: icon })
+                   .bindPopup('<b>' + loc.type + '</b><br>' + (loc.subType || loc.category));
+                  group.addLayer(marker);
+                });
+                group.addTo(map);
+                map.fitBounds(group.getBounds().pad(0.1));
+            }
+          } catch (e) {
+            console.error(e);
+          }
+        </script>
+      </body>
+    </html>
+  `;
+  };
+
+  const onSelectEvac = (type: EvacuationType) => {
+    setEvacuationFilter(type);
+    setDisasterFilter(null);
+    toggleEvacDropdown();
+  };
+
+  const onSelectDisaster = (type: DisasterType) => {
+    setDisasterFilter(type);
+    setEvacuationFilter(null);
+    toggleDisasterDropdown();
+  };
+
+  return (
+    <View style={styles.container}>
+      {/* Header */}
+      {!isMapFullscreen && (
+        <View style={[styles.header, { paddingTop: insets.top }]}>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={styles.backButton}
+          >
+            <Ionicons name="arrow-back" size={24} color="#333" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Maps</Text>
+        </View>
+      )}
+
+      {/* Content Container */}
+      <View style={styles.contentContainer}>
+        {/* Filter Section */}
+        {!isMapFullscreen && (
+          <View style={styles.imageBackgroundWrapper}>
+            <View style={styles.filtersWrapper}>
+              {/* Filter Box 1: Evacuation Areas */}
+              <View style={styles.filterBoxContainer}>
+                <TouchableOpacity
+                  style={styles.filterBox}
+                  onPress={toggleEvacDropdown}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.filterLabel}>Evacuation Areas</Text>
+                  <View style={styles.filterValueRow}>
+                    <Text style={styles.filterValue}>
+                      {evacuationFilter || "Select Area"}
+                    </Text>
+                    <Ionicons
+                      name={isEvacDropdownOpen ? "chevron-up" : "chevron-down"}
+                      size={20}
+                      color="#666"
+                    />
+                  </View>
+                </TouchableOpacity>
+
+                <Animated.View style={[styles.dropdownList, animatedEvacStyle]}>
+                  {(["Police", "Hospital", "Area 3"] as string[]).map(
+                    (type) => (
+                      <TouchableOpacity
+                        key={type}
+                        style={[
+                          styles.dropdownItem,
+                          evacuationFilter === type && styles.activeItem,
+                        ]}
+                        onPress={() => onSelectEvac(type as EvacuationType)}
+                      >
+                        <Text
+                          style={[
+                            styles.itemText,
+                            evacuationFilter === type && styles.activeItemText,
+                          ]}
+                        >
+                          {type}
+                        </Text>
+                      </TouchableOpacity>
+                    ),
+                  )}
+                </Animated.View>
+              </View>
+
+              {/* Filter Box 2: Disaster Type */}
+              <View style={styles.filterBoxContainer}>
+                <TouchableOpacity
+                  style={styles.filterBox}
+                  onPress={toggleDisasterDropdown}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.filterLabel}>Disaster Type</Text>
+                  <View style={styles.filterValueRow}>
+                    <Text style={styles.filterValue}>
+                      {disasterFilter || "Select Type"}
+                    </Text>
+                    <Ionicons
+                      name={
+                        isDisasterDropdownOpen ? "chevron-up" : "chevron-down"
+                      }
+                      size={20}
+                      color="#666"
+                    />
+                  </View>
+                </TouchableOpacity>
+
+                <Animated.View
+                  style={[styles.dropdownList, animatedDisasterStyle]}
+                >
+                  {(["Flood", "Landslide", "Fire", "Other"] as string[]).map(
+                    (type) => (
+                      <TouchableOpacity
+                        key={type}
+                        style={[
+                          styles.dropdownItem,
+                          disasterFilter === type && styles.activeItem,
+                        ]}
+                        onPress={() => onSelectDisaster(type as DisasterType)}
+                      >
+                        <Text
+                          style={[
+                            styles.itemText,
+                            disasterFilter === type && styles.activeItemText,
+                          ]}
+                        >
+                          {type}
+                        </Text>
+                      </TouchableOpacity>
+                    ),
+                  )}
+                </Animated.View>
+              </View>
+
+              {/* Date Picker (Visible when Disaster Type is selected) */}
+              {disasterFilter && (
+                <View style={styles.datePickerContainer}>
+                  <Text style={styles.dateLabel}>Select Date:</Text>
+                  <TouchableOpacity
+                    style={styles.dateButton}
+                    onPress={() => setShowDatePicker(true)}
+                  >
+                    <Ionicons
+                      name="calendar-outline"
+                      size={16}
+                      color="#007AFF"
+                      style={{ marginRight: 6 }}
+                    />
+                    <Text style={styles.dateButtonText}>
+                      {selectedDate.toLocaleDateString("en-US", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                      })}
+                    </Text>
+                  </TouchableOpacity>
+                  {showDatePicker && (
+                    <DateTimePicker
+                      value={selectedDate}
+                      mode="date"
+                      display="default"
+                      onChange={(event, date) => {
+                        // On Android the dialog dismisses after one pick; on iOS it's inline
+                        setShowDatePicker(Platform.OS === "ios");
+                        if (date) setSelectedDate(date);
+                      }}
+                    />
+                  )}
+                </View>
+              )}
+            </View>
+          </View>
+        )}
+
+        {/* Map Container */}
+        <View
+          style={[
+            styles.mapContainer,
+            isMapFullscreen && styles.fullscreenContainer,
+            !isMapFullscreen && { marginBottom: 90 },
+          ]}
+        >
+          {Platform.OS === "web" ? (
+            <iframe
+              srcDoc={getLeafletHtml()}
+              style={{
+                width: "100%",
+                height: "100%",
+                border: "none",
+                borderRadius: isMapFullscreen ? 0 : 12,
+              }}
+              title="Map"
+            />
+          ) : (
+            <WebView
+              originWhitelist={["*"]}
+              source={{ html: getLeafletHtml() }}
+              style={styles.map}
+              scrollEnabled={false}
+            />
+          )}
+
+          {/* Fullscreen Toggle Button */}
+          <TouchableOpacity
+            style={[styles.fullscreenButton, { bottom: insets.bottom + 20 }]}
+            onPress={() => setIsMapFullscreen(!isMapFullscreen)}
+            activeOpacity={0.8}
+          >
+            <Ionicons
+              name={isMapFullscreen ? "contract" : "expand"}
+              size={22}
+              color="#333"
+            />
+          </TouchableOpacity>
+        </View>
+        {/* Shared Bottom Nav */}
+        {!isMapFullscreen && <BottomNav activeTab="map" />}
+      </View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#fff",
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    backgroundColor: "#fff",
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
+  },
+  backButton: {
+    padding: 8,
+    marginRight: 8,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#333",
+  },
+  contentContainer: {
+    flex: 1,
+    position: "relative",
+  },
+  imageBackgroundWrapper: {
+    zIndex: 10,
+    backgroundColor: "transparent",
+  },
+  filtersWrapper: {
+    padding: 16,
+    backgroundColor: "#fff",
+    borderBottomRightRadius: 20,
+    borderBottomLeftRadius: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 5 }, // Increased shadow
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 8,
+    marginBottom: 10,
+  },
+  filterBoxContainer: {
+    marginBottom: 12,
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: "#eee",
+    overflow: "hidden",
+  },
+  filterBox: {
+    padding: 16,
+    borderLeftWidth: 4,
+    borderLeftColor: "#007AFF",
+  },
+  filterLabel: {
+    fontSize: 12,
+    color: "#888",
+    marginBottom: 4,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  filterValueRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  filterValue: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#333",
+  },
+  dropdownList: {
+    backgroundColor: "#fafafa",
+  },
+  dropdownItem: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderTopWidth: 1,
+    borderTopColor: "#eee",
+  },
+  activeItem: {
+    backgroundColor: "#e6f0ff",
+  },
+  itemText: {
+    fontSize: 15,
+    color: "#444",
+  },
+  activeItemText: {
+    color: "#007AFF",
+    fontWeight: "600",
+  },
+  datePickerContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between", // Spread label and picker
+    padding: 12,
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#eee",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  dateLabel: {
+    fontSize: 16,
+    color: "#333",
+    fontWeight: "500",
+  },
+  dateButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: "#f0f7ff",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#cce0ff",
+  },
+  dateButtonText: {
+    fontSize: 14,
+    color: "#007AFF",
+    fontWeight: "600",
+  },
+  mapContainer: {
+    flex: 1,
+    position: "relative",
+    overflow: "hidden",
+    marginHorizontal: 16,
+    marginBottom: 16,
+    borderRadius: 16,
+    // The "border type" background requested
+    borderWidth: 6,
+    borderColor: "#f0f0f0",
+    backgroundColor: "#fff",
+    // Deep shadow for card effect
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  fullscreenContainer: {
+    marginHorizontal: 0,
+    marginBottom: 0,
+    borderRadius: 0,
+    borderWidth: 0,
+  },
+  map: {
+    flex: 1,
+    backgroundColor: "#e0e0e0",
+  },
+  fullscreenButton: {
+    position: "absolute",
+    right: 16,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "#fff",
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+    zIndex: 999,
+    borderWidth: 1,
+    borderColor: "#eee",
+  },
+});
