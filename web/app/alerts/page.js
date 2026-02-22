@@ -1,601 +1,359 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import Link from "next/link";
 import {
-  AlertTriangle,
-  Droplets,
-  Mountain,
-  Flame,
-  Wind,
-  Waves,
-  Clock,
-  MapPin,
-  RefreshCw,
-  Bell,
-  BellOff,
-  ArrowUpRight,
-  Users,
-  CheckCircle2,
-  X,
-  Info,
-  ChevronDown,
-  SlidersHorizontal,
-  Activity,
+  AlertTriangle, CloudRain, Mountain, Activity, Flame, Wind,
+  MapPin, Users, X, ChevronDown, Clock, Radio, Shield,
+  Filter, Search,
 } from "lucide-react";
 
-// ── Data ─────────────────────────────────────────────────────────────────────
-
+/* ────── DATA ────── */
 const ALERTS = [
-  {
-    id: 1, type: "Flood", icon: Droplets, severity: "critical",
-    title: "Severe Flooding – Koshi River Basin",
-    province: "Koshi", district: "Sunsari", municipality: "Inaruwa",
-    description: "Water level at Chatara barrage has exceeded the danger mark by 2.4 m. Immediate evacuation of riverbank settlements within 1 km radius ordered.",
-    affectedPeople: 12400, date: "2026-02-22", time: "12 min ago", status: "active",
-    actions: ["Evacuate Zone A", "Shelters Open"],
-  },
-  {
-    id: 2, type: "Landslide", icon: Mountain, severity: "high",
-    title: "Landslide Risk – Seti Corridor",
-    province: "Gandaki", district: "Kaski", municipality: "Pokhara",
-    description: "Heavy rainfall (180mm in 6 hrs) has destabilised slopes along BP Highway KM 34–58. Road blocked.",
-    affectedPeople: 3800, date: "2026-02-22", time: "38 min ago", status: "active",
-    actions: ["Road Closed", "Rescue Deployed"],
-  },
-  {
-    id: 3, type: "Earthquake", icon: Waves, severity: "high",
-    title: "Magnitude 5.2 Earthquake",
-    province: "Sudurpashchim", district: "Bajhang", municipality: "Chainpur",
-    description: "5.2M earthquake at 14 km depth. Structural assessments ongoing. Aftershock risk elevated for 48 hrs.",
-    affectedPeople: 6100, date: "2026-02-22", time: "1 hr ago", status: "monitoring",
-    actions: ["Assessment Ongoing"],
-  },
-  {
-    id: 4, type: "Wildfire", icon: Flame, severity: "high",
-    title: "Forest Fire – Chure Range",
-    province: "Bagmati", district: "Makwanpur", municipality: "Hetauda",
-    description: "Active wildfire spanning ~340 hectares. Wind speed 45 km/h. Fire brigade and Army deployed.",
-    affectedPeople: 1200, date: "2026-02-21", time: "2 hr ago", status: "active",
-    actions: ["Firefighting Active"],
-  },
-  {
-    id: 5, type: "Flood", icon: Droplets, severity: "moderate",
-    title: "Flash Flood Warning – Rapti Basin",
-    province: "Bagmati", district: "Chitwan", municipality: "Bharatpur",
-    description: "Upstream rainfall forecast to cause flash flooding along Rapti river within 4–6 hours. Precautionary evacuation advised.",
-    affectedPeople: 5500, date: "2026-02-21", time: "2 hr ago", status: "warning",
-    actions: ["Pre-Evacuation"],
-  },
-  {
-    id: 6, type: "Extreme Weather", icon: Wind, severity: "moderate",
-    title: "Thunderstorm & Hail Alert",
-    province: "Bagmati", district: "Kathmandu", municipality: "Kathmandu Metro",
-    description: "Heavy thunderstorm with hail from 15:00–20:00. Winds up to 70 km/h expected. Avoid outdoor activities.",
-    affectedPeople: 89000, date: "2026-02-22", time: "3 hr ago", status: "warning",
-    actions: ["Public Advisory"],
-  },
-  {
-    id: 7, type: "Landslide", icon: Mountain, severity: "low",
-    title: "Minor Landslide – Prithvi Highway",
-    province: "Bagmati", district: "Dhading", municipality: "Nilkantha",
-    description: "Small debris flow blocking one lane of Prithvi Highway near KM 78. Clearance underway. Expect 2–3 hr delay.",
-    affectedPeople: 0, date: "2026-02-21", time: "5 hr ago", status: "resolved",
-    actions: ["Clearance Underway"],
-  },
-  {
-    id: 8, type: "Flood", icon: Droplets, severity: "low",
-    title: "River Watch – Bagmati",
-    province: "Madhesh", district: "Sarlahi", municipality: "Lalbandi",
-    description: "Bagmati river rising steadily. Currently 0.8 m below danger mark. Monitoring teams standby.",
-    affectedPeople: 0, date: "2026-02-20", time: "6 hr ago", status: "monitoring",
-    actions: ["Monitoring Active"],
-  },
-  {
-    id: 9, type: "Wildfire", icon: Flame, severity: "moderate",
-    title: "Wildfire Spread – Palpa Hills",
-    province: "Lumbini", district: "Palpa", municipality: "Tansen",
-    description: "Fire spreading across dry forest patches in Palpa. Wind conditions unfavorable.",
-    affectedPeople: 800, date: "2026-02-20", time: "8 hr ago", status: "active",
-    actions: ["Fire Brigade Dispatched"],
-  },
-  {
-    id: 10, type: "Earthquake", icon: Waves, severity: "moderate",
-    title: "Magnitude 4.1 Tremor",
-    province: "Koshi", district: "Taplejung", municipality: "Phungling",
-    description: "4.1M earthquake felt across Taplejung and Panchthar. No major damage reported.",
-    affectedPeople: 500, date: "2026-02-20", time: "10 hr ago", status: "monitoring",
-    actions: ["Field Assessment"],
-  },
+  { id: 1,  type: "Flood",     icon: CloudRain, severity: "critical", title: "Severe Flooding — Koshi River Basin", province: "Koshi", district: "Sunsari", municipality: "Itahari Sub-Metro", description: "Water levels have breached critical threshold. Koshi River at Chatara recording 9.2m (danger: 8.5m). 14 wards inundated. Agricultural land submerged across 4,200 hectares.", affectedPeople: 34200, date: "2026-02-25", time: "06:45", status: "active", actions: ["Evacuate low-lying areas immediately", "Move to higher ground", "Avoid river crossings", "Contact NDRRMA 1155"] },
+  { id: 2,  type: "Landslide", icon: Mountain,   severity: "critical", title: "Massive Landslide — Melamchi Valley", province: "Bagmati", district: "Sindhupalchok", municipality: "Melamchi", description: "Major debris flow triggered by continuous rainfall. Melamchi Bazar road severed at 3 points. Helambu trail blocked. 42 houses buried, rescue teams deployed.", affectedPeople: 8900, date: "2026-02-25", time: "03:20", status: "active", actions: ["Stay away from steep slopes", "Do not attempt road travel", "Report missing persons to 100", "Helicopter rescue requested"] },
+  { id: 3,  type: "Earthquake", icon: Activity,  severity: "high",     title: "Seismic Activity — Gorkha Epicenter", province: "Gandaki", district: "Gorkha", municipality: "Gorkha", description: "4.8ML earthquake detected at 12km depth. Epicenter 15km NW of Gorkha Bazar. Aftershock sequence ongoing (12 events >2.5ML in 6hrs). DMG assessing structural damage.", affectedPeople: 15400, date: "2026-02-24", time: "14:32", status: "warning", actions: ["Move to open spaces", "Check structural integrity", "Prepare emergency kit", "Stay away from damaged buildings"] },
+  { id: 4,  type: "Flood",     icon: CloudRain, severity: "high",     title: "Flash Flood Warning — Rapti River", province: "Lumbini", district: "Rupandehi", municipality: "Butwal Sub-Metro", description: "Rapti River rising rapidly due to upstream rainfall in Dang. Expected to breach embankment within 12 hours. Pre-positioning relief supplies at 5 distribution points.", affectedPeople: 19600, date: "2026-02-26", time: "10:15", status: "warning", actions: ["Prepare for possible evacuation", "Secure important documents", "Stock food and water", "Monitor local radio"] },
+  { id: 5,  type: "Wildfire",  icon: Flame,     severity: "high",     title: "Forest Fire — Chitwan National Park", province: "Bagmati", district: "Chitwan", municipality: "Bharatpur Metro", description: "Uncontrolled wildfire spreading across 850 hectares of buffer zone. Wind speed 25km/h from SE. 3 community forests threatened. Army battalion deployed for containment.", affectedPeople: 5200, date: "2026-02-28", time: "16:00", status: "active", actions: ["Evacuate buffer zone settlements", "Close park entry points", "Report fire sightings to 101", "Avoid smoke-affected areas"] },
+  { id: 6,  type: "Flood",     icon: CloudRain, severity: "moderate", title: "Rising Water Levels — Bagmati Corridor", province: "Madhesh", district: "Sarlahi", municipality: "Malangwa", description: "Bagmati River at Karmaiya gauge: 6.1m (warning: 5.8m, danger: 7.2m). Trend upward. Southern Sarlahi low-lands being monitored. Pre-alert issued to 8 municipalities.", affectedPeople: 12000, date: "2026-02-27", time: "09:30", status: "monitoring", actions: ["Prepare emergency supplies", "Know your evacuation route", "Keep phone charged", "Monitor this feed"] },
+  { id: 7,  type: "Extreme Weather", icon: Wind, severity: "moderate", title: "Heavy Snowfall — High Himalayas", province: "Karnali", district: "Jumla", municipality: "Chandannath", description: "72-hour snowfall accumulation exceeding 120cm in Jumla, Humla, Dolpa. Air transport suspended. Road access cut to 4 districts. Food supplies running low in remote VDCs.", affectedPeople: 8900, date: "2026-03-01", time: "08:00", status: "active", actions: ["Stock essential supplies", "Avoid mountain travel", "Check on elderly neighbors", "Keep alternate heating ready"] },
+  { id: 8,  type: "Landslide", icon: Mountain,   severity: "moderate", title: "Slope Instability — Pokhara Metro Ward 17", province: "Gandaki", district: "Kaski", municipality: "Pokhara Metro", description: "Ground cracks observed in Seti River gorge area. 24 houses in red zone. Geologists measuring 4cm lateral displacement. Ward office issued voluntary evacuation advisory.", affectedPeople: 3200, date: "2026-02-25", time: "11:45", status: "monitoring", actions: ["Evacuate if in red zone", "Watch for ground cracks", "Report changes to ward office", "Prepare emergency bag"] },
+  { id: 9,  type: "Flood",     icon: CloudRain, severity: "low",      title: "Seasonal Monitoring — Mahakali Basin", province: "Sudurpashchim", district: "Kanchanpur", municipality: "Mahendranagar", description: "Pre-monsoon monitoring active. Rivers at normal levels. Early warning systems tested and functional. Community preparedness drills completed in 12 municipalities.", affectedPeople: 0, date: "2026-03-01", time: "07:00", status: "monitoring", actions: ["No immediate action required", "Review family emergency plan", "Check emergency kit supplies", "Know your ward contact"] },
+  { id: 10, type: "Earthquake", icon: Activity,  severity: "low",      title: "Micro-seismic Activity — Far Western Region", province: "Sudurpashchim", district: "Bajhang", municipality: "Chainpur", description: "Cluster of micro-earthquakes (1.8-2.6ML) detected over past 72 hours. National Seismological Centre monitoring. No structural risk at current magnitude. Public advised to stay informed.", affectedPeople: 0, date: "2026-03-05", time: "12:00", status: "resolved", actions: ["Stay informed via official channels", "No action needed currently", "Review earthquake preparedness", "Know emergency numbers"] },
 ];
 
 const TYPE_FILTERS = ["All", "Flood", "Landslide", "Earthquake", "Wildfire", "Extreme Weather"];
+const TYPE_ICONS = { Flood: CloudRain, Landslide: Mountain, Earthquake: Activity, Wildfire: Flame, "Extreme Weather": Wind };
 
-const PROVINCES = ["All Provinces", "Koshi", "Madhesh", "Bagmati", "Gandaki", "Lumbini", "Karnali", "Sudurpashchim"];
-
+const PROVINCES = ["All", "Koshi", "Madhesh", "Bagmati", "Gandaki", "Lumbini", "Karnali", "Sudurpashchim"];
 const DISTRICTS_BY_PROVINCE = {
-  Koshi: ["All Districts", "Sunsari", "Taplejung", "Dhankuta", "Morang", "Solukhumbu"],
-  Madhesh: ["All Districts", "Sarlahi", "Bara", "Parsa", "Rautahat", "Mahottari"],
-  Bagmati: ["All Districts", "Kathmandu", "Chitwan", "Makwanpur", "Dhading", "Bhaktapur"],
-  Gandaki: ["All Districts", "Kaski", "Syangja", "Lamjung", "Gorkha", "Tanahun"],
-  Lumbini: ["All Districts", "Palpa", "Rupandehi", "Kapilbastu", "Arghakhanchi"],
-  Karnali: ["All Districts", "Surkhet", "Dailekh", "Jajarkot", "Dolpa"],
-  Sudurpashchim: ["All Districts", "Bajhang", "Doti", "Kailali", "Dadeldhura"],
+  Koshi: ["Sunsari", "Morang", "Jhapa", "Taplejung", "Panchthar", "Udayapur", "Sindhupalchok"],
+  Madhesh: ["Dhanusha", "Parsa", "Siraha", "Sarlahi", "Saptari", "Rautahat", "Mahottari"],
+  Bagmati: ["Kathmandu", "Lalitpur", "Bhaktapur", "Sindhupalchok", "Chitwan", "Makwanpur", "Nuwakot"],
+  Gandaki: ["Kaski", "Gorkha", "Lamjung", "Palpa", "Mustang"],
+  Lumbini: ["Rupandehi", "Kapilvastu", "Dang", "Nawalparasi", "Rolpa"],
+  Karnali: ["Surkhet", "Jumla", "Humla", "Dolpa"],
+  Sudurpashchim: ["Kailali", "Kanchanpur", "Doti", "Bajhang"],
 };
-
 const MUNICIPALITIES_BY_DISTRICT = {
-  Sunsari: ["All Municipalities", "Inaruwa", "Itahari", "Dharan", "Biratnagar"],
-  Kaski: ["All Municipalities", "Pokhara", "Lekhnath"],
-  Bajhang: ["All Municipalities", "Chainpur", "Jaya Prithvi"],
-  Makwanpur: ["All Municipalities", "Hetauda", "Thaha"],
-  Chitwan: ["All Municipalities", "Bharatpur", "Ratnanagar"],
-  Kathmandu: ["All Municipalities", "Kathmandu Metro", "Kirtipur"],
-  Dhading: ["All Municipalities", "Nilkantha", "Dhunibesi"],
-  Sarlahi: ["All Municipalities", "Lalbandi", "Haripur"],
-  Palpa: ["All Municipalities", "Tansen", "Rampur"],
-  Taplejung: ["All Municipalities", "Phungling"],
+  Sunsari: ["Itahari Sub-Metro", "Dharan Sub-Metro", "Inaruwa"],
+  Morang: ["Biratnagar Metro", "Urlabari"],
+  Sindhupalchok: ["Melamchi", "Chautara Sangachok"],
+  Chitwan: ["Bharatpur Metro"],
+  Makwanpur: ["Hetauda Sub-Metro"],
+  Kathmandu: ["Kathmandu Metro"],
+  Kaski: ["Pokhara Metro"],
+  Gorkha: ["Gorkha"],
+  Rupandehi: ["Butwal Sub-Metro", "Siddharthanagar"],
+  Sarlahi: ["Malangwa"],
+  Jumla: ["Chandannath"],
+  Kanchanpur: ["Mahendranagar"],
+  Bajhang: ["Chainpur"],
+  Kailali: ["Dhangadhi Sub-Metro"],
+  Dhanusha: ["Janakpur Sub-Metro"],
+  Parsa: ["Birgunj Metro"],
 };
 
 const SEV = {
-  critical: { label: "Critical", dot: "bg-red-500",    badge: "bg-red-50 text-red-600 border-red-200",       top: "bg-red-500",    text: "text-red-600"    },
-  high:     { label: "High",     dot: "bg-orange-500", badge: "bg-orange-50 text-orange-600 border-orange-200", top: "bg-orange-500", text: "text-orange-600" },
-  moderate: { label: "Moderate", dot: "bg-yellow-500", badge: "bg-yellow-50 text-yellow-600 border-yellow-200", top: "bg-yellow-400", text: "text-yellow-600" },
-  low:      { label: "Low",      dot: "bg-green-500",  badge: "bg-green-50 text-green-600 border-green-200",   top: "bg-green-500",  text: "text-green-600"  },
+  critical: { dot: "bg-red-500", badge: "border-red-500/30 text-red-400 bg-red-500/10", bar: "bg-red-500", text: "text-red-400" },
+  high:     { dot: "bg-amber-500", badge: "border-amber-500/30 text-amber-400 bg-amber-500/10", bar: "bg-amber-500", text: "text-amber-400" },
+  moderate: { dot: "bg-blue-400", badge: "border-blue-400/30 text-blue-400 bg-blue-400/10", bar: "bg-blue-400", text: "text-blue-400" },
+  low:      { dot: "bg-gray-400", badge: "border-gray-400/30 text-gray-400 bg-gray-400/10", bar: "bg-gray-400", text: "text-gray-400" },
 };
 
-const STATUS = {
-  active:     "bg-red-100 text-red-700",
-  warning:    "bg-yellow-100 text-yellow-700",
-  monitoring: "bg-blue-100 text-blue-700",
-  resolved:   "bg-green-100 text-green-700",
+const STATUS_STYLE = {
+  active:     { dot: "bg-red-500 animate-pulse", text: "text-red-400", label: "ACTIVE" },
+  warning:    { dot: "bg-amber-500 animate-pulse", text: "text-amber-400", label: "WARNING" },
+  monitoring: { dot: "bg-blue-400", text: "text-blue-400", label: "MONITORING" },
+  resolved:   { dot: "bg-emerald-400", text: "text-emerald-400", label: "RESOLVED" },
 };
 
-// ── Alert Card ────────────────────────────────────────────────────────────────
+/* ────── COMPONENTS ────── */
+
+function Select({ label, value, onChange, options }) {
+  return (
+    <div>
+      <label className="block text-[10px] font-mono font-bold uppercase tracking-widest text-muted mb-1.5">{label}</label>
+      <div className="relative">
+        <select value={value} onChange={(e) => onChange(e.target.value)}
+          className="w-full appearance-none border border-border bg-surface px-3 py-2 pr-8 text-xs text-white focus:border-emerald-500/50 focus:outline-none">
+          {options.map((o) => <option key={o} value={o}>{o}</option>)}
+        </select>
+        <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted" />
+      </div>
+    </div>
+  );
+}
 
 function AlertCard({ alert, onClick }) {
   const sev = SEV[alert.severity];
-  const Icon = alert.icon;
-  const isActive = alert.status === "active";
-
+  const st = STATUS_STYLE[alert.status];
   return (
-    <button
-      onClick={() => onClick(alert)}
-      className="group relative flex flex-col rounded-2xl border border-gray-100 bg-white text-left transition-all hover:shadow-lg hover:-translate-y-0.5 overflow-hidden"
-    >
-      <div className={`h-1 w-full ${sev.top}`} />
-      <div className="p-4 flex flex-col gap-3 flex-1">
-        {/* Icon + status */}
-        <div className="flex items-start justify-between gap-2">
-          <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gray-50 ${sev.text}`}>
-            <Icon className="h-[18px] w-[18px]" strokeWidth={2} />
-          </div>
-          <div className="flex items-center gap-1.5 shrink-0">
-            {isActive && (
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500" />
-              </span>
-            )}
-            <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize ${STATUS[alert.status]}`}>
-              {alert.status}
+    <button onClick={onClick}
+      className="group w-full text-left border border-border bg-[#0d1117] transition-all hover:bg-surface-hover hover:border-border">
+      {/* Severity bar */}
+      <div className={`h-0.5 w-full ${sev.bar}`} />
+      <div className="p-4">
+        {/* Top row */}
+        <div className="flex items-center justify-between gap-2 mb-2">
+          <div className="flex items-center gap-2">
+            <alert.icon className={`h-4 w-4 ${sev.text}`} />
+            <span className={`border px-1.5 py-0.5 text-[9px] font-mono font-bold tracking-widest ${sev.badge}`}>
+              {alert.severity.toUpperCase()}
             </span>
           </div>
-        </div>
-
-        {/* Type + title */}
-        <div>
-          <div className={`text-[10px] font-bold uppercase tracking-widest ${sev.text} mb-1`}>{alert.type}</div>
-          <h3 className="text-sm font-semibold text-gray-900 leading-snug group-hover:text-green-700 line-clamp-2">
-            {alert.title}
-          </h3>
-        </div>
-
-        {/* Location */}
-        <div className="flex items-center gap-1 text-[11px] text-gray-400">
-          <MapPin className="h-3 w-3 shrink-0" />
-          <span className="truncate">{alert.municipality}, {alert.district}</span>
-        </div>
-
-        {/* Severity + time */}
-        <div className="flex items-center justify-between pt-1 border-t border-gray-50">
-          <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${sev.badge}`}>
-            <span className={`h-1.5 w-1.5 rounded-full ${sev.dot}`} />
-            {sev.label}
-          </span>
-          <span className="flex items-center gap-1 text-[11px] text-gray-400">
-            <Clock className="h-3 w-3" />{alert.time}
-          </span>
-        </div>
-
-        {alert.affectedPeople > 0 && (
-          <div className="flex items-center gap-1 text-[11px] text-gray-400">
-            <Users className="h-3 w-3 shrink-0" />
-            <span>{alert.affectedPeople.toLocaleString()} affected</span>
+          <div className="flex items-center gap-1.5">
+            <span className={`h-1.5 w-1.5 ${st.dot}`} />
+            <span className={`text-[9px] font-mono font-bold ${st.text}`}>{st.label}</span>
           </div>
-        )}
+        </div>
+
+        <h3 className="text-sm font-bold text-white leading-snug group-hover:text-emerald-400 transition-colors">
+          {alert.title}
+        </h3>
+
+        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] font-mono text-muted">
+          <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{alert.district}, {alert.province}</span>
+          <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{alert.date} {alert.time}</span>
+          {alert.affectedPeople > 0 && (
+            <span className="flex items-center gap-1"><Users className="h-3 w-3" />{alert.affectedPeople.toLocaleString()}</span>
+          )}
+        </div>
       </div>
     </button>
   );
 }
 
-// ── Modal ─────────────────────────────────────────────────────────────────────
-
 function AlertModal({ alert, onClose }) {
+  if (!alert) return null;
   const sev = SEV[alert.severity];
-  const Icon = alert.icon;
-
+  const st = STATUS_STYLE[alert.status];
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
-      onClick={(e) => e.target === e.currentTarget && onClose()}
-    >
-      <div className="relative w-full max-w-md rounded-2xl bg-white shadow-2xl overflow-hidden">
-        {/* Severity top bar */}
-        <div className={`h-1.5 w-full ${sev.top}`} />
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4" onClick={onClose}>
+      <div className="relative w-full max-w-2xl border border-border bg-[#0d1117] max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}>
+        {/* Severity bar */}
+        <div className={`h-1 w-full ${sev.bar}`} />
 
         {/* Header */}
-        <div className="p-6 pb-4">
-          <div className="flex items-start justify-between gap-3">
-            <div className={`flex h-12 w-12 items-center justify-center rounded-2xl bg-gray-50 ${sev.text}`}>
-              <Icon className="h-6 w-6" />
+        <div className="flex items-start justify-between gap-4 border-b border-border p-5">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <alert.icon className={`h-5 w-5 ${sev.text}`} />
+              <span className={`border px-2 py-0.5 text-[10px] font-mono font-bold tracking-widest ${sev.badge}`}>
+                {alert.severity.toUpperCase()}
+              </span>
+              <div className="flex items-center gap-1.5">
+                <span className={`h-1.5 w-1.5 ${st.dot}`} />
+                <span className={`text-[10px] font-mono font-bold ${st.text}`}>{st.label}</span>
+              </div>
             </div>
-            <button
-              onClick={onClose}
-              className="rounded-xl p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
-            >
-              <X className="h-5 w-5" />
-            </button>
+            <h2 className="text-lg font-bold text-white">{alert.title}</h2>
           </div>
-
-          <div className="mt-4 flex flex-wrap gap-2">
-            <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold ${sev.badge}`}>
-              <span className={`h-1.5 w-1.5 rounded-full ${sev.dot}`} />
-              {sev.label}
-            </span>
-            <span className={`rounded-full px-2.5 py-1 text-xs font-medium capitalize ${STATUS[alert.status]}`}>
-              {alert.status}
-            </span>
-          </div>
-
-          <h2 className="mt-3 text-lg font-bold text-gray-900 leading-snug">{alert.title}</h2>
-          <div className="mt-1.5 flex items-center gap-1 text-sm text-gray-500">
-            <MapPin className="h-3.5 w-3.5 shrink-0" />
-            {alert.municipality} · {alert.district} · {alert.province}
-          </div>
+          <button onClick={onClose} className="flex h-8 w-8 items-center justify-center border border-border text-muted hover:text-white hover:border-white/30 transition-colors">
+            <X className="h-4 w-4" />
+          </button>
         </div>
 
-        {/* Body */}
-        <div className="px-6 pb-4 space-y-4 border-t border-gray-50 pt-4">
-          <p className="text-sm leading-relaxed text-gray-600">{alert.description}</p>
-
-          {alert.affectedPeople > 0 && (
-            <div className="flex items-center gap-3 rounded-xl bg-orange-50 px-4 py-3">
-              <Users className="h-5 w-5 text-orange-500 shrink-0" />
-              <div>
-                <div className="text-sm font-semibold text-orange-800">
-                  {alert.affectedPeople.toLocaleString()} people affected
-                </div>
-                <div className="text-xs text-orange-500">Estimated impact zone population</div>
+        {/* Content */}
+        <div className="p-5 space-y-5">
+          {/* Location & time */}
+          <div className="grid grid-cols-2 gap-px bg-border sm:grid-cols-4">
+            {[
+              { label: "PROVINCE", value: alert.province },
+              { label: "DISTRICT", value: alert.district },
+              { label: "MUNICIPALITY", value: alert.municipality },
+              { label: "TIMESTAMP", value: `${alert.date} ${alert.time}` },
+            ].map((item) => (
+              <div key={item.label} className="bg-surface p-3">
+                <span className="text-[9px] font-mono tracking-widest text-muted">{item.label}</span>
+                <p className="mt-0.5 text-xs font-bold text-white">{item.value}</p>
               </div>
+            ))}
+          </div>
+
+          {/* Description */}
+          <div>
+            <h3 className="text-[10px] font-mono font-bold tracking-widest text-muted mb-2">SITUATION REPORT</h3>
+            <p className="text-sm text-gray-300 leading-relaxed">{alert.description}</p>
+          </div>
+
+          {/* Stats */}
+          {alert.affectedPeople > 0 && (
+            <div className="border border-border bg-surface p-4">
+              <div className="flex items-center gap-2">
+                <Users className="h-4 w-4 text-amber-400" />
+                <span className="text-[10px] font-mono tracking-widest text-muted">AFFECTED POPULATION</span>
+              </div>
+              <p className="mt-1 text-2xl font-black font-mono text-white">{alert.affectedPeople.toLocaleString()}</p>
             </div>
           )}
 
+          {/* Actions */}
           <div>
-            <div className="mb-2 text-[10px] font-bold uppercase tracking-wider text-gray-400">
-              Response Actions
+            <h3 className="text-[10px] font-mono font-bold tracking-widest text-muted mb-2">REQUIRED ACTIONS</h3>
+            <div className="space-y-2">
+              {alert.actions.map((a, i) => (
+                <div key={i} className="flex items-start gap-2 border border-border bg-surface p-3">
+                  <span className={`mt-0.5 h-2 w-2 flex-none ${sev.dot}`} />
+                  <span className="text-xs text-gray-300">{a}</span>
+                </div>
+              ))}
             </div>
-            {alert.actions.map((a) => (
-              <div key={a} className="flex items-center gap-2 py-1 text-sm text-gray-700">
-                <CheckCircle2 className="h-3.5 w-3.5 text-green-500 shrink-0" />
-                {a}
-              </div>
-            ))}
           </div>
-
-          <div className="flex items-center gap-1 text-[11px] text-gray-400 border-t border-gray-50 pt-3">
-            <Clock className="h-3 w-3" /> Last updated {alert.time} · Auto-refreshes every 60s
-          </div>
-        </div>
-
-        {/* CTAs */}
-        <div className="border-t border-gray-100 p-4 flex gap-2">
-          <Link
-            href="/evacuate"
-            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-green-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-green-700 transition-colors"
-          >
-            <MapPin className="h-4 w-4" /> Find Shelter
-          </Link>
-          <Link
-            href="/sos"
-            className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-100 transition-colors"
-          >
-            Emergency SOS <ArrowUpRight className="h-4 w-4" />
-          </Link>
         </div>
       </div>
     </div>
   );
 }
 
-// ── Select ────────────────────────────────────────────────────────────────────
-
-function Select({ value, onChange, options }) {
-  return (
-    <div className="relative">
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full appearance-none rounded-xl border border-gray-200 bg-white py-2 pl-3 pr-8 text-sm text-gray-700 focus:border-green-400 focus:outline-none focus:ring-1 focus:ring-green-300 cursor-pointer"
-      >
-        {options.map((o) => <option key={o} value={o}>{o}</option>)}
-      </select>
-      <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400" />
-    </div>
-  );
-}
-
-// ── Page ──────────────────────────────────────────────────────────────────────
+/* ────── MAIN PAGE ────── */
 
 export default function AlertsPage() {
-  const [typeFilter, setTypeFilter]     = useState("All");
-  const [province, setProvince]         = useState("All Provinces");
-  const [district, setDistrict]         = useState("All Districts");
-  const [municipality, setMunicipality] = useState("All Municipalities");
-  const [dateFrom, setDateFrom]         = useState("");
-  const [dateTo, setDateTo]             = useState("");
-  const [modal, setModal]               = useState(null);
-  const [subscribed, setSubscribed]     = useState(false);
+  const [type, setType] = useState("All");
+  const [province, setProvince] = useState("All");
+  const [district, setDistrict] = useState("All");
+  const [municipality, setMunicipality] = useState("All");
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
+  const [selected, setSelected] = useState(null);
+  const [search, setSearch] = useState("");
 
-  const handleProvince = (v) => { setProvince(v); setDistrict("All Districts"); setMunicipality("All Municipalities"); };
-  const handleDistrict = (v) => { setDistrict(v); setMunicipality("All Municipalities"); };
+  const districts = province !== "All" && DISTRICTS_BY_PROVINCE[province]
+    ? ["All", ...DISTRICTS_BY_PROVINCE[province]] : ["All"];
+  const municipalities = district !== "All" && MUNICIPALITIES_BY_DISTRICT[district]
+    ? ["All", ...MUNICIPALITIES_BY_DISTRICT[district]] : ["All"];
 
-  const districtOptions = province !== "All Provinces" && DISTRICTS_BY_PROVINCE[province]
-    ? DISTRICTS_BY_PROVINCE[province] : ["All Districts"];
-
-  const municipalityOptions = district !== "All Districts" && MUNICIPALITIES_BY_DISTRICT[district]
-    ? MUNICIPALITIES_BY_DISTRICT[district] : ["All Municipalities"];
-
-  const filtered = useMemo(() => ALERTS.filter((a) => {
-    if (typeFilter !== "All" && a.type !== typeFilter) return false;
-    if (province !== "All Provinces" && a.province !== province) return false;
-    if (district !== "All Districts" && a.district !== district) return false;
-    if (municipality !== "All Municipalities" && a.municipality !== municipality) return false;
-    if (dateFrom && a.date < dateFrom) return false;
-    if (dateTo && a.date > dateTo) return false;
-    return true;
-  }), [typeFilter, province, district, municipality, dateFrom, dateTo]);
-
-  const hasActiveFilters = typeFilter !== "All" || province !== "All Provinces" || district !== "All Districts"
-    || municipality !== "All Municipalities" || dateFrom || dateTo;
-
-  const clearAll = () => {
-    setTypeFilter("All"); setProvince("All Provinces"); setDistrict("All Districts");
-    setMunicipality("All Municipalities"); setDateFrom(""); setDateTo("");
-  };
+  const filtered = useMemo(() => {
+    return ALERTS.filter((a) => {
+      if (type !== "All" && a.type !== type) return false;
+      if (province !== "All" && a.province !== province) return false;
+      if (district !== "All" && a.district !== district) return false;
+      if (municipality !== "All" && a.municipality !== municipality) return false;
+      if (from && a.date < from) return false;
+      if (to && a.date > to) return false;
+      if (search && !a.title.toLowerCase().includes(search.toLowerCase()) && !a.district.toLowerCase().includes(search.toLowerCase())) return false;
+      return true;
+    });
+  }, [type, province, district, municipality, from, to, search]);
 
   const counts = {
-    critical: ALERTS.filter((a) => a.severity === "critical").length,
-    high: ALERTS.filter((a) => a.severity === "high").length,
-    active: ALERTS.filter((a) => a.status === "active").length,
-    total: ALERTS.length,
+    critical: filtered.filter((a) => a.severity === "critical").length,
+    high: filtered.filter((a) => a.severity === "high").length,
+    moderate: filtered.filter((a) => a.severity === "moderate").length,
+    low: filtered.filter((a) => a.severity === "low").length,
+    active: filtered.filter((a) => a.status === "active").length,
   };
 
-  const tickerAlerts = ALERTS.filter((a) => a.status === "active" || a.severity === "critical");
-
   return (
-    <div className="min-h-screen bg-gray-50">
-
+    <div className="min-h-screen bg-background cmd-grid">
       {/* Ticker */}
-      <div className="bg-red-600 overflow-hidden py-2 flex items-stretch">
-        <div className="shrink-0 bg-red-800 px-4 flex items-center text-xs font-black tracking-widest text-white uppercase">
-          LIVE
+      <div className="overflow-hidden border-b border-red-500/20 bg-red-500/5 py-1.5">
+        <div className="flex animate-[scroll-left_40s_linear_infinite] whitespace-nowrap">
+          {[...ALERTS, ...ALERTS, ...ALERTS].filter((a) => a.status === "active" || a.status === "warning").map((a, i) => (
+            <span key={`${a.id}-${i}`} className="mx-8 inline-flex items-center gap-2 text-xs">
+              <span className={`h-1.5 w-1.5 ${a.status === "active" ? "bg-red-500 animate-pulse" : "bg-amber-500"}`} />
+              <span className={`font-mono font-bold ${a.status === "active" ? "text-red-400" : "text-amber-400"}`}>{a.type.toUpperCase()}</span>
+              <span className="text-muted">{a.district} — {a.title.split("—")[1] || a.title}</span>
+            </span>
+          ))}
         </div>
-        <div className="overflow-hidden flex-1">
-          <div className="flex whitespace-nowrap" style={{ animation: "ticker 28s linear infinite" }}>
-            {[...tickerAlerts, ...tickerAlerts, ...tickerAlerts].map((a, i) => (
-              <span key={i} className="inline-flex items-center gap-2 px-8 text-sm text-white shrink-0">
-                <span className="font-black uppercase tracking-wider opacity-70 text-xs">{a.type}</span>
-                <span>{a.title}</span>
-                <span className="opacity-50">·</span>
-                <span className="opacity-70">{a.district}</span>
-                <span className="opacity-20 mx-2">|</span>
-              </span>
+      </div>
+
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        {/* Header */}
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between mb-8">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <Radio className="h-4 w-4 text-red-400" />
+              <span className="text-[10px] font-mono font-bold tracking-[0.2em] text-red-400">LIVE FEED</span>
+            </div>
+            <h1 className="text-2xl font-black text-white">Disaster Alerts</h1>
+          </div>
+
+          {/* Stats strip */}
+          <div className="flex gap-4">
+            {[
+              { label: "CRITICAL", value: counts.critical, color: "text-red-400" },
+              { label: "HIGH", value: counts.high, color: "text-amber-400" },
+              { label: "MODERATE", value: counts.moderate, color: "text-blue-400" },
+              { label: "ACTIVE", value: counts.active, color: "text-red-400" },
+            ].map((s) => (
+              <div key={s.label} className="text-right">
+                <div className={`text-lg font-black font-mono ${s.color}`}>{s.value}</div>
+                <div className="text-[9px] font-mono tracking-widest text-muted">{s.label}</div>
+              </div>
             ))}
           </div>
         </div>
-      </div>
 
-      {/* Header */}
-      <div className="border-b border-gray-100 bg-white">
-        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        {/* Filters */}
+        <div className="border border-border bg-[#0d1117] p-4 mb-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Filter className="h-3.5 w-3.5 text-emerald-500" />
+            <span className="text-[10px] font-mono font-bold tracking-[0.2em] text-emerald-500">FILTERS</span>
+          </div>
 
-          {/* Title + subscribe */}
-          <div className="flex items-center justify-between gap-4 flex-wrap">
-            <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-bold text-gray-900">Disaster Alerts</h1>
-              <span className="flex items-center gap-1.5 rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-600">
-                <span className="relative flex h-2 w-2">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" />
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500" />
-                </span>
-                Live
-              </span>
-              <div className="flex items-center gap-1.5 rounded-xl border border-gray-200 px-3 py-1.5 text-xs text-gray-500">
-                <RefreshCw className="h-3.5 w-3.5" /> Updated just now
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-7">
+            {/* Search */}
+            <div className="col-span-2 sm:col-span-1">
+              <label className="block text-[10px] font-mono font-bold uppercase tracking-widest text-muted mb-1.5">Search</label>
+              <div className="relative">
+                <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted" />
+                <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search..."
+                  className="w-full border border-border bg-surface pl-8 pr-3 py-2 text-xs text-white placeholder:text-muted/50 focus:border-emerald-500/50 focus:outline-none" />
               </div>
             </div>
-            <button
-              onClick={() => setSubscribed(!subscribed)}
-              className={`flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold transition-colors ${
-                subscribed ? "bg-green-100 text-green-700 hover:bg-green-200" : "bg-green-600 text-white hover:bg-green-700"
-              }`}
-            >
-              {subscribed ? <><BellOff className="h-4 w-4" /> Subscribed</> : <><Bell className="h-4 w-4" /> Subscribe to Alerts</>}
+
+            <Select label="Type" value={type} onChange={(v) => setType(v)} options={TYPE_FILTERS} />
+            <Select label="Province" value={province}
+              onChange={(v) => { setProvince(v); setDistrict("All"); setMunicipality("All"); }}
+              options={PROVINCES} />
+            <Select label="District" value={district}
+              onChange={(v) => { setDistrict(v); setMunicipality("All"); }}
+              options={districts} />
+            <Select label="Municipality" value={municipality} onChange={setMunicipality} options={municipalities} />
+
+            <div>
+              <label className="block text-[10px] font-mono font-bold uppercase tracking-widest text-muted mb-1.5">From</label>
+              <input type="date" value={from} onChange={(e) => setFrom(e.target.value)}
+                className="w-full border border-border bg-surface px-3 py-2 text-xs text-white focus:border-emerald-500/50 focus:outline-none" />
+            </div>
+            <div>
+              <label className="block text-[10px] font-mono font-bold uppercase tracking-widest text-muted mb-1.5">To</label>
+              <input type="date" value={to} onChange={(e) => setTo(e.target.value)}
+                className="w-full border border-border bg-surface px-3 py-2 text-xs text-white focus:border-emerald-500/50 focus:outline-none" />
+            </div>
+          </div>
+        </div>
+
+        {/* Results count */}
+        <div className="flex items-center justify-between mb-4">
+          <span className="text-xs text-muted font-mono">{filtered.length} ALERT{filtered.length !== 1 ? "S" : ""}</span>
+          {(type !== "All" || province !== "All" || search) && (
+            <button onClick={() => { setType("All"); setProvince("All"); setDistrict("All"); setMunicipality("All"); setFrom(""); setTo(""); setSearch(""); }}
+              className="text-[10px] font-mono text-emerald-500 hover:text-emerald-400">
+              CLEAR FILTERS
             </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Filters + Stats — Two Column Layout */}
-      <div className="border-b border-gray-100 bg-white">
-        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-[420px,1fr] gap-8 items-start">
-            
-            {/* Left: Stats Overview */}
-            <div className="space-y-3">
-              {/* <div className="flex items-center gap-2 mb-2">
-                <Activity className="h-4 w-4 text-gray-400" />
-                <h2 className="text-sm font-bold text-gray-700">Overview</h2>
-              </div> */}
-              
-              {/* <div className="grid grid-cols-2 gap-3">
-                {[
-                  { label: "Total Alerts",  val: counts.total,    color: "text-gray-900",   bg: "bg-gray-50",    border: "border-gray-200",   icon: AlertTriangle },
-                  { label: "Critical",      val: counts.critical, color: "text-red-600",    bg: "bg-red-50",     border: "border-red-200",    icon: AlertTriangle },
-                  { label: "High Risk",     val: counts.high,     color: "text-orange-600", bg: "bg-orange-50",  border: "border-orange-200", icon: Flame },
-                  { label: "Active Now",    val: counts.active,   color: "text-green-600",  bg: "bg-green-50",   border: "border-green-200",  icon: Bell },
-                ].map(({ label, val, color, bg, border, icon: Icon }) => (
-                  <div key={label} className={`relative overflow-hidden rounded-xl border ${border} ${bg} p-5 transition-all hover:shadow-md group`}>
-                    <Icon className={`absolute -right-2 -top-2 h-16 w-16 opacity-5 group-hover:opacity-10 transition-opacity ${color}`} />
-                    <div className={`text-4xl font-black ${color} mb-1.5`}>{val}</div>
-                    <div className="text-xs font-semibold text-gray-500">{label}</div>
-                  </div>
-                ))}
-              </div> */}
-
-              {/* Active filters indicator */}
-              {hasActiveFilters && (
-                <div className="rounded-xl bg-green-50 border border-green-200 px-4 py-3 flex items-start gap-2">
-                  <Info className="h-4 w-4 text-green-600 shrink-0 mt-0.5" />
-                  <div className="flex-1 min-w-0">
-                    <div className="text-xs font-semibold text-green-900">Filters Active</div>
-                    <div className="text-[11px] text-green-600 mt-0.5">
-                      Showing {filtered.length} of {counts.total} alerts
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Right: Filters */}
-            <div className="space-y-5">
-              <div className="flex items-center gap-2 mb-4">
-                <SlidersHorizontal className="h-4 w-4 text-gray-400" />
-                <h2 className="text-sm font-bold text-gray-700">Filters</h2>
-                {hasActiveFilters && (
-                  <button
-                    onClick={clearAll}
-                    className="ml-auto text-xs font-semibold text-red-500 hover:text-red-600 transition-colors"
-                  >
-                    Clear all
-                  </button>
-                )}
-              </div>
-
-              {/* Type pills */}
-              <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-2">Disaster Type</label>
-                <div className="flex flex-wrap gap-2">
-                  {TYPE_FILTERS.map((f) => (
-                    <button
-                      key={f}
-                      onClick={() => setTypeFilter(f)}
-                      className={`rounded-full px-4 py-1.5 text-sm font-semibold transition-all ${
-                        typeFilter === f
-                          ? "bg-green-600 text-white shadow-sm scale-105"
-                          : "bg-gray-100 text-gray-600 hover:bg-green-50 hover:text-green-700 hover:scale-105"
-                      }`}
-                    >
-                      {f}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Location dropdowns */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Province</label>
-                  <Select value={province} onChange={handleProvince} options={PROVINCES} />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-gray-400">District</label>
-                  <Select value={district} onChange={handleDistrict} options={districtOptions} />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Municipality</label>
-                  <Select value={municipality} onChange={setMunicipality} options={municipalityOptions} />
-                </div>
-              </div>
-
-              {/* Date range */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-gray-400">From</label>
-                  <input
-                    type="date"
-                    value={dateFrom}
-                    onChange={(e) => setDateFrom(e.target.value)}
-                    placeholder="mm/dd/yyyy"
-                    className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-400/20 transition-all"
-                  />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-gray-400">To</label>
-                  <input
-                    type="date"
-                    value={dateTo}
-                    onChange={(e) => setDateTo(e.target.value)}
-                    placeholder="mm/dd/yyyy"
-                    className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-400/20 transition-all"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Cards */}
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-
-        <div className="mb-4 flex items-center justify-between">
-          <p className="text-sm text-gray-500">
-            Showing <span className="font-semibold text-gray-800">{filtered.length}</span> of {counts.total} alerts
-            {hasActiveFilters && <span className="text-green-600 font-medium"> · filtered</span>}
-          </p>
+          )}
         </div>
 
+        {/* Alert Grid */}
         {filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-24 text-gray-400">
-            <CheckCircle2 className="h-14 w-14 text-green-200 mb-4" />
-            <p className="text-base font-semibold">No alerts match your filters</p>
-            <button onClick={clearAll} className="mt-2 text-sm text-green-600 hover:underline">Clear filters</button>
+          <div className="border border-border bg-[#0d1117] p-16 text-center">
+            <Shield className="mx-auto h-8 w-8 text-emerald-500/30 mb-3" />
+            <p className="text-sm font-bold text-white">No Alerts Found</p>
+            <p className="mt-1 text-xs text-muted">Adjust filters or check back later</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {filtered.map((alert) => (
-              <AlertCard key={alert.id} alert={alert} onClick={setModal} />
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {filtered.map((a) => (
+              <AlertCard key={a.id} alert={a} onClick={() => setSelected(a)} />
             ))}
           </div>
         )}
-
-        <div className="mt-8 flex items-start gap-2 rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-xs text-blue-700">
-          <Info className="h-4 w-4 mt-0.5 shrink-0" />
-          Alerts sourced from NDRRMA, DHM & local municipalities. Refreshes every 60s. For emergencies call{" "}
-          <strong className="ml-1">1155</strong>.
-        </div>
       </div>
 
-      {/* Modal */}
-      {modal && <AlertModal alert={modal} onClose={() => setModal(null)} />}
-
-      <style jsx>{`
-        @keyframes ticker {
-          0%   { transform: translateX(0); }
-          100% { transform: translateX(-33.333%); }
-        }
-      `}</style>
+      <AlertModal alert={selected} onClose={() => setSelected(null)} />
     </div>
   );
 }

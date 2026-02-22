@@ -13,49 +13,36 @@ const RISK_COLORS = {
 
 export default function NepalMap({ onSelect, selected, predictions }) {
   const data = predictions || PREDICTIONS;
-  
+
   return (
     <MapContainer
       center={[28.1, 84.1]}
       zoom={7}
       zoomControl={false}
-      style={{ height: "100%", width: "100%", background: "#e8f4f8" }}
-      className="rounded-2xl"
+      style={{ height: "100%", width: "100%", background: "#0B0F19" }}
     >
       <ZoomControl position="bottomright" />
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+        attribution='&copy; <a href="https://carto.com/">CARTO</a>'
+        url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
       />
-
       {data.map((p) => {
         const col = RISK_COLORS[p.severity];
-        const radius = 8 + (p.risk / 100) * 7;
+        const radius = 7 + (p.risk / 100) * 8;
         const isSelected = selected?.id === p.id;
-
         return (
-          <CircleMarker
-            key={p.id}
-            center={[p.lat, p.lng]}
+          <CircleMarker key={p.id} center={[p.lat, p.lng]}
             radius={isSelected ? radius + 5 : radius}
             pathOptions={{
-              fillColor: col.fill,
-              fillOpacity: isSelected ? 0.95 : 0.75,
-              color: col.stroke,
-              weight: isSelected ? 3 : 1.5,
+              fillColor: col.fill, fillOpacity: isSelected ? 0.95 : 0.7,
+              color: col.stroke, weight: isSelected ? 3 : 1.5,
             }}
-            eventHandlers={{ click: () => onSelect(p) }}
-          >
+            eventHandlers={{ click: () => onSelect(p) }}>
             <Tooltip permanent={false} direction="top" offset={[0, -6]}>
               <div className="text-xs font-semibold">
                 <span className="block font-bold">{p.name}</span>
                 <span>{p.type} — </span>
-                <span
-                  style={{ color: col.fill }}
-                  className="font-black"
-                >
-                  {p.risk}% risk
-                </span>
+                <span style={{ color: col.fill }} className="font-black">{p.risk}% risk</span>
               </div>
             </Tooltip>
           </CircleMarker>

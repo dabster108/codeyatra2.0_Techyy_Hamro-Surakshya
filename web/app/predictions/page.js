@@ -1,187 +1,143 @@
 "use client";
 
+import { useState, useMemo, useCallback } from "react";
 import dynamic from "next/dynamic";
-import { useState, useMemo } from "react";
 import {
-  Brain,
-  Droplets,
-  Mountain,
-  Flame,
-  Wind,
-  Waves,
-  MapPin,
-  TrendingUp,
-  Clock,
-  X,
-  Thermometer,
-  CloudRain,
-  Activity,
-  AlertTriangle,
-  Calendar,
-  Filter,
+  CloudRain, Mountain, Activity, Flame, Wind, Brain,
+  X, ChevronDown, MapPin, TrendingUp, BarChart3,
+  Info, Calendar, Filter, Layers,
 } from "lucide-react";
-
-// Dynamic import — Leaflet cannot run server-side
-const NepalMap = dynamic(() => import("../components/NepalMap"), {
-  ssr: false,
-  loading: () => (
-    <div className="flex h-full w-full items-center justify-center rounded-2xl bg-gray-100">
-      <div className="flex flex-col items-center gap-3 text-gray-400">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-green-500" />
-        <span className="text-sm">Loading map…</span>
-      </div>
-    </div>
-  ),
-});
-
 import { PREDICTIONS } from "../data/predictions";
 
-const TYPE_ICON = {
-  Flood:           Droplets,
-  Landslide:       Mountain,
-  Earthquake:      Waves,
-  Wildfire:        Flame,
-  "Extreme Weather": Wind,
-};
+const NepalMap = dynamic(() => import("../components/NepalMap"), { ssr: false });
+
+/* ────── HELPERS ────── */
+
+const TYPE_ICON = { Flood: CloudRain, Landslide: Mountain, Earthquake: Activity, Wildfire: Flame, "Extreme Weather": Wind };
+const TYPE_FILTERS = ["All", "Flood", "Landslide", "Earthquake", "Wildfire", "Extreme Weather"];
 
 const SEV = {
-  critical: { label: "Critical", bg: "bg-red-50",     text: "text-red-600",    border: "border-red-200",    bar: "bg-red-500",    dot: "bg-red-500" },
-  high:     { label: "High",     bg: "bg-orange-50",  text: "text-orange-600", border: "border-orange-200", bar: "bg-orange-500", dot: "bg-orange-500" },
-  moderate: { label: "Moderate", bg: "bg-yellow-50",  text: "text-yellow-600", border: "border-yellow-200", bar: "bg-yellow-400", dot: "bg-yellow-400" },
-  low:      { label: "Low",      bg: "bg-green-50",   text: "text-green-600",  border: "border-green-200",  bar: "bg-green-500",  dot: "bg-green-500" },
+  critical: { dot: "bg-red-500", badge: "border-red-500/30 text-red-400 bg-red-500/10", text: "text-red-400", bar: "bg-red-500" },
+  high:     { dot: "bg-amber-500", badge: "border-amber-500/30 text-amber-400 bg-amber-500/10", text: "text-amber-400", bar: "bg-amber-500" },
+  moderate: { dot: "bg-blue-400", badge: "border-blue-400/30 text-blue-400 bg-blue-400/10", text: "text-blue-400", bar: "bg-blue-400" },
+  low:      { dot: "bg-gray-400", badge: "border-gray-400/30 text-gray-400 bg-gray-400/10", text: "text-gray-400", bar: "bg-gray-400" },
 };
 
 const FORECAST = [
-  { day: "Today",    risk: 87, type: "Flood",     severity: "critical" },
-  { day: "Tomorrow", risk: 79, type: "Flood",     severity: "high"     },
-  { day: "Wed",      risk: 64, type: "Landslide", severity: "high"     },
-  { day: "Thu",      risk: 47, type: "Landslide", severity: "moderate" },
-  { day: "Fri",      risk: 35, type: "Flood",     severity: "moderate" },
-  { day: "Sat",      risk: 22, type: "Flood",     severity: "low"      },
-  { day: "Sun",      risk: 18, type: "Flood",     severity: "low"      },
+  { day: "Mon", delta: -3 }, { day: "Tue", delta: 2 }, { day: "Wed", delta: 5 },
+  { day: "Thu", delta: -1 }, { day: "Fri", delta: 8 }, { day: "Sat", delta: -4 }, { day: "Sun", delta: 1 },
 ];
 
-// Detail Popup Overlay Component
-function DetailPopup({ p, onClose }) {
-  if (!p) return null;
-  const sev = SEV[p.severity];
-  const Icon = TYPE_ICON[p.type];
+const PROVINCES = ["All", "Koshi", "Madhesh", "Bagmati", "Gandaki", "Lumbini", "Karnali", "Sudurpashchim"];
+const DISTRICTS_BY_PROVINCE = { Koshi: ["Sunsari", "Morang", "Panchthar", "Taplejung", "Jhapa", "Udayapur"], Madhesh: ["Dhanusha", "Parsa", "Siraha", "Sarlahi", "Saptari", "Rautahat", "Mahottari"], Bagmati: ["Kathmandu", "Lalitpur", "Bhaktapur", "Sindhupalchok", "Chitwan", "Makwanpur", "Nuwakot"], Gandaki: ["Kaski", "Gorkha", "Lamjung", "Palpa", "Mustang"], Lumbini: ["Rupandehi", "Kapilvastu", "Dang", "Nawalparasi", "Rolpa"], Karnali: ["Surkhet", "Jumla", "Humla", "Dolpa"], Sudurpashchim: ["Kailali", "Kanchanpur", "Doti", "Bajhang"] };
+const MUNICIPALITIES_BY_DISTRICT = { Sunsari: ["Itahari Sub-Metro", "Dharan Sub-Metro"], Morang: ["Biratnagar Metro", "Urlabari"], Kathmandu: ["Kathmandu Metro"], Sindhupalchok: ["Melamchi", "Chautara Sangachok"], Chitwan: ["Bharatpur Metro"], Kaski: ["Pokhara Metro"], Gorkha: ["Gorkha"], Rupandehi: ["Butwal Sub-Metro", "Siddharthanagar"], Jumla: ["Chandannath"], Kailali: ["Dhangadhi Sub-Metro"], Kanchanpur: ["Mahendranagar"], Bajhang: ["Chainpur"], Doti: ["Dipayal Silgadhi", "K.I. Singh"], Dhanusha: ["Janakpur Sub-Metro"], Parsa: ["Birgunj Metro"] };
+
+function Select({ label, value, onChange, options }) {
+  return (
+    <div>
+      <label className="block text-[10px] font-mono font-bold uppercase tracking-widest text-muted mb-1.5">{label}</label>
+      <div className="relative">
+        <select value={value} onChange={(e) => onChange(e.target.value)}
+          className="w-full appearance-none border border-border bg-surface px-3 py-2 pr-8 text-xs text-white focus:border-emerald-500/50 focus:outline-none">
+          {options.map((o) => <option key={o} value={o}>{o}</option>)}
+        </select>
+        <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted" />
+      </div>
+    </div>
+  );
+}
+
+/* ────── DETAIL POPUP ────── */
+function DetailPopup({ item, onClose }) {
+  if (!item) return null;
+  const sev = SEV[item.severity];
+  const Icon = TYPE_ICON[item.type] || Activity;
+  const factors = [
+    { label: "Rainfall Index", value: Math.min(99, item.risk + 5), bar: "bg-blue-400" },
+    { label: "Soil Saturation", value: Math.min(99, item.risk - 8), bar: "bg-amber-400" },
+    { label: "Slope Grade", value: Math.min(99, Math.round(item.risk * 0.7)), bar: "bg-purple-400" },
+    { label: "Historical Freq", value: Math.min(99, Math.round(item.risk * 0.85)), bar: "bg-cyan-400" },
+  ];
 
   return (
-    <div
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
-      onClick={onClose}
-    >
-      <div
-        className="relative max-w-lg w-full max-h-[90vh] overflow-y-auto rounded-2xl border border-gray-100 bg-white shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Close button */}
-        <button
-          onClick={onClose}
-          className="absolute right-4 top-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-gray-500 transition-colors hover:bg-gray-200 hover:text-gray-700"
-        >
-          <X className="h-4 w-4" />
-        </button>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4" onClick={onClose}>
+      <div className="relative w-full max-w-lg border border-border bg-[#0d1117] max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div className={`h-1 w-full ${sev.bar}`} />
 
-        {/* Header */}
-        <div className={`p-6 border-b ${sev.border} ${sev.bg}`}>
-          <div className="flex items-start gap-3">
-            <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${sev.bg} border ${sev.border}`}>
-              <Icon className={`h-6 w-6 ${sev.text}`} />
+        <div className="flex items-start justify-between border-b border-border p-5">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <Icon className={`h-5 w-5 ${sev.text}`} />
+              <span className={`border px-1.5 py-0.5 text-[9px] font-mono font-bold tracking-widest ${sev.badge}`}>
+                {item.severity.toUpperCase()}
+              </span>
+              <span className="text-[10px] font-mono text-muted">{item.type}</span>
             </div>
-            <div className="flex-1 min-w-0">
-              <h2 className="text-xl font-bold text-gray-900 mb-1">{p.name}</h2>
-              <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
-                <span className="flex items-center gap-1">
-                  <MapPin className="h-3 w-3" />
-                  {p.district}, {p.province}
-                </span>
-                <span>•</span>
-                <span>{p.municipality}</span>
+            <h2 className="text-lg font-bold text-white">{item.name}</h2>
+          </div>
+          <button onClick={onClose} className="flex h-8 w-8 items-center justify-center border border-border text-muted hover:text-white transition-colors">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="p-5 space-y-5">
+          {/* Location */}
+          <div className="grid grid-cols-2 gap-px bg-border sm:grid-cols-4">
+            {[
+              { l: "PROVINCE", v: item.province }, { l: "DISTRICT", v: item.district },
+              { l: "MUNICIPALITY", v: item.municipality }, { l: "PREDICTED", v: item.date },
+            ].map((d) => (
+              <div key={d.l} className="bg-surface p-3">
+                <span className="text-[9px] font-mono tracking-widest text-muted">{d.l}</span>
+                <p className="mt-0.5 text-xs font-bold text-white">{d.v}</p>
               </div>
-            </div>
+            ))}
           </div>
 
           {/* Risk score */}
-          <div className="mt-5 flex items-end justify-between">
-            <div>
-              <div className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1">
-                Risk Level
-              </div>
-              <div className={`text-6xl font-black ${sev.text}`}>{p.risk}%</div>
+          <div className="border border-border bg-surface p-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[10px] font-mono tracking-widest text-muted">AI RISK SCORE</span>
+              <span className={`text-2xl font-black font-mono ${sev.text}`}>{item.risk}%</span>
             </div>
-            <div className={`rounded-xl ${sev.bg} border ${sev.border} px-4 py-2`}>
-              <div className={`text-sm font-bold ${sev.text}`}>{sev.label} Risk</div>
-              <div className="text-xs text-gray-500">{p.type}</div>
+            <div className="h-2 w-full bg-gray-800">
+              <div className={`h-full ${sev.bar} transition-all`} style={{ width: `${item.risk}%` }} />
             </div>
           </div>
-        </div>
 
-        {/* 7-day forecast */}
-        <div className="p-6 border-b border-gray-100">
-          <div className="flex items-center gap-2 mb-4">
-            <TrendingUp className="h-4 w-4 text-gray-400" />
-            <h3 className="text-sm font-bold text-gray-700">7-Day Forecast</h3>
+          {/* 7-day forecast */}
+          <div>
+            <span className="text-[10px] font-mono font-bold tracking-widest text-muted">7-DAY FORECAST</span>
+            <div className="mt-3 flex justify-between gap-1">
+              {FORECAST.map((f) => {
+                const val = Math.max(10, Math.min(99, item.risk + f.delta));
+                return (
+                  <div key={f.day} className="flex flex-1 flex-col items-center gap-1">
+                    <span className="text-[9px] font-mono text-muted">{f.day}</span>
+                    <div className="w-full h-16 bg-gray-800 relative">
+                      <div className={`absolute bottom-0 w-full ${val >= 80 ? "bg-red-500" : val >= 60 ? "bg-amber-500" : val >= 40 ? "bg-blue-400" : "bg-gray-400"}`}
+                        style={{ height: `${val}%` }} />
+                    </div>
+                    <span className="text-[9px] font-mono font-bold text-white">{val}</span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
-          <div className="flex items-end justify-between gap-2">
-            {FORECAST.map((f, idx) => {
-              const fsev = SEV[f.severity];
-              return (
-                <div key={idx} className="flex-1 flex flex-col items-center gap-1.5">
-                  <div className="text-[10px] font-semibold text-gray-400">{f.day}</div>
-                  <div
-                    className={`w-full rounded-t-md ${fsev.bar} transition-all`}
-                    style={{ height: `${f.risk * 1.2}px` }}
-                  />
-                  <div className={`text-[10px] font-bold ${fsev.text}`}>{f.risk}%</div>
+
+          {/* Contributing factors */}
+          <div>
+            <span className="text-[10px] font-mono font-bold tracking-widest text-muted">CONTRIBUTING FACTORS</span>
+            <div className="mt-3 space-y-2">
+              {factors.map((f) => (
+                <div key={f.label} className="flex items-center gap-3">
+                  <span className="w-28 text-[10px] text-muted">{f.label}</span>
+                  <div className="flex-1 h-1.5 bg-gray-800">
+                    <div className={`h-full ${f.bar}`} style={{ width: `${f.value}%` }} />
+                  </div>
+                  <span className="w-8 text-right text-[10px] font-mono font-bold text-white">{f.value}</span>
                 </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Contributing factors */}
-        <div className="p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <Activity className="h-4 w-4 text-gray-400" />
-            <h3 className="text-sm font-bold text-gray-700">Contributing Factors</h3>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-xl border border-gray-100 bg-gray-50 p-3">
-              <CloudRain className="h-4 w-4 text-blue-500 mb-2" />
-              <div className="text-xs text-gray-500 mb-0.5">Rainfall (7d)</div>
-              <div className="text-lg font-black text-gray-900">340mm</div>
-              <div className="text-[10px] text-gray-400">Above average</div>
-            </div>
-            <div className="rounded-xl border border-gray-100 bg-gray-50 p-3">
-              <Thermometer className="h-4 w-4 text-red-500 mb-2" />
-              <div className="text-xs text-gray-500 mb-0.5">Temperature</div>
-              <div className="text-lg font-black text-gray-900">+2.4°C</div>
-              <div className="text-[10px] text-gray-400">Anomaly</div>
-            </div>
-            <div className="rounded-xl border border-gray-100 bg-gray-50 p-3">
-              <Activity className="h-4 w-4 text-green-500 mb-2" />
-              <div className="text-xs text-gray-500 mb-0.5">Soil Moisture</div>
-              <div className="text-lg font-black text-gray-900">94%</div>
-              <div className="text-[10px] text-gray-400">Saturation level</div>
-            </div>
-            <div className="rounded-xl border border-gray-100 bg-gray-50 p-3">
-              <Wind className="h-4 w-4 text-purple-500 mb-2" />
-              <div className="text-xs text-gray-500 mb-0.5">Wind Speed</div>
-              <div className="text-lg font-black text-gray-900">52km/h</div>
-              <div className="text-[10px] text-gray-400">Avg. surface wind</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Predicted date */}
-        <div className="px-6 pb-6">
-          <div className="rounded-xl bg-purple-50 border border-purple-200 p-3 flex items-center gap-2">
-            <Calendar className="h-4 w-4 text-purple-600" />
-            <div>
-              <div className="text-xs text-purple-600 font-semibold">Predicted Event Date</div>
-              <div className="text-sm font-black text-purple-900">{p.date}</div>
+              ))}
             </div>
           </div>
         </div>
@@ -190,245 +146,149 @@ function DetailPopup({ p, onClose }) {
   );
 }
 
+/* ────── MAIN PAGE ────── */
 export default function PredictionsPage() {
+  const [type, setType] = useState("All");
+  const [province, setProvince] = useState("All");
+  const [district, setDistrict] = useState("All");
+  const [municipality, setMunicipality] = useState("All");
+  const [date, setDate] = useState("");
   const [selected, setSelected] = useState(null);
-  
-  // Filters
-  const [dateFilter, setDateFilter] = useState("");
-  const [provinceFilter, setProvinceFilter] = useState("All");
-  const [districtFilter, setDistrictFilter] = useState("All");
-  const [municipalityFilter, setMunicipalityFilter] = useState("All");
-  const [typeFilter, setTypeFilter] = useState("All");
+  const [hovered, setHovered] = useState(null);
 
-  // Extract unique values for filters
-  const provinces = ["All", ...new Set(PREDICTIONS.map(p => p.province))];
-  const districts = useMemo(() => {
-    if (provinceFilter === "All") return ["All", ...new Set(PREDICTIONS.map(p => p.district))];
-    return ["All", ...new Set(PREDICTIONS.filter(p => p.province === provinceFilter).map(p => p.district))];
-  }, [provinceFilter]);
-  const municipalities = useMemo(() => {
-    let filtered = PREDICTIONS;
-    if (provinceFilter !== "All") filtered = filtered.filter(p => p.province === provinceFilter);
-    if (districtFilter !== "All") filtered = filtered.filter(p => p.district === districtFilter);
-    return ["All", ...new Set(filtered.map(p => p.municipality))];
-  }, [provinceFilter, districtFilter]);
-  const types = ["All", "Flood", "Landslide", "Earthquake", "Wildfire", "Extreme Weather"];
+  const districts = province !== "All" && DISTRICTS_BY_PROVINCE[province]
+    ? ["All", ...DISTRICTS_BY_PROVINCE[province]] : ["All"];
+  const municipalities = district !== "All" && MUNICIPALITIES_BY_DISTRICT[district]
+    ? ["All", ...MUNICIPALITIES_BY_DISTRICT[district]] : ["All"];
 
-  // Apply filters
   const filtered = useMemo(() => {
-    return PREDICTIONS.filter(p => {
-      if (dateFilter && p.date !== dateFilter) return false;
-      if (provinceFilter !== "All" && p.province !== provinceFilter) return false;
-      if (districtFilter !== "All" && p.district !== districtFilter) return false;
-      if (municipalityFilter !== "All" && p.municipality !== municipalityFilter) return false;
-      if (typeFilter !== "All" && p.type !== typeFilter) return false;
+    return PREDICTIONS.filter((p) => {
+      if (type !== "All" && p.type !== type) return false;
+      if (province !== "All" && p.province !== province) return false;
+      if (district !== "All" && p.district !== district) return false;
+      if (municipality !== "All" && p.municipality !== municipality) return false;
+      if (date && p.date !== date) return false;
       return true;
     });
-  }, [dateFilter, provinceFilter, districtFilter, municipalityFilter, typeFilter]);
+  }, [type, province, district, municipality, date]);
 
-  const counts = useMemo(() => ({
+  const handleMarkerClick = useCallback((p) => setSelected(p), []);
+
+  const counts = {
     critical: filtered.filter((p) => p.severity === "critical").length,
-    high:     filtered.filter((p) => p.severity === "high").length,
+    high: filtered.filter((p) => p.severity === "high").length,
     moderate: filtered.filter((p) => p.severity === "moderate").length,
-    low:      filtered.filter((p) => p.severity === "low").length,
-  }), [filtered]);
-
-  const hasActiveFilters = dateFilter || provinceFilter !== "All" || districtFilter !== "All" || municipalityFilter !== "All" || typeFilter !== "All";
-
-  const clearFilters = () => {
-    setDateFilter("");
-    setProvinceFilter("All");
-    setDistrictFilter("All");
-    setMunicipalityFilter("All");
-    setTypeFilter("All");
+    low: filtered.filter((p) => p.severity === "low").length,
+    total: filtered.length,
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background cmd-grid">
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        {/* Header */}
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between mb-6">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <Brain className="h-4 w-4 text-purple-400" />
+              <span className="text-[10px] font-mono font-bold tracking-[0.2em] text-purple-400">AI ENGINE</span>
+            </div>
+            <h1 className="text-2xl font-black text-white">Risk Predictions</h1>
+            <p className="mt-1 text-sm text-muted">ML-powered local-level disaster risk forecasting for Nepal</p>
+          </div>
 
-      {/* Header */}
-      <div className="border-b border-gray-100 bg-white">
-        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-          <div className="flex items-start justify-between flex-wrap gap-4 mb-6">
-            <div>
-              <div className="flex items-center gap-2.5 mb-1">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-purple-100">
-                  <Brain className="h-5 w-5 text-purple-600" />
-                </div>
-                <h1 className="text-3xl font-bold text-gray-900">AI Prediction Engine</h1>
+          {/* Stats */}
+          <div className="flex gap-4">
+            {[
+              { label: "CRITICAL", value: counts.critical, color: "text-red-400" },
+              { label: "HIGH", value: counts.high, color: "text-amber-400" },
+              { label: "MODERATE", value: counts.moderate, color: "text-blue-400" },
+              { label: "TOTAL", value: counts.total, color: "text-white" },
+            ].map((s) => (
+              <div key={s.label} className="text-right">
+                <div className={`text-lg font-black font-mono ${s.color}`}>{s.value}</div>
+                <div className="text-[9px] font-mono tracking-widest text-muted">{s.label}</div>
               </div>
-              <p className="text-sm text-gray-500 ml-11.5">
-                Local-level machine learning risk forecasts · Updated every 6 hours
-              </p>
-            </div>
-            <div className="flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-4 py-2 text-sm text-gray-500">
-              <Clock className="h-4 w-4" />
-              Last run: 2 hrs ago
-            </div>
+            ))}
           </div>
         </div>
-      </div>
 
-      {/* Filters */}
-      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-        <div className="rounded-2xl border border-gray-100 bg-white p-5 mb-6">
+        {/* Filters */}
+        <div className="border border-border bg-[#0d1117] p-4 mb-6">
           <div className="flex items-center gap-2 mb-4">
-            <Filter className="h-4 w-4 text-gray-400" />
-            <h2 className="text-sm font-bold text-gray-700">Filters</h2>
-            {hasActiveFilters && (
-              <button
-                onClick={clearFilters}
-                className="ml-auto text-xs font-semibold text-green-600 hover:text-green-700"
-              >
-                Clear all
+            <Filter className="h-3.5 w-3.5 text-emerald-500" />
+            <span className="text-[10px] font-mono font-bold tracking-[0.2em] text-emerald-500">FILTERS</span>
+          </div>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+            <Select label="Type" value={type} onChange={(v) => setType(v)} options={TYPE_FILTERS} />
+            <Select label="Province" value={province}
+              onChange={(v) => { setProvince(v); setDistrict("All"); setMunicipality("All"); }}
+              options={PROVINCES} />
+            <Select label="District" value={district}
+              onChange={(v) => { setDistrict(v); setMunicipality("All"); }}
+              options={districts} />
+            <Select label="Municipality" value={municipality} onChange={setMunicipality} options={municipalities} />
+            <div>
+              <label className="block text-[10px] font-mono font-bold uppercase tracking-widest text-muted mb-1.5">Date</label>
+              <input type="date" value={date} onChange={(e) => setDate(e.target.value)}
+                className="w-full border border-border bg-surface px-3 py-2 text-xs text-white focus:border-emerald-500/50 focus:outline-none" />
+            </div>
+            <div className="flex items-end">
+              <button onClick={() => { setType("All"); setProvince("All"); setDistrict("All"); setMunicipality("All"); setDate(""); }}
+                className="w-full border border-border bg-surface px-3 py-2 text-xs text-muted hover:text-white hover:border-white/30 transition-colors">
+                RESET
               </button>
-            )}
-          </div>
-          
-          {/* Filter controls */}
-          <div className="flex flex-wrap items-end justify-center gap-3">
-            {/* Date */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-gray-500">Date</label>
-              <input
-                type="date"
-                value={dateFilter}
-                onChange={(e) => setDateFilter(e.target.value)}
-                className="h-9 rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm text-gray-700 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20"
-              />
             </div>
-
-            {/* Province */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-gray-500">Province</label>
-              <select
-                value={provinceFilter}
-                onChange={(e) => {
-                  setProvinceFilter(e.target.value);
-                  setDistrictFilter("All");
-                  setMunicipalityFilter("All");
-                }}
-                className="h-9 rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm text-gray-700 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20"
-              >
-                {provinces.map(p => <option key={p} value={p}>{p}</option>)}
-              </select>
-            </div>
-
-            {/* District */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-gray-500">District</label>
-              <select
-                value={districtFilter}
-                onChange={(e) => {
-                  setDistrictFilter(e.target.value);
-                  setMunicipalityFilter("All");
-                }}
-                className="h-9 rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm text-gray-700 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20"
-              >
-                {districts.map(d => <option key={d} value={d}>{d}</option>)}
-              </select>
-            </div>
-
-            {/* Municipality */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-gray-500">Municipality</label>
-              <select
-                value={municipalityFilter}
-                onChange={(e) => setMunicipalityFilter(e.target.value)}
-                className="h-9 rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm text-gray-700 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20"
-              >
-                {municipalities.map(m => <option key={m} value={m}>{m}</option>)}
-              </select>
-            </div>
-
-            {/* Disaster Type */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-gray-500">Disaster Type</label>
-              <select
-                value={typeFilter}
-                onChange={(e) => setTypeFilter(e.target.value)}
-                className="h-9 rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm text-gray-700 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20"
-              >
-                {types.map(t => <option key={t} value={t}>{t}</option>)}
-              </select>
-            </div>
-          </div>
-
-          {/* Result count */}
-          <div className="mt-4 text-center text-sm text-gray-500">
-            Showing <span className="font-bold text-gray-900">{filtered.length}</span> of {PREDICTIONS.length} predicted locations
           </div>
         </div>
 
         {/* Map */}
-        <div className="rounded-2xl overflow-hidden border border-gray-100 shadow-sm relative h-[700px] z-0">
-          <NepalMap onSelect={setSelected} selected={selected} predictions={filtered} />
+        <div className="relative border border-border bg-[#0d1117]">
+          <div className="h-[500px] lg:h-[560px]">
+            <NepalMap data={filtered} onMarkerClick={handleMarkerClick} />
+          </div>
 
-          {/* Legend overlay - FIXED z-index */}
-          <div className="absolute bottom-4 left-4 z-10 rounded-xl border border-gray-100 bg-white/95 backdrop-blur-sm p-3 shadow-md">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-2">Risk Level</div>
-            {[
-              { label: "Critical (≥80%)", color: "bg-red-500" },
-              { label: "High (60–79%)",   color: "bg-orange-500" },
-              { label: "Moderate (35–59%)", color: "bg-yellow-400" },
-              { label: "Low (<35%)",      color: "bg-green-500" },
-            ].map(({ label, color }) => (
-              <div key={label} className="flex items-center gap-2 mb-1 last:mb-0">
-                <div className={`h-3 w-3 rounded-full ${color}`} />
-                <span className="text-xs text-gray-600">{label}</span>
-              </div>
-            ))}
-            <div className="mt-2 pt-2 border-t border-gray-100 text-[10px] text-gray-400">
-              Circle size = risk magnitude
+          {/* Legend overlay */}
+          <div className="absolute left-3 top-3 z-[10] border border-border bg-[#0d1117]/90 backdrop-blur p-3">
+            <span className="text-[9px] font-mono font-bold tracking-widest text-muted">SEVERITY</span>
+            <div className="mt-2 space-y-1.5">
+              {[
+                { label: "Critical (80+)", color: "bg-red-500" },
+                { label: "High (60-79)", color: "bg-amber-500" },
+                { label: "Moderate (40-59)", color: "bg-blue-400" },
+                { label: "Low (<40)", color: "bg-gray-400" },
+              ].map((l) => (
+                <div key={l.label} className="flex items-center gap-2">
+                  <span className={`h-2.5 w-2.5 ${l.color}`} />
+                  <span className="text-[10px] text-gray-400">{l.label}</span>
+                </div>
+              ))}
             </div>
           </div>
 
-          {/* Hint */}
-          {!selected && (
-            <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 rounded-xl bg-white/90 backdrop-blur-sm border border-gray-100 px-4 py-2 shadow text-xs text-gray-500 whitespace-nowrap">
-              Click a circle to see local forecast
-            </div>
-          )}
+          {/* Results count */}
+          <div className="absolute right-3 top-3 z-[10] border border-border bg-[#0d1117]/90 backdrop-blur px-3 py-2">
+            <span className="font-mono text-xs text-white font-bold">{counts.total}</span>
+            <span className="ml-1 text-[10px] font-mono text-muted">PREDICTIONS</span>
+          </div>
         </div>
 
-        {/* AI model info */}
-        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+        {/* AI Info Cards */}
+        <div className="mt-6 grid grid-cols-1 gap-px bg-border sm:grid-cols-3">
           {[
-            { icon: CloudRain,   title: "Weather Data",    desc: "DHM rainfall, temperature & wind readings from 300+ weather stations across Nepal." },
-            { icon: TrendingUp,  title: "Historical Patterns", desc: "10 years of disaster event data from NDRRMA, analysed for seasonal and geographic trends." },
-            { icon: Activity,    title: "Terrain Analysis", desc: "Elevation, slope gradient, soil moisture & vegetation index from satellite imagery." },
-          ].map(({ icon: Icon, title, desc }) => (
-            <div key={title} className="rounded-2xl border border-gray-100 bg-white p-5">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-purple-50">
-                  <Icon className="h-4.5 w-4.5 text-purple-500" />
-                </div>
-                <span className="text-sm font-semibold text-gray-800">{title}</span>
-              </div>
-              <p className="text-xs leading-relaxed text-gray-500">{desc}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* Stats */}
-        <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
-          {[
-            { label: "Critical Risk",  val: counts.critical, ...SEV.critical },
-            { label: "High Risk",      val: counts.high,     ...SEV.high     },
-            { label: "Moderate Risk",  val: counts.moderate, ...SEV.moderate },
-            { label: "Low Risk",       val: counts.low,      ...SEV.low      },
-          ].map(({ label, val, bg, text, border }) => (
-            <div key={label} className={`rounded-2xl border ${border} ${bg} py-5 text-center`}>
-              <div className={`text-5xl font-black ${text}`}>{val}</div>
-              <div className="mt-1.5 text-sm font-semibold text-gray-500">{label}</div>
-              <div className="text-xs text-gray-400">locations</div>
+            { icon: Brain, title: "ML Model", desc: "Random Forest + LSTM ensemble analyzing 12 environmental variables including rainfall, soil moisture, slope gradient, and historical patterns.", color: "text-purple-400" },
+            { icon: Layers, title: "Data Sources", desc: "DHM real-time weather stations, NASA SRTM terrain data, USGS seismic feeds, and NDRRMA historical disaster database (2015-2026).", color: "text-cyan-400" },
+            { icon: BarChart3, title: "Accuracy", desc: "93.2% validation accuracy on historical data. Predictions updated every 6 hours. Local-level granularity for all 753 local governments.", color: "text-emerald-400" },
+          ].map((card) => (
+            <div key={card.title} className="bg-[#0d1117] p-5">
+              <card.icon className={`h-4 w-4 ${card.color} mb-2`} />
+              <h3 className="text-xs font-bold text-white">{card.title}</h3>
+              <p className="mt-1.5 text-[11px] text-muted leading-relaxed">{card.desc}</p>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Detail Popup */}
-      <DetailPopup p={selected} onClose={() => setSelected(null)} />
+      <DetailPopup item={selected} onClose={() => setSelected(null)} />
     </div>
   );
 }

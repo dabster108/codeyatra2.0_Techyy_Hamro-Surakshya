@@ -1,90 +1,64 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 
 export default function Footer() {
   return (
-    <footer className="border-t border-border bg-surface">
-      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+    <footer className="border-t border-border bg-[#060910]">
+      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
-          {/* Brand */}
           <div>
-            <h3 className="text-lg font-bold text-foreground">
-              Hamro Suraksha
-            </h3>
-            <p className="mt-2 text-sm text-muted">
-              Nepal&apos;s unified disaster management and public safety
-              platform. Connecting citizens, governments, and emergency
-              authorities.
+            <h3 className="text-xs font-bold tracking-[0.2em] text-white">HAMRO SURAKSHA</h3>
+            <p className="mt-3 text-xs leading-relaxed text-muted">
+              Nepal&apos;s national disaster command center. AI-powered alerts,
+              transparent fund tracking, emergency response coordination.
             </p>
           </div>
-
-          {/* Quick Links */}
           <div>
-            <h4 className="text-sm font-semibold uppercase tracking-wider text-foreground">
-              Quick Links
-            </h4>
-            <ul className="mt-3 space-y-2">
+            <h4 className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted mb-3">Operations</h4>
+            <ul className="space-y-1.5">
               {[
                 { href: "/alerts", label: "Disaster Alerts" },
                 { href: "/predictions", label: "Risk Predictions" },
-                { href: "/evacuate", label: "Evacuation Centers" },
-              ].map((link) => (
-                <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className="text-sm text-muted transition-colors hover:text-green-600"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Resources */}
-          <div>
-            <h4 className="text-sm font-semibold uppercase tracking-wider text-foreground">
-              Resources
-            </h4>
-            <ul className="mt-3 space-y-2">
-              {[
-                { href: "/transparency", label: "Fund Transparency" },
-                { href: "/volunteer", label: "Volunteer" },
-                { href: "/admin", label: "Admin Dashboard" },
                 { href: "/sos", label: "Emergency SOS" },
               ].map((link) => (
                 <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className="text-sm text-muted transition-colors hover:text-green-600"
-                  >
+                  <Link href={link.href} className="text-xs text-gray-400 transition-colors hover:text-emerald-400">
                     {link.label}
                   </Link>
                 </li>
               ))}
             </ul>
           </div>
-
-          {/* Emergency */}
           <div>
-            <h4 className="text-sm font-semibold uppercase tracking-wider text-foreground">
-              Emergency Contacts
-            </h4>
-            <ul className="mt-3 space-y-2 text-sm text-muted">
-              <li>Nepal Police: <span className="font-medium text-foreground">100</span></li>
-              <li>Fire Brigade: <span className="font-medium text-foreground">101</span></li>
-              <li>Ambulance: <span className="font-medium text-foreground">102</span></li>
-              <li>NDRRMA: <span className="font-medium text-foreground">1155</span></li>
+            <h4 className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted mb-3">Administration</h4>
+            <ul className="space-y-1.5">
+              {[
+                { href: "/transparency", label: "Fund Transparency" },
+                { href: "/chatbot", label: "AI Assistant" },
+                { href: "/login", label: "Secure Access" },
+              ].map((link) => (
+                <li key={link.href}>
+                  <Link href={link.href} className="text-xs text-gray-400 transition-colors hover:text-emerald-400">
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <h4 className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted mb-3">Emergency Lines</h4>
+            <ul className="space-y-1.5 text-xs font-mono">
+              <li className="text-gray-400">Nepal Police <span className="text-red-400 font-bold">100</span></li>
+              <li className="text-gray-400">Fire Brigade <span className="text-red-400 font-bold">101</span></li>
+              <li className="text-gray-400">Ambulance <span className="text-red-400 font-bold">102</span></li>
+              <li className="text-gray-400">NDRRMA <span className="text-red-400 font-bold">1155</span></li>
             </ul>
           </div>
         </div>
-
-        <div className="mt-10 border-t border-border pt-6 text-center text-sm text-muted">
-          <p>
-            © {new Date().getFullYear()} Hamro Suraksha. Built for Himalayan Hackathon 🇳🇵
-          </p>
+        <div className="mt-8 border-t border-border pt-5 flex items-center justify-between text-[10px] font-mono text-muted">
+          <span>© {new Date().getFullYear()} HAMRO SURAKSHA — GOVT OF NEPAL</span>
+          <span>HIMALAYAN HACKATHON 2026</span>
         </div>
       </div>
     </footer>
