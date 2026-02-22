@@ -21,6 +21,7 @@ import {
   Info,
   ChevronDown,
   SlidersHorizontal,
+  Activity,
 } from "lucide-react";
 
 // ── Data ─────────────────────────────────────────────────────────────────────
@@ -409,7 +410,7 @@ export default function AlertsPage() {
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
 
           {/* Title + subscribe */}
-          <div className="flex items-center justify-between gap-4 flex-wrap mb-8">
+          <div className="flex items-center justify-between gap-4 flex-wrap">
             <div className="flex items-center gap-3">
               <h1 className="text-3xl font-bold text-gray-900">Disaster Alerts</h1>
               <span className="flex items-center gap-1.5 rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-600">
@@ -432,85 +433,125 @@ export default function AlertsPage() {
               {subscribed ? <><BellOff className="h-4 w-4" /> Subscribed</> : <><Bell className="h-4 w-4" /> Subscribe to Alerts</>}
             </button>
           </div>
-
-          {/* Stats — big & centered */}
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-            {[
-              { label: "Total Alerts",  val: counts.total,    color: "text-gray-900",   bg: "bg-gray-50",    border: "border-gray-200" },
-              { label: "Critical",      val: counts.critical, color: "text-red-600",    bg: "bg-red-50",     border: "border-red-200" },
-              { label: "High Risk",     val: counts.high,     color: "text-orange-600", bg: "bg-orange-50",  border: "border-orange-200" },
-              { label: "Active Now",    val: counts.active,   color: "text-green-600",  bg: "bg-green-50",   border: "border-green-200" },
-            ].map(({ label, val, color, bg, border }) => (
-              <div key={label} className={`rounded-2xl border ${border} ${bg} py-5 text-center`}>
-                <div className={`text-5xl font-black ${color}`}>{val}</div>
-                <div className="mt-1.5 text-sm font-semibold text-gray-500">{label}</div>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
 
-      {/* Filters — centered */}
+      {/* Filters + Stats — Two Column Layout */}
       <div className="border-b border-gray-100 bg-white">
-        <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6">
+        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-[420px,1fr] gap-8 items-start">
+            
+            {/* Left: Stats Overview */}
+            <div className="space-y-3">
+              {/* <div className="flex items-center gap-2 mb-2">
+                <Activity className="h-4 w-4 text-gray-400" />
+                <h2 className="text-sm font-bold text-gray-700">Overview</h2>
+              </div> */}
+              
+              {/* <div className="grid grid-cols-2 gap-3">
+                {[
+                  { label: "Total Alerts",  val: counts.total,    color: "text-gray-900",   bg: "bg-gray-50",    border: "border-gray-200",   icon: AlertTriangle },
+                  { label: "Critical",      val: counts.critical, color: "text-red-600",    bg: "bg-red-50",     border: "border-red-200",    icon: AlertTriangle },
+                  { label: "High Risk",     val: counts.high,     color: "text-orange-600", bg: "bg-orange-50",  border: "border-orange-200", icon: Flame },
+                  { label: "Active Now",    val: counts.active,   color: "text-green-600",  bg: "bg-green-50",   border: "border-green-200",  icon: Bell },
+                ].map(({ label, val, color, bg, border, icon: Icon }) => (
+                  <div key={label} className={`relative overflow-hidden rounded-xl border ${border} ${bg} p-5 transition-all hover:shadow-md group`}>
+                    <Icon className={`absolute -right-2 -top-2 h-16 w-16 opacity-5 group-hover:opacity-10 transition-opacity ${color}`} />
+                    <div className={`text-4xl font-black ${color} mb-1.5`}>{val}</div>
+                    <div className="text-xs font-semibold text-gray-500">{label}</div>
+                  </div>
+                ))}
+              </div> */}
 
-          {/* Type pills — centered */}
-          <div className="flex flex-wrap items-center justify-center gap-2 mb-5">
-            {TYPE_FILTERS.map((f) => (
-              <button
-                key={f}
-                onClick={() => setTypeFilter(f)}
-                className={`rounded-full px-4 py-1.5 text-sm font-semibold transition-colors ${
-                  typeFilter === f
-                    ? "bg-green-600 text-white shadow-sm"
-                    : "bg-gray-100 text-gray-600 hover:bg-green-50 hover:text-green-700"
-                }`}
-              >
-                {f}
-              </button>
-            ))}
-          </div>
+              {/* Active filters indicator */}
+              {hasActiveFilters && (
+                <div className="rounded-xl bg-green-50 border border-green-200 px-4 py-3 flex items-start gap-2">
+                  <Info className="h-4 w-4 text-green-600 shrink-0 mt-0.5" />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs font-semibold text-green-900">Filters Active</div>
+                    <div className="text-[11px] text-green-600 mt-0.5">
+                      Showing {filtered.length} of {counts.total} alerts
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
 
-          {/* Location + date — all centered in one row */}
-          <div className="flex flex-wrap items-end justify-center gap-3">
-            <div className="flex flex-col gap-1 w-40">
-              <label className="text-center text-[10px] font-bold uppercase tracking-wider text-gray-400">Province</label>
-              <Select value={province} onChange={handleProvince} options={PROVINCES} />
+            {/* Right: Filters */}
+            <div className="space-y-5">
+              <div className="flex items-center gap-2 mb-4">
+                <SlidersHorizontal className="h-4 w-4 text-gray-400" />
+                <h2 className="text-sm font-bold text-gray-700">Filters</h2>
+                {hasActiveFilters && (
+                  <button
+                    onClick={clearAll}
+                    className="ml-auto text-xs font-semibold text-red-500 hover:text-red-600 transition-colors"
+                  >
+                    Clear all
+                  </button>
+                )}
+              </div>
+
+              {/* Type pills */}
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-2">Disaster Type</label>
+                <div className="flex flex-wrap gap-2">
+                  {TYPE_FILTERS.map((f) => (
+                    <button
+                      key={f}
+                      onClick={() => setTypeFilter(f)}
+                      className={`rounded-full px-4 py-1.5 text-sm font-semibold transition-all ${
+                        typeFilter === f
+                          ? "bg-green-600 text-white shadow-sm scale-105"
+                          : "bg-gray-100 text-gray-600 hover:bg-green-50 hover:text-green-700 hover:scale-105"
+                      }`}
+                    >
+                      {f}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Location dropdowns */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Province</label>
+                  <Select value={province} onChange={handleProvince} options={PROVINCES} />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-gray-400">District</label>
+                  <Select value={district} onChange={handleDistrict} options={districtOptions} />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Municipality</label>
+                  <Select value={municipality} onChange={setMunicipality} options={municipalityOptions} />
+                </div>
+              </div>
+
+              {/* Date range */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-gray-400">From</label>
+                  <input
+                    type="date"
+                    value={dateFrom}
+                    onChange={(e) => setDateFrom(e.target.value)}
+                    placeholder="mm/dd/yyyy"
+                    className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-400/20 transition-all"
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-gray-400">To</label>
+                  <input
+                    type="date"
+                    value={dateTo}
+                    onChange={(e) => setDateTo(e.target.value)}
+                    placeholder="mm/dd/yyyy"
+                    className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-400/20 transition-all"
+                  />
+                </div>
+              </div>
             </div>
-            <div className="flex flex-col gap-1 w-36">
-              <label className="text-center text-[10px] font-bold uppercase tracking-wider text-gray-400">District</label>
-              <Select value={district} onChange={handleDistrict} options={districtOptions} />
-            </div>
-            <div className="flex flex-col gap-1 w-44">
-              <label className="text-center text-[10px] font-bold uppercase tracking-wider text-gray-400">Municipality</label>
-              <Select value={municipality} onChange={setMunicipality} options={municipalityOptions} />
-            </div>
-            <div className="flex flex-col gap-1 w-36">
-              <label className="text-center text-[10px] font-bold uppercase tracking-wider text-gray-400">From</label>
-              <input
-                type="date"
-                value={dateFrom}
-                onChange={(e) => setDateFrom(e.target.value)}
-                className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-green-400 focus:outline-none focus:ring-1 focus:ring-green-300"
-              />
-            </div>
-            <div className="flex flex-col gap-1 w-36">
-              <label className="text-center text-[10px] font-bold uppercase tracking-wider text-gray-400">To</label>
-              <input
-                type="date"
-                value={dateTo}
-                onChange={(e) => setDateTo(e.target.value)}
-                className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-green-400 focus:outline-none focus:ring-1 focus:ring-green-300"
-              />
-            </div>
-            {hasActiveFilters && (
-              <button
-                onClick={clearAll}
-                className="flex items-center gap-1.5 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-500 hover:bg-red-100 transition-colors"
-              >
-                <X className="h-3.5 w-3.5" /> Clear
-              </button>
-            )}
           </div>
         </div>
       </div>
@@ -532,7 +573,7 @@ export default function AlertsPage() {
             <button onClick={clearAll} className="mt-2 text-sm text-green-600 hover:underline">Clear filters</button>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {filtered.map((alert) => (
               <AlertCard key={alert.id} alert={alert} onClick={setModal} />
             ))}
