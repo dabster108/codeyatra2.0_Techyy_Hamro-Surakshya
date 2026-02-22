@@ -35,6 +35,7 @@ export default function RootLayout() {
           options={{ presentation: "modal", title: "Modal" }}
         />
         <Stack.Screen name="map" options={{ headerShown: false }} />
+        <Stack.Screen name="alert" options={{ headerShown: false }} />
       </Stack>
       <StatusBar style="auto" />
     </ThemeProvider>

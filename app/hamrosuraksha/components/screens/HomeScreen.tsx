@@ -12,7 +12,6 @@ import Animated, {
   useAnimatedStyle,
   withTiming,
   withSpring,
-  withDelay,
 } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -26,27 +25,17 @@ export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
-  // Animation values
-  const headerOpacity = useSharedValue(0);
-  const headerTranslateY = useSharedValue(-20);
-  const contentTranslateY = useSharedValue(50);
-  const contentOpacity = useSharedValue(0);
+  const welcomeOpacity = useSharedValue(0);
+  const welcomeTranslateY = useSharedValue(24);
 
   useEffect(() => {
-    headerOpacity.value = withTiming(1, { duration: 800 });
-    headerTranslateY.value = withSpring(0);
-    contentTranslateY.value = withDelay(200, withSpring(0, { damping: 15 }));
-    contentOpacity.value = withDelay(200, withTiming(1, { duration: 800 }));
+    welcomeOpacity.value = withTiming(1, { duration: 700 });
+    welcomeTranslateY.value = withSpring(0, { damping: 14, stiffness: 90 });
   }, []);
 
-  const headerStyle = useAnimatedStyle(() => ({
-    opacity: headerOpacity.value,
-    transform: [{ translateY: headerTranslateY.value }],
-  }));
-
-  const contentStyle = useAnimatedStyle(() => ({
-    opacity: contentOpacity.value,
-    transform: [{ translateY: contentTranslateY.value }],
+  const welcomeStyle = useAnimatedStyle(() => ({
+    opacity: welcomeOpacity.value,
+    transform: [{ translateY: welcomeTranslateY.value }],
   }));
 
   return (
@@ -54,9 +43,7 @@ export default function HomeScreen() {
       <StatusBar style="dark" />
 
       {/* Header Section */}
-      <Animated.View
-        style={[styles.header, { paddingTop: insets.top + 10 }, headerStyle]}
-      >
+      <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
         <View style={styles.headerLeft}>
           <TouchableOpacity style={styles.menuButton}>
             <Ionicons name="menu" size={24} color="#333" />
@@ -70,14 +57,14 @@ export default function HomeScreen() {
           <View style={styles.notificationBadge} />
           <Ionicons name="notifications-outline" size={24} color="#333" />
         </TouchableOpacity>
-      </Animated.View>
+      </View>
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
         {/* Welcome Section */}
-        <Animated.View style={[styles.welcomeSection, contentStyle]}>
+        <Animated.View style={[styles.welcomeSection, welcomeStyle]}>
           <Text style={styles.welcomeTitle}>Stay Safe,</Text>
           <Text style={styles.welcomeTitleHighlight}>Stay Secure</Text>
           <Text style={styles.welcomeDesc}>
@@ -86,7 +73,7 @@ export default function HomeScreen() {
         </Animated.View>
 
         {/* Real-time Alerts */}
-        <Animated.View style={[styles.sectionContainer, contentStyle]}>
+        <View style={styles.sectionContainer}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Real-time Alerts</Text>
             <TouchableOpacity>
@@ -152,10 +139,10 @@ export default function HomeScreen() {
               <Ionicons name="chevron-forward" size={20} color="#ccc" />
             </View>
           </View>
-        </Animated.View>
+        </View>
 
         {/* Evacuation Areas - Compact Modern Scrollable List */}
-        <Animated.View style={[styles.sectionContainer, contentStyle]}>
+        <View style={styles.sectionContainer}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Evacuation Areas</Text>
             <TouchableOpacity>
@@ -213,7 +200,7 @@ export default function HomeScreen() {
               </View>
             </TouchableOpacity>
           </ScrollView>
-        </Animated.View>
+        </View>
       </ScrollView>
 
       {/* Shared Bottom Nav */}
@@ -329,12 +316,12 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: "#f0f0f0",
+    borderColor: "#e8e8e8",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.03,
+    shadowOpacity: 0.08,
     shadowRadius: 8,
-    elevation: 2,
+    elevation: 3,
   },
   alertIconBg: {
     width: 44,

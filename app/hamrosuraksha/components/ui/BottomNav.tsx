@@ -38,16 +38,19 @@ export default function BottomNav({ activeTab }: BottomNavProps) {
         </TouchableOpacity>
 
         {/* Alert */}
-        <TouchableOpacity style={styles.tabItem}>
+        <TouchableOpacity
+          style={styles.tabItem}
+          onPress={() => activeTab !== "alert" && router.push("/alert")}
+        >
           <Ionicons
             name={activeTab === "alert" ? "warning" : "warning-outline"}
             size={24}
-            color={activeTab === "alert" ? "#4CAF50" : "#888"}
+            color={activeTab === "alert" ? "#007AFF" : "#888"}
           />
           <Text
             style={[
               styles.tabLabel,
-              activeTab === "alert" && { color: "#4CAF50" },
+              activeTab === "alert" && { color: "#007AFF" },
             ]}
           >
             Alert
