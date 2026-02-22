@@ -39,6 +39,7 @@ export default function RootLayout() {
           <Stack.Screen name="map" options={{ headerShown: false }} />
           <Stack.Screen name="alert" options={{ headerShown: false }} />
           <Stack.Screen name="settings" options={{ headerShown: false }} />
+          <Stack.Screen name="dashboard" options={{ headerShown: false }} />
         </Stack>
         <StatusBar style="auto" />
       </ThemeProvider>

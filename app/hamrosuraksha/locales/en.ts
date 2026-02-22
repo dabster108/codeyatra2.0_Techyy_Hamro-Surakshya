@@ -130,6 +130,21 @@ const en = {
   settingsTerms: "Terms of Service",
   settingsLogout: "Log Out",
   settingsLogoutSub: "Sign out of your account",
+
+  // ── Dashboard ─────────────────────────────────────────
+  dashboardTitle: "Budget Dashboard",
+  dashboardSubtitle: "NDRRMA National Disaster Fund",
+  dashboardLoading: "Fetching live data...",
+  dashboardError: "Could not load data. Is the backend running?",
+  dashboardRetry: "Retry",
+  dashboardAllocated: "Allocated",
+  dashboardUsed: "Used",
+  dashboardRemaining: "Remaining",
+  dashboardBeneficiaries: "Beneficiaries",
+  dashboardUtilization: "Utilization",
+  dashboardProvinces: "Province Breakdown",
+  dashboardLastUpdated: "Live · updated now",
+  dashboardNoData: "No province data available",
 };
 
 export type Translations = typeof en;
