@@ -28,6 +28,12 @@
     "plugins": [
       "expo-router",
       [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Hamro Surakshyaलाई आपतकालीन SOS को लागि तपाईंको स्थान पहुँच गर्न अनुमति दिनुस्।"
+        }
+      ],
+      [
         "expo-splash-screen",
         {
           "image": "./assets/images/splash-icon.png",
