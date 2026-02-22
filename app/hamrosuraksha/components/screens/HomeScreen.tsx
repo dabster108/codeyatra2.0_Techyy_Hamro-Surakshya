@@ -18,12 +18,14 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { useRouter } from "expo-router";
 import BottomNav from "@/components/ui/BottomNav";
+import { useLang } from "@/context/LanguageContext";
 
 const { width } = Dimensions.get("window");
 
 export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { t, lang, toggleLang } = useLang();
 
   const welcomeOpacity = useSharedValue(0);
   const welcomeTranslateY = useSharedValue(24);
@@ -45,18 +47,23 @@ export default function HomeScreen() {
       {/* Header Section */}
       <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
         <View style={styles.headerLeft}>
-          <TouchableOpacity style={styles.menuButton}>
-            <Ionicons name="menu" size={24} color="#333" />
-          </TouchableOpacity>
           <View>
-            <Text style={styles.headerTitle}>Hamro Suraksha</Text>
-            <Text style={styles.headerSubtitle}>सुरक्षा</Text>
+            <Text style={styles.headerTitle}>{t.appName}</Text>
+            <Text style={styles.headerSubtitle}>{t.appSubtitle}</Text>
           </View>
         </View>
-        <TouchableOpacity style={styles.notificationButton}>
-          <View style={styles.notificationBadge} />
-          <Ionicons name="notifications-outline" size={24} color="#333" />
-        </TouchableOpacity>
+        <View style={styles.headerRight}>
+          {/* Language Toggle */}
+          <TouchableOpacity style={styles.langButton} onPress={toggleLang}>
+            <Ionicons name="globe-outline" size={18} color="#4CAF50" />
+            <Text style={styles.langLabel}>{lang === "en" ? "EN" : "NE"}</Text>
+          </TouchableOpacity>
+          {/* Notification */}
+          <TouchableOpacity style={styles.notificationButton}>
+            <View style={styles.notificationBadge} />
+            <Ionicons name="notifications-outline" size={24} color="#333" />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView
@@ -65,19 +72,17 @@ export default function HomeScreen() {
       >
         {/* Welcome Section */}
         <Animated.View style={[styles.welcomeSection, welcomeStyle]}>
-          <Text style={styles.welcomeTitle}>Stay Safe,</Text>
-          <Text style={styles.welcomeTitleHighlight}>Stay Secure</Text>
-          <Text style={styles.welcomeDesc}>
-            Real-time protection and monitoring.
-          </Text>
+          <Text style={styles.welcomeTitle}>{t.welcomeLine1}</Text>
+          <Text style={styles.welcomeTitleHighlight}>{t.welcomeLine2}</Text>
+          <Text style={styles.welcomeDesc}>{t.welcomeDesc}</Text>
         </Animated.View>
 
         {/* Real-time Alerts */}
         <View style={styles.sectionContainer}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Real-time Alerts</Text>
+            <Text style={styles.sectionTitle}>{t.realtimeAlerts}</Text>
             <TouchableOpacity>
-              <Text style={styles.seeAllText}>View All</Text>
+              <Text style={styles.seeAllText}>{t.viewAll}</Text>
             </TouchableOpacity>
           </View>
 
@@ -93,10 +98,8 @@ export default function HomeScreen() {
                 <Ionicons name="warning" size={24} color="#FF5252" />
               </View>
               <View style={styles.alertContent}>
-                <Text style={styles.alertTitle}>Heavy Rainfall Warning</Text>
-                <Text style={styles.alertSubtitle}>
-                  Kathmandu Valley • 2m ago
-                </Text>
+                <Text style={styles.alertTitle}>{t.alert1Title}</Text>
+                <Text style={styles.alertSubtitle}>{t.alert1Sub}</Text>
               </View>
               <Ionicons name="chevron-forward" size={20} color="#ccc" />
             </View>
@@ -112,10 +115,8 @@ export default function HomeScreen() {
                 <Ionicons name="car" size={24} color="#FF9800" />
               </View>
               <View style={styles.alertContent}>
-                <Text style={styles.alertTitle}>Traffic Congestion</Text>
-                <Text style={styles.alertSubtitle}>
-                  Koteshwor - Tinkune • 15m ago
-                </Text>
+                <Text style={styles.alertTitle}>{t.alert2Title}</Text>
+                <Text style={styles.alertSubtitle}>{t.alert2Sub}</Text>
               </View>
               <Ionicons name="chevron-forward" size={20} color="#ccc" />
             </View>
@@ -131,22 +132,20 @@ export default function HomeScreen() {
                 <Ionicons name="information-circle" size={24} color="#2196F3" />
               </View>
               <View style={styles.alertContent}>
-                <Text style={styles.alertTitle}>System Maintenance</Text>
-                <Text style={styles.alertSubtitle}>
-                  Scheduled for 12:00 AM • 1h ago
-                </Text>
+                <Text style={styles.alertTitle}>{t.alert3Title}</Text>
+                <Text style={styles.alertSubtitle}>{t.alert3Sub}</Text>
               </View>
               <Ionicons name="chevron-forward" size={20} color="#ccc" />
             </View>
           </View>
         </View>
 
-        {/* Evacuation Areas - Compact Modern Scrollable List */}
+        {/* Evacuation Areas */}
         <View style={styles.sectionContainer}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Evacuation Areas</Text>
+            <Text style={styles.sectionTitle}>{t.evacuationAreas}</Text>
             <TouchableOpacity>
-              <Text style={styles.seeAllText}>See Map</Text>
+              <Text style={styles.seeAllText}>{t.seeMap}</Text>
             </TouchableOpacity>
           </View>
 
@@ -155,14 +154,13 @@ export default function HomeScreen() {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.evacuationList}
           >
-            {/* Evacuation Item 1 */}
             <TouchableOpacity style={styles.evacuationCard}>
               <View style={styles.imagePlaceholder}>
                 <Ionicons name="image-outline" size={32} color="#ccc" />
                 <Text style={styles.placeholderLabel}>Tudikhel</Text>
               </View>
               <View style={styles.evacuationInfo}>
-                <Text style={styles.evacuationName}>Tudikhel Ground</Text>
+                <Text style={styles.evacuationName}>{t.evac1Name}</Text>
                 <View style={styles.evacuationMeta}>
                   <Ionicons name="location-sharp" size={14} color="#4CAF50" />
                   <Text style={styles.evacuationDistance}>0.5 km</Text>
@@ -170,14 +168,13 @@ export default function HomeScreen() {
               </View>
             </TouchableOpacity>
 
-            {/* Evacuation Item 2 */}
             <TouchableOpacity style={styles.evacuationCard}>
               <View style={styles.imagePlaceholder}>
                 <Ionicons name="image-outline" size={32} color="#ccc" />
                 <Text style={styles.placeholderLabel}>Dasharath</Text>
               </View>
               <View style={styles.evacuationInfo}>
-                <Text style={styles.evacuationName}>Dasharath Stadium</Text>
+                <Text style={styles.evacuationName}>{t.evac2Name}</Text>
                 <View style={styles.evacuationMeta}>
                   <Ionicons name="location-sharp" size={14} color="#4CAF50" />
                   <Text style={styles.evacuationDistance}>2.1 km</Text>
@@ -185,14 +182,13 @@ export default function HomeScreen() {
               </View>
             </TouchableOpacity>
 
-            {/* Evacuation Item 3 */}
             <TouchableOpacity style={styles.evacuationCard}>
               <View style={styles.imagePlaceholder}>
                 <Ionicons name="image-outline" size={32} color="#ccc" />
                 <Text style={styles.placeholderLabel}>UN Park</Text>
               </View>
               <View style={styles.evacuationInfo}>
-                <Text style={styles.evacuationName}>UN Park</Text>
+                <Text style={styles.evacuationName}>{t.evac3Name}</Text>
                 <View style={styles.evacuationMeta}>
                   <Ionicons name="location-sharp" size={14} color="#4CAF50" />
                   <Text style={styles.evacuationDistance}>3.4 km</Text>
@@ -224,14 +220,30 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   headerLeft: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
   },
-  menuButton: {
-    padding: 10,
-    backgroundColor: "#f5f5f5",
-    borderRadius: 12,
+  headerRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  langButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    paddingHorizontal: 9,
+    paddingVertical: 8,
+    backgroundColor: "#f0faf0",
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#c8e6c9",
+  },
+  langLabel: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#4CAF50",
   },
   headerTitle: {
     fontSize: 20,

@@ -21,6 +21,7 @@ import Animated, {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import BottomNav from "@/components/ui/BottomNav";
+import { useLang } from "@/context/LanguageContext";
 
 // ─── Nepal Location Data ───────────────────────────────────────────────────────
 
@@ -288,99 +289,94 @@ interface AlertItem {
   description: string;
 }
 
-const MOCK_ALERTS: AlertItem[] = [
+const MOCK_ALERTS_BASE = [
   {
     id: "1",
-    title: "Severe Flooding in Terai Region",
-    location: "Bardiya, Lumbini Province",
+    titleKey: "a1Title" as const,
+    locKey: "a1Loc" as const,
+    descKey: "a1Desc" as const,
     province: "Lumbini Province",
     district: "Bardiya",
     date: "2026-02-20",
-    category: "Flood",
-    severity: "High",
-    description: "Heavy rainfall causing severe flooding. Evacuation advised.",
+    category: "Flood" as AlertCategory,
+    severity: "High" as const,
   },
   {
     id: "2",
-    title: "Landslide Risk Alert",
-    location: "Sindhupalchok, Bagmati Province",
+    titleKey: "a2Title" as const,
+    locKey: "a2Loc" as const,
+    descKey: "a2Desc" as const,
     province: "Bagmati Province",
     district: "Sindhupalchok",
     date: "2026-02-19",
-    category: "Landslide",
-    severity: "High",
-    description:
-      "Soil saturation has reached critical levels on northern slopes.",
+    category: "Landslide" as AlertCategory,
+    severity: "High" as const,
   },
   {
     id: "3",
-    title: "Forest Fire Spreading",
-    location: "Chitwan, Bagmati Province",
+    titleKey: "a3Title" as const,
+    locKey: "a3Loc" as const,
+    descKey: "a3Desc" as const,
     province: "Bagmati Province",
     district: "Chitwan",
     date: "2026-02-18",
-    category: "Fire",
-    severity: "Medium",
-    description: "Wildfire spreading near buffer zone. Community on standby.",
+    category: "Fire" as AlertCategory,
+    severity: "Medium" as const,
   },
   {
     id: "4",
-    title: "Minor Earthquake Reported",
-    location: "Kaski, Gandaki Province",
+    titleKey: "a4Title" as const,
+    locKey: "a4Loc" as const,
+    descKey: "a4Desc" as const,
     province: "Gandaki Province",
     district: "Kaski",
     date: "2026-02-17",
-    category: "Earthquake",
-    severity: "Low",
-    description:
-      "Magnitude 3.8 earthquake recorded near Pokhara. No damage reported.",
+    category: "Earthquake" as AlertCategory,
+    severity: "Low" as const,
   },
   {
     id: "5",
-    title: "Monsoon Storm Warning",
-    location: "Sunsari, Koshi Province",
+    titleKey: "a5Title" as const,
+    locKey: "a5Loc" as const,
+    descKey: "a5Desc" as const,
     province: "Koshi Province",
     district: "Sunsari",
     date: "2026-02-16",
-    category: "Storm",
-    severity: "Medium",
-    description: "Strong winds expected. Residents advised to stay indoors.",
+    category: "Storm" as AlertCategory,
+    severity: "Medium" as const,
   },
   {
     id: "6",
-    title: "Disease Outbreak Alert",
-    location: "Kailali, Sudurpashchim Province",
+    titleKey: "a6Title" as const,
+    locKey: "a6Loc" as const,
+    descKey: "a6Desc" as const,
     province: "Sudurpashchim Province",
     district: "Kailali",
     date: "2026-02-15",
-    category: "Disease",
-    severity: "High",
-    description:
-      "Cholera cases rising. Medical teams deployed. Boil water before use.",
+    category: "Disease" as AlertCategory,
+    severity: "High" as const,
   },
   {
     id: "7",
-    title: "Flash Flood Advisory",
-    location: "Humla, Karnali Province",
+    titleKey: "a7Title" as const,
+    locKey: "a7Loc" as const,
+    descKey: "a7Desc" as const,
     province: "Karnali Province",
     district: "Humla",
     date: "2026-02-14",
-    category: "Flood",
-    severity: "Medium",
-    description:
-      "Glacial lake overflow risk. Communities downstream should prepare.",
+    category: "Flood" as AlertCategory,
+    severity: "Medium" as const,
   },
   {
     id: "8",
-    title: "Earthquake Aftershocks Ongoing",
-    location: "Bajhang, Sudurpashchim Province",
+    titleKey: "a8Title" as const,
+    locKey: "a8Loc" as const,
+    descKey: "a8Desc" as const,
     province: "Sudurpashchim Province",
     district: "Bajhang",
     date: "2026-02-13",
-    category: "Earthquake",
-    severity: "High",
-    description:
-      "Aftershocks continuing. Structural damage reported in 3 VDCs.",
+    category: "Earthquake" as AlertCategory,
+    severity: "High" as const,
   },
 ];
 
@@ -388,20 +384,65 @@ const MOCK_ALERTS: AlertItem[] = [
 
 const CATEGORY_CONFIG: Record<
   AlertCategory,
-  { icon: keyof typeof Ionicons.glyphMap; color: string; bg: string }
+  {
+    icon: keyof typeof Ionicons.glyphMap;
+    color: string;
+    bg: string;
+    labelKey:
+      | "catFlood"
+      | "catLandslide"
+      | "catFire"
+      | "catEarthquake"
+      | "catStorm"
+      | "catDisease";
+  }
 > = {
-  Flood: { icon: "water", color: "#0288D1", bg: "#E1F5FE" },
-  Landslide: { icon: "earth", color: "#6D4C41", bg: "#EFEBE9" },
-  Fire: { icon: "flame", color: "#E64A19", bg: "#FBE9E7" },
-  Earthquake: { icon: "pulse", color: "#7B1FA2", bg: "#F3E5F5" },
-  Storm: { icon: "thunderstorm", color: "#1565C0", bg: "#E3F2FD" },
-  Disease: { icon: "medkit", color: "#2E7D32", bg: "#E8F5E9" },
+  Flood: {
+    icon: "water",
+    color: "#0288D1",
+    bg: "#E1F5FE",
+    labelKey: "catFlood",
+  },
+  Landslide: {
+    icon: "earth",
+    color: "#6D4C41",
+    bg: "#EFEBE9",
+    labelKey: "catLandslide",
+  },
+  Fire: { icon: "flame", color: "#E64A19", bg: "#FBE9E7", labelKey: "catFire" },
+  Earthquake: {
+    icon: "pulse",
+    color: "#7B1FA2",
+    bg: "#F3E5F5",
+    labelKey: "catEarthquake",
+  },
+  Storm: {
+    icon: "thunderstorm",
+    color: "#1565C0",
+    bg: "#E3F2FD",
+    labelKey: "catStorm",
+  },
+  Disease: {
+    icon: "medkit",
+    color: "#2E7D32",
+    bg: "#E8F5E9",
+    labelKey: "catDisease",
+  },
 };
 
 const SEVERITY_COLOR: Record<"High" | "Medium" | "Low", string> = {
   High: "#D32F2F",
   Medium: "#F57C00",
   Low: "#388E3C",
+};
+
+const SEVERITY_KEY: Record<
+  "High" | "Medium" | "Low",
+  "high" | "medium" | "low"
+> = {
+  High: "high",
+  Medium: "medium",
+  Low: "low",
 };
 
 // ─── Dropdown component ────────────────────────────────────────────────────────
@@ -414,6 +455,8 @@ interface DropdownProps {
   onToggle: () => void;
   onSelect: (val: string | null) => void;
   disabled?: boolean;
+  placeholder?: string;
+  allLabel?: string;
 }
 
 function FilterDropdown({
@@ -424,6 +467,8 @@ function FilterDropdown({
   onToggle,
   onSelect,
   disabled = false,
+  placeholder,
+  allLabel = "All",
 }: DropdownProps) {
   const height = useSharedValue(0);
   const prevOpen = useRef(false);
@@ -457,7 +502,7 @@ function FilterDropdown({
             ]}
             numberOfLines={1}
           >
-            {value || `Select ${label}`}
+            {value || placeholder || `Select ${label}`}
           </Text>
           <Ionicons
             name={isOpen ? "chevron-up" : "chevron-down"}
@@ -480,7 +525,7 @@ function FilterDropdown({
             onPress={() => onSelect(null)}
           >
             <Text style={[styles.itemText, !value && styles.activeItemText]}>
-              All
+              {allLabel}
             </Text>
           </TouchableOpacity>
           {options.map((opt) => (
@@ -510,6 +555,20 @@ function FilterDropdown({
 export default function AlertScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { t, lang, toggleLang } = useLang();
+
+  // Build translated alert list
+  const MOCK_ALERTS: AlertItem[] = MOCK_ALERTS_BASE.map((a) => ({
+    id: a.id,
+    title: t[a.titleKey] as string,
+    location: t[a.locKey] as string,
+    description: t[a.descKey] as string,
+    province: a.province,
+    district: a.district,
+    date: a.date,
+    category: a.category,
+    severity: a.severity,
+  }));
 
   // ── Location filter state
   const [province, setProvince] = useState<string | null>(null);
@@ -586,6 +645,10 @@ export default function AlertScreen() {
     transform: [{ scale: badgeScale.value }],
   }));
 
+  // ── Translated dropdown labels
+  const evacOptions = [t.police, t.hospital, t.area3];
+  const disasterOptions = [t.flood, t.landslide, t.fire, t.other];
+
   // ── Renderers
   const renderAlertItem = ({
     item,
@@ -621,7 +684,7 @@ export default function AlertScreen() {
                   { color: SEVERITY_COLOR[item.severity] },
                 ]}
               >
-                {item.severity}
+                {t[SEVERITY_KEY[item.severity]]}
               </Text>
             </View>
           </View>
@@ -636,7 +699,7 @@ export default function AlertScreen() {
           <View style={styles.alertBottomRow}>
             <View style={[styles.categoryChip, { backgroundColor: cfg.bg }]}>
               <Text style={[styles.categoryChipText, { color: cfg.color }]}>
-                {item.category}
+                {t[cfg.labelKey]}
               </Text>
             </View>
             <View style={styles.alertDateRow}>
@@ -676,12 +739,18 @@ export default function AlertScreen() {
         >
           <Ionicons name="arrow-back" size={24} color="#333" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Alerts</Text>
-        <View style={styles.bellWrapper}>
-          <Ionicons name="notifications-outline" size={24} color="#333" />
-          <Animated.View style={[styles.bellBadge, badgeStyle]}>
-            <Text style={styles.bellBadgeText}>{filteredAlerts.length}</Text>
-          </Animated.View>
+        <Text style={styles.headerTitle}>{t.alertsTitle}</Text>
+        <View style={styles.headerRight}>
+          <TouchableOpacity style={styles.langButton} onPress={toggleLang}>
+            <Ionicons name="globe-outline" size={18} color="#4CAF50" />
+            <Text style={styles.langLabel}>{lang === "en" ? "EN" : "NE"}</Text>
+          </TouchableOpacity>
+          <View style={styles.bellWrapper}>
+            <Ionicons name="notifications-outline" size={24} color="#333" />
+            <Animated.View style={[styles.bellBadge, badgeStyle]}>
+              <Text style={styles.bellBadgeText}>{filteredAlerts.length}</Text>
+            </Animated.View>
+          </View>
         </View>
       </View>
 
@@ -702,12 +771,14 @@ export default function AlertScreen() {
               {/* Section Title */}
               <View style={styles.sectionTitleRow}>
                 <Ionicons name="funnel-outline" size={16} color="#007AFF" />
-                <Text style={styles.sectionTitle}>Filter by Location</Text>
+                <Text style={styles.sectionTitle}>{t.filterByLocation}</Text>
               </View>
 
               {/* Province */}
               <FilterDropdown
-                label="Province"
+                label={t.province}
+                placeholder={t.selectProvince}
+                allLabel={t.all}
                 value={province}
                 options={PROVINCES}
                 isOpen={openDropdown === "province"}
@@ -717,7 +788,9 @@ export default function AlertScreen() {
 
               {/* District */}
               <FilterDropdown
-                label="District"
+                label={t.district}
+                placeholder={t.selectDistrict}
+                allLabel={t.all}
                 value={district}
                 options={districtOptions}
                 isOpen={openDropdown === "district"}
@@ -728,7 +801,9 @@ export default function AlertScreen() {
 
               {/* Municipality */}
               <FilterDropdown
-                label="Municipality"
+                label={t.municipality}
+                placeholder={t.selectMunicipality}
+                allLabel={t.all}
                 value={municipality}
                 options={municipalityOptions}
                 isOpen={openDropdown === "municipality"}
@@ -740,13 +815,13 @@ export default function AlertScreen() {
               {/* ── Date Range ─────────────────────────────── */}
               <View style={styles.sectionTitleRow}>
                 <Ionicons name="calendar-outline" size={16} color="#007AFF" />
-                <Text style={styles.sectionTitle}>Filter by Date</Text>
+                <Text style={styles.sectionTitle}>{t.filterByDate}</Text>
               </View>
 
               <View style={styles.dateRangeRow}>
                 {/* From Date */}
                 <View style={styles.datePickerBlock}>
-                  <Text style={styles.dateRangeLabel}>From</Text>
+                  <Text style={styles.dateRangeLabel}>{t.from}</Text>
                   <TouchableOpacity
                     style={styles.dateButton}
                     onPress={() => {
@@ -785,7 +860,7 @@ export default function AlertScreen() {
 
                 {/* To Date */}
                 <View style={styles.datePickerBlock}>
-                  <Text style={styles.dateRangeLabel}>To</Text>
+                  <Text style={styles.dateRangeLabel}>{t.to}</Text>
                   <TouchableOpacity
                     style={styles.dateButton}
                     onPress={() => {
@@ -825,8 +900,8 @@ export default function AlertScreen() {
             <View style={styles.alertsHeaderRow}>
               <Text style={styles.alertsHeaderText}>
                 {filteredAlerts.length === 0
-                  ? "No alerts found"
-                  : `${filteredAlerts.length} Alert${filteredAlerts.length !== 1 ? "s" : ""} Found`}
+                  ? t.noAlertsFound
+                  : t.alertsFound(filteredAlerts.length)}
               </Text>
               {(province || district || municipality) && (
                 <TouchableOpacity
@@ -837,7 +912,7 @@ export default function AlertScreen() {
                     setOpenDropdown(null);
                   }}
                 >
-                  <Text style={styles.clearText}>Clear Filters</Text>
+                  <Text style={styles.clearText}>{t.clearFilters}</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -846,11 +921,8 @@ export default function AlertScreen() {
         ListEmptyComponent={
           <Animated.View entering={FadeIn.delay(200)} style={styles.emptyState}>
             <Ionicons name="notifications-off-outline" size={48} color="#ccc" />
-            <Text style={styles.emptyTitle}>No Alerts</Text>
-            <Text style={styles.emptySubtitle}>
-              No alerts match the selected filters.{"\n"}Try adjusting the
-              location or date range.
-            </Text>
+            <Text style={styles.emptyTitle}>{t.noAlertsTitle}</Text>
+            <Text style={styles.emptySubtitle}>{t.noAlertsSub}</Text>
           </Animated.View>
         }
       />
@@ -885,6 +957,27 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#333",
     flex: 1,
+  },
+  headerRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  langButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    paddingHorizontal: 9,
+    paddingVertical: 8,
+    backgroundColor: "#f0faf0",
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#c8e6c9",
+  },
+  langLabel: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#4CAF50",
   },
   bellWrapper: {
     position: "relative",
