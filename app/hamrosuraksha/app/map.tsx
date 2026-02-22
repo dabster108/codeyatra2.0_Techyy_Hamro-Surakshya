@@ -14,6 +14,7 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
+  FadeIn,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import DateTimePicker from "@react-native-community/datetimepicker";
@@ -201,7 +202,7 @@ export default function MapScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <Animated.View style={styles.container} entering={FadeIn.duration(350)}>
       {/* Header */}
       {!isMapFullscreen && (
         <View style={[styles.header, { paddingTop: insets.top }]}>
@@ -409,7 +410,7 @@ export default function MapScreen() {
         {/* Shared Bottom Nav */}
         {!isMapFullscreen && <BottomNav activeTab="map" />}
       </View>
-    </View>
+    </Animated.View>
   );
 }
 

@@ -173,6 +173,23 @@ const en = {
   dashOfficerId: "ID:",
   catCyclone: "Cyclone",
   catDrought: "Drought",
+
+  // ── Emergency SOS ──────────────────────────────────
+  sosLabel: "SOS",
+  sosConfirmTitle: "🚨 Send Emergency SOS?",
+  sosConfirmBody:
+    "This will send your current GPS location to the emergency contact via SMS.",
+  sosConfirmCancel: "Cancel",
+  sosConfirmSend: "SEND SOS",
+  sosSending: "Sending...",
+  sosSuccessTitle: "SOS Sent",
+  sosSuccessBody: "Emergency message sent to +9779863995341.",
+  sosErrorTitle: "Failed",
+  sosErrorBody: "Could not send SOS. Please call 112 manually.",
+  sosNoSmsTitle: "SMS Not Available",
+  sosNoSmsBody: "Cannot open SMS on this device.",
+  sosSmsMessage: (lat: string, lng: string, link: string) =>
+    `\uD83C\uDD98 EMERGENCY SOS - Hamro Surakshya\n\nI need immediate emergency help!\n\n\uD83D\uDCCD Location: ${lat}, ${lng}\n\uD83D\uDDFA Map: ${link}\n\nPlease send help immediately!`,
   tabOverview: "Overview",
   tabProvince: "Province",
   tabDisaster: "Disaster",

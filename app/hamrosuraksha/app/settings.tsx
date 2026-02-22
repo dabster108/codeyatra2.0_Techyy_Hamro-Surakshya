@@ -12,6 +12,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { useRouter } from "expo-router";
+import Animated, { FadeIn } from "react-native-reanimated";
 import BottomNav from "@/components/ui/BottomNav";
 import { useLang } from "@/context/LanguageContext";
 
@@ -92,7 +93,7 @@ export default function SettingsScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <Animated.View style={styles.container} entering={FadeIn.duration(350)}>
       <StatusBar style="dark" />
 
       {/* ── Header ──────────────────────────────────────────── */}
@@ -313,7 +314,7 @@ export default function SettingsScreen() {
       </ScrollView>
 
       <BottomNav activeTab="settings" />
-    </View>
+    </Animated.View>
   );
 }
 

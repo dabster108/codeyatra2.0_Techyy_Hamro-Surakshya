@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   ScrollView,
   Dimensions,
-  Alert,
 } from "react-native";
 import Animated, {
   useSharedValue,
@@ -22,6 +21,7 @@ import { StatusBar } from "expo-status-bar";
 import { useRouter } from "expo-router";
 import BottomNav from "@/components/ui/BottomNav";
 import { useLang } from "@/context/LanguageContext";
+import { useEmergencySOS } from "@/hooks/useEmergencySOS";
 
 const { width } = Dimensions.get("window");
 
@@ -29,6 +29,7 @@ export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { t, lang, toggleLang } = useLang();
+  const { confirmAndSendSOS, sending } = useEmergencySOS();
 
   const welcomeOpacity = useSharedValue(0);
   const welcomeTranslateY = useSharedValue(24);
@@ -68,18 +69,7 @@ export default function HomeScreen() {
   }));
 
   const handleSOS = () => {
-    Alert.alert(
-      "🚨 Emergency SOS",
-      "Do you want to send an emergency alert to your contacts and nearby services?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Send SOS",
-          style: "destructive",
-          onPress: () => {},
-        },
-      ],
-    );
+    if (!sending) confirmAndSendSOS();
   };
 
   return (
@@ -124,16 +114,23 @@ export default function HomeScreen() {
 
             {/* SOS button right */}
             <TouchableOpacity
-              style={styles.sosButton}
+              style={[styles.sosButton, sending && { opacity: 0.7 }]}
               onPress={handleSOS}
               activeOpacity={0.85}
+              disabled={sending}
             >
               {/* Pulsing ring behind */}
               <Animated.View style={[styles.sosRing, sosRingStyle]} />
               {/* Circle */}
               <View style={styles.sosCircle}>
-                <Ionicons name="flash" size={28} color="#fff" />
-                <Text style={styles.sosLabel}>SOS</Text>
+                <Ionicons
+                  name={sending ? "hourglass" : "flash"}
+                  size={28}
+                  color="#fff"
+                />
+                <Text style={styles.sosLabel}>
+                  {sending ? t.sosSending : t.sosLabel}
+                </Text>
               </View>
             </TouchableOpacity>
           </View>
