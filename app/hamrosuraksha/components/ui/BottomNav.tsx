@@ -60,7 +60,7 @@ export default function BottomNav({ activeTab }: BottomNavProps) {
         {/* Center FAB */}
         <View style={styles.fabWrapper}>
           <TouchableOpacity style={styles.fab}>
-            <Ionicons name="add" size={32} color="#fff" />
+            <Ionicons name="alert-circle-outline" size={28} color="#fff" />
           </TouchableOpacity>
         </View>
 
@@ -85,16 +85,19 @@ export default function BottomNav({ activeTab }: BottomNavProps) {
         </TouchableOpacity>
 
         {/* Settings */}
-        <TouchableOpacity style={styles.tabItem}>
+        <TouchableOpacity
+          style={styles.tabItem}
+          onPress={() => activeTab !== "settings" && router.push("/settings")}
+        >
           <Ionicons
             name={activeTab === "settings" ? "settings" : "settings-outline"}
             size={24}
-            color={activeTab === "settings" ? "#4CAF50" : "#888"}
+            color={activeTab === "settings" ? "#007AFF" : "#888"}
           />
           <Text
             style={[
               styles.tabLabel,
-              activeTab === "settings" && { color: "#4CAF50" },
+              activeTab === "settings" && { color: "#007AFF" },
             ]}
           >
             Settings

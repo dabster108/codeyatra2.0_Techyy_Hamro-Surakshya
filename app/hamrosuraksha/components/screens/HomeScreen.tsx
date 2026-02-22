@@ -6,12 +6,15 @@ import {
   TouchableOpacity,
   ScrollView,
   Dimensions,
+  Alert,
 } from "react-native";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
   withSpring,
+  withRepeat,
+  withSequence,
 } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -29,16 +32,55 @@ export default function HomeScreen() {
 
   const welcomeOpacity = useSharedValue(0);
   const welcomeTranslateY = useSharedValue(24);
+  const sosScale = useSharedValue(1);
+  const sosGlow = useSharedValue(1);
 
   useEffect(() => {
     welcomeOpacity.value = withTiming(1, { duration: 700 });
     welcomeTranslateY.value = withSpring(0, { damping: 14, stiffness: 90 });
+    // Pulse the SOS ring endlessly
+    sosScale.value = withRepeat(
+      withSequence(
+        withTiming(1.13, { duration: 700 }),
+        withTiming(1, { duration: 700 }),
+      ),
+      -1,
+      false,
+    );
+    sosGlow.value = withRepeat(
+      withSequence(
+        withTiming(0.35, { duration: 700 }),
+        withTiming(0.12, { duration: 700 }),
+      ),
+      -1,
+      false,
+    );
   }, []);
 
   const welcomeStyle = useAnimatedStyle(() => ({
     opacity: welcomeOpacity.value,
     transform: [{ translateY: welcomeTranslateY.value }],
   }));
+
+  const sosRingStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: sosScale.value }],
+    opacity: sosGlow.value,
+  }));
+
+  const handleSOS = () => {
+    Alert.alert(
+      "🚨 Emergency SOS",
+      "Do you want to send an emergency alert to your contacts and nearby services?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Send SOS",
+          style: "destructive",
+          onPress: () => {},
+        },
+      ],
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -72,9 +114,29 @@ export default function HomeScreen() {
       >
         {/* Welcome Section */}
         <Animated.View style={[styles.welcomeSection, welcomeStyle]}>
-          <Text style={styles.welcomeTitle}>{t.welcomeLine1}</Text>
-          <Text style={styles.welcomeTitleHighlight}>{t.welcomeLine2}</Text>
-          <Text style={styles.welcomeDesc}>{t.welcomeDesc}</Text>
+          <View style={styles.welcomeRow}>
+            {/* Text left */}
+            <View style={styles.welcomeTextBlock}>
+              <Text style={styles.welcomeTitle}>{t.welcomeLine1}</Text>
+              <Text style={styles.welcomeTitleHighlight}>{t.welcomeLine2}</Text>
+              <Text style={styles.welcomeDesc}>{t.welcomeDesc}</Text>
+            </View>
+
+            {/* SOS button right */}
+            <TouchableOpacity
+              style={styles.sosButton}
+              onPress={handleSOS}
+              activeOpacity={0.85}
+            >
+              {/* Pulsing ring behind */}
+              <Animated.View style={[styles.sosRing, sosRingStyle]} />
+              {/* Circle */}
+              <View style={styles.sosCircle}>
+                <Ionicons name="flash" size={28} color="#fff" />
+                <Text style={styles.sosLabel}>SOS</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
         </Animated.View>
 
         {/* Real-time Alerts */}
@@ -281,6 +343,15 @@ const styles = StyleSheet.create({
     marginTop: 10,
     marginBottom: 20,
   },
+  welcomeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  welcomeTextBlock: {
+    flex: 1,
+    paddingRight: 12,
+  },
   welcomeTitle: {
     fontSize: 28,
     fontWeight: "300",
@@ -295,7 +366,41 @@ const styles = StyleSheet.create({
   welcomeDesc: {
     fontSize: 15,
     color: "#666",
-    maxWidth: "80%",
+    maxWidth: "90%",
+  },
+  // SOS
+  sosButton: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  sosRing: {
+    position: "absolute",
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    borderWidth: 3,
+    borderColor: "#FF3B30",
+    backgroundColor: "rgba(255,59,48,0.08)",
+  },
+  sosCircle: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: "#FF3B30",
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#FF3B30",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.45,
+    shadowRadius: 10,
+    elevation: 8,
+    gap: 1,
+  },
+  sosLabel: {
+    color: "#fff",
+    fontSize: 11,
+    fontWeight: "900",
+    letterSpacing: 1.5,
   },
   sectionContainer: {
     marginBottom: 25,
