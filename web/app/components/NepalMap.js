@@ -11,7 +11,9 @@ const RISK_COLORS = {
   low:      { fill: "#22c55e", stroke: "#15803d" },
 };
 
-export default function NepalMap({ onSelect, selected }) {
+export default function NepalMap({ onSelect, selected, predictions }) {
+  const data = predictions || PREDICTIONS;
+  
   return (
     <MapContainer
       center={[28.1, 84.1]}
@@ -26,9 +28,9 @@ export default function NepalMap({ onSelect, selected }) {
         url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
       />
 
-      {PREDICTIONS.map((p) => {
+      {data.map((p) => {
         const col = RISK_COLORS[p.severity];
-        const radius = 8 + (p.risk / 100) * 20;
+        const radius = 8 + (p.risk / 100) * 7;
         const isSelected = selected?.id === p.id;
 
         return (
