@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nepal NDRRMA Budget Transparency - Official Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --primary: #c2410c;
+            /* Official Nepal Red variant */
+            --secondary: #1e3a8a;
+            /* Official Nepal Blue variant */
+            --accent: #f59e0b;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            background-image: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+        }
+
+        .gov-header {
+            background: white;
+            padding: 1rem 2rem;
+            border-bottom: 3px solid var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo-placeholder {
+            width: 50px;
+            height: 50px;
+            background: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 0.8rem;
+            text-align: center;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 4rem auto;
+            padding: 0 2rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 3rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            color: var(--secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        input {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(194, 65, 12, 0.1);
+        }
+
+        button {
+            width: 100%;
+            padding: 1rem;
+            background: var(--secondary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #1e40af;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .stat-card {
+            background: #f1f5f9;
+            padding: 1.5rem;
+            border-radius: 8px;
+            text-align: center;
+            border-left: 4px solid var(--primary);
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--secondary);
+        }
+
+        .stat-label {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .helper-text {
+            margin-top: 3rem;
+            padding: 1.5rem;
+            background: #fffbeb;
+            border: 1px solid #fde68a;
+            border-radius: 8px;
+            font-size: 0.85rem;
+        }
+
+        .helper-text h4 {
+            color: #92400e;
+            margin-bottom: 0.5rem;
+        }
+
+        .notification {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            color: white;
+            transform: translateX(200%);
+            transition: transform 0.3s;
+            z-index: 1000;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .bg-error {
+            background: #dc2626;
+        }
+
+        .bg-success {
+            background: #059669;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="gov-header">
+        <div class="logo-section">
+            <div class="logo-placeholder">NDRRMA<br>NEPAL</div>
+            <div>
+                <div style="font-weight: 800; color: var(--secondary); font-size: 1.2rem;">NDRRMA</div>
+                <div style="font-size: 0.7rem; color: var(--primary); font-weight: 700; letter-spacing: 1px;">GOVERNMENT
+                    OF NEPAL</div>
+            </div>
+        </div>
+        <div id="connectionStatus" style="font-size: 0.8rem; color: var(--text-muted);">
+            Connecting to Backend...
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Login Card -->
+        <div id="authSection" class="card">
+            <header>
+                <h1>Official Login Portal</h1>
+                <p class="subtitle">Secure access for National and Provincial Authorities</p>
+            </header>
+
+            <form id="loginForm">
+                <label class="form-label">Official Email</label>
+                <input type="email" id="email" placeholder="e.g. hq@ndrrma.gov.np" required>
+
+                <label class="form-label">Security Password</label>
+                <input type="password" id="password" placeholder="••••••••" required>
+
+                <button type="submit">Authorize & Enter Dashboard</button>
+            </form>
+
+            <div class="helper-text">
+                <h4>Credentials Helper (Nepal Structure)</h4>
+                <ul style="list-style: none; color: #b45309;">
+                    <li>🏛️ <strong>National HQ:</strong> <code>hq@ndrrma.gov.np</code> / <code>Government@2080</code>
+                    </li>
+                    <li>🌄 <strong>Bagmati (P3):</strong> <code>province3@gov.np</code> / <code>Province@3#2080</code>
+                    </li>
+                    <li>🌍 <strong>Karnali (P6):</strong> <code>province6@gov.np</code> / <code>Province@6#2080</code>
+                    </li>
+                </ul>
+                <p style="margin-top: 0.5rem; font-size: 0.75rem;">(Run <code>python scripts/seed_official.py</code> to
+                    create these accounts)</p>
+            </div>
+        </div>
+
+        <!-- Dashboard Card -->
+        <div id="dashboardSection" class="hidden">
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 2rem;">
+                    <div>
+                        <h2 id="portalName">National Transparency Hub</h2>
+                        <span id="roleLabel"
+                            style="background: #dbeafe; color: #1e40af; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase;">SUPER_ADMIN</span>
+                    </div>
+                    <button onclick="logout()"
+                        style="width: auto; background: #ef4444; padding: 0.5rem 1rem; font-size: 0.8rem;">Logout</button>
+                </div>
+
+                <div class="dashboard-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="valAllocated">Rs. 0</div>
+                        <div class="stat-label">Total Allocated</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="valUsed" style="color: #ea580c">Rs. 0</div>
+                        <div class="stat-label">Spent / Released</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="valRemaining" style="color: #16a34a">Rs. 0</div>
+                        <div class="stat-label">Available Balance</div>
+                    </div>
+                </div>
+
+                <div
+                    style="margin-top: 2.5rem; padding: 1.5rem; background: #f8fafc; border: 1px dashed var(--border); border-radius: 8px;">
+                    <h4 style="font-size: 0.9rem; margin-bottom: 1rem;">System Verification Logs</h4>
+                    <pre id="rawLogs"
+                        style="font-size: 0.75rem; color: var(--text-muted); overflow-x: auto;">// Backend response will appear here...</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="notify" class="notification"></div>
+
+    <script>
+        const API_URL = 'http://127.0.0.1:8005';
+        let currentUser = null;
+
+        function showNotify(msg, success = true) {
+            const el = document.getElementById('notify');
+            el.innerText = msg;
+            el.className = `notification show ${success ? 'bg-success' : 'bg-error'}`;
+            setTimeout(() => el.classList.remove('show'), 3000);
+        }
+
+        async function checkConnection() {
+            try {
+                const res = await fetch(API_URL + '/');
+                if (res.ok) {
+                    document.getElementById('connectionStatus').innerText = '● System Online (Nepal Backend)';
+                    document.getElementById('connectionStatus').style.color = '#059669';
+                }
+            } catch (e) {
+                document.getElementById('connectionStatus').innerText = '○ Backend Offline';
+                document.getElementById('connectionStatus').style.color = '#dc2626';
+            }
+        }
+
+        document.getElementById('loginForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            const formData = new FormData();
+            formData.append('username', email);
+            formData.append('password', password);
+
+            try {
+                const res = await fetch(`${API_URL}/auth/login`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.detail || 'Access Denied');
+                }
+
+                const data = await res.json();
+                currentUser = {
+                    token: data.access_token,
+                    email: email,
+                    // Decode JWT for role and province info
+                    payload: JSON.parse(atob(data.access_token.split('.')[1]))
+                };
+
+                showNotify('Authorized Successfully');
+                renderDashboard();
+            } catch (err) {
+                showNotify(err.message, false);
+            }
+        };
+
+        async function renderDashboard() {
+            document.getElementById('authSection').classList.add('hidden');
+            document.getElementById('dashboardSection').classList.remove('hidden');
+
+            const payload = currentUser.payload;
+            document.getElementById('roleLabel').innerText = payload.role;
+
+            // Determine logic based on role
+            let endpoint = '/dashboard/national';
+            let title = 'National Transparency Dashboard';
+
+            if (payload.role === 'PROVINCE_ADMIN') {
+                // Provincial admins have a province_id from registration
+                // We'll use a sample ID mapping for Nepal if not in payload (usually it is)
+                const provId = payload.id_meta || 3; // Fallback to 3 for demo
+                endpoint = `/dashboard/province/${provId}`;
+                title = `Provincial Dashboard (Province ID: ${provId})`;
+            }
+
+            document.getElementById('portalName').innerText = title;
+
+            try {
+                const res = await fetch(`${API_URL}${endpoint}`, {
+                    headers: { 'Authorization': `Bearer ${currentUser.token}` }
+                });
+                const data = await res.json();
+
+                document.getElementById('rawLogs').innerText = JSON.stringify(data, null, 2);
+
+                if (res.ok) {
+                    document.getElementById('valAllocated').innerText = `Rs. ${data.allocated.toLocaleString()}`;
+                    document.getElementById('valUsed').innerText = `Rs. ${data.used.toLocaleString()}`;
+                    document.getElementById('valRemaining').innerText = `Rs. ${data.remaining.toLocaleString()}`;
+                } else {
+                    showNotify(`RBAC Warning: ${data.detail}`, false);
+                }
+            } catch (e) {
+                showNotify("Failed to fetch dashboard data", false);
+            }
+        }
+
+        function logout() {
+            currentUser = null;
+            document.getElementById('authSection').classList.remove('hidden');
+            document.getElementById('dashboardSection').classList.add('hidden');
+            showNotify('Session Terminated');
+        }
+
+        checkConnection();
+    </script>
+</body>
+
+</html>
