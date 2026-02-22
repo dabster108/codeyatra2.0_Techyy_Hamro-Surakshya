@@ -29,13 +29,12 @@ export default function Footer() {
               {[
                 { href: "/alerts", label: "Disaster Alerts" },
                 { href: "/predictions", label: "Risk Predictions" },
-                { href: "/report", label: "Report Incident" },
                 { href: "/evacuate", label: "Evacuation Centers" },
               ].map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-sm text-muted transition-colors hover:text-primary"
+                    className="text-sm text-muted transition-colors hover:text-green-600"
                   >
                     {link.label}
                   </Link>
@@ -59,7 +58,7 @@ export default function Footer() {
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-sm text-muted transition-colors hover:text-primary"
+                    className="text-sm text-muted transition-colors hover:text-green-600"
                   >
                     {link.label}
                   </Link>

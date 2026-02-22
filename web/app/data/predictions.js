@@ -1,0 +1,17 @@
+export const PREDICTIONS = [
+  { id: 1,  name: "Sunsari",       lat: 26.62, lng: 87.17, type: "Flood",           risk: 87, severity: "critical" },
+  { id: 2,  name: "Kaski",         lat: 28.21, lng: 83.98, type: "Landslide",       risk: 74, severity: "high"     },
+  { id: 3,  name: "Bajhang",       lat: 29.54, lng: 81.18, type: "Earthquake",      risk: 71, severity: "high"     },
+  { id: 4,  name: "Makwanpur",     lat: 27.43, lng: 84.99, type: "Wildfire",        risk: 68, severity: "high"     },
+  { id: 5,  name: "Chitwan",       lat: 27.53, lng: 84.35, type: "Flood",           risk: 61, severity: "high"     },
+  { id: 6,  name: "Kathmandu",     lat: 27.70, lng: 85.31, type: "Extreme Weather", risk: 55, severity: "moderate" },
+  { id: 7,  name: "Sindhupalchok", lat: 27.95, lng: 85.68, type: "Landslide",       risk: 62, severity: "high"     },
+  { id: 8,  name: "Sarlahi",       lat: 26.97, lng: 85.58, type: "Flood",           risk: 48, severity: "moderate" },
+  { id: 9,  name: "Palpa",         lat: 27.86, lng: 83.55, type: "Wildfire",        risk: 45, severity: "moderate" },
+  { id: 10, name: "Taplejung",     lat: 27.35, lng: 87.66, type: "Earthquake",      risk: 42, severity: "moderate" },
+  { id: 11, name: "Doti",          lat: 29.27, lng: 80.96, type: "Landslide",       risk: 38, severity: "moderate" },
+  { id: 12, name: "Humla",         lat: 29.96, lng: 81.82, type: "Earthquake",      risk: 31, severity: "low"      },
+  { id: 13, name: "Mustang",       lat: 28.99, lng: 83.85, type: "Extreme Weather", risk: 27, severity: "low"      },
+  { id: 14, name: "Rolpa",         lat: 28.34, lng: 82.67, type: "Wildfire",        risk: 36, severity: "low"      },
+  { id: 15, name: "Morang",        lat: 26.67, lng: 87.45, type: "Flood",           risk: 58, severity: "moderate" },
+];
