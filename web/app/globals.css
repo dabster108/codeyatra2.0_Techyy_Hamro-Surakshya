@@ -1,17 +1,17 @@
 @import "tailwindcss";
 
 :root {
-  --background: #F8FAFC;
-  --foreground: #0F172A;
-  --primary: #DC2626;
-  --primary-dark: #B91C1C;
-  --secondary: #1E3A5F;
-  --accent: #F59E0B;
-  --success: #10B981;
-  --surface: #FFFFFF;
-  --surface-hover: #F1F5F9;
-  --border: #E2E8F0;
-  --muted: #64748B;
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --primary: #dc2626;
+  --primary-dark: #b91c1c;
+  --secondary: #1e3a5f;
+  --accent: #f59e0b;
+  --success: #10b981;
+  --surface: #ffffff;
+  --surface-hover: #f1f5f9;
+  --border: #e2e8f0;
+  --muted: #64748b;
 }
 
 @theme inline {
@@ -32,12 +32,12 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0F172A;
-    --foreground: #F1F5F9;
-    --surface: #1E293B;
+    --background: #0f172a;
+    --foreground: #f1f5f9;
+    --surface: #1e293b;
     --surface-hover: #334155;
     --border: #334155;
-    --muted: #94A3B8;
+    --muted: #94a3b8;
   }
 }
 
@@ -62,4 +62,161 @@ body {
 /* Smooth scrolling */
 html {
   scroll-behavior: smooth;
+}
+
+/* ─── Keyframes ─────────────────────────────────────────────────────────────── */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-28px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-44px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(44px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.88);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+@keyframes floatAlt {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(10px);
+  }
+}
+@keyframes pulseGlow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(22, 163, 74, 0);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(22, 163, 74, 0.12);
+  }
+}
+
+/* ─── Hero load animations (run immediately) ────────────────────────────────── */
+.animate-fade-in-up {
+  animation: fadeInUp 0.75s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.animate-fade-in-down {
+  animation: fadeInDown 0.75s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.animate-slide-in-left {
+  animation: slideInLeft 0.75s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.animate-slide-in-right {
+  animation: slideInRight 0.75s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.animate-scale-in {
+  animation: scaleIn 0.75s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.animate-float {
+  animation: float 3.4s ease-in-out infinite;
+}
+.animate-float-alt {
+  animation: floatAlt 3.8s ease-in-out infinite;
+}
+.animate-pulse-glow {
+  animation: pulseGlow 2.4s ease-in-out infinite;
+}
+
+/* ─── Stagger delays ────────────────────────────────────────────────────────── */
+.delay-0 {
+  animation-delay: 0ms;
+}
+.delay-80 {
+  animation-delay: 80ms;
+}
+.delay-150 {
+  animation-delay: 150ms;
+}
+.delay-250 {
+  animation-delay: 250ms;
+}
+.delay-350 {
+  animation-delay: 350ms;
+}
+.delay-450 {
+  animation-delay: 450ms;
+}
+.delay-550 {
+  animation-delay: 550ms;
+}
+.delay-650 {
+  animation-delay: 650ms;
+}
+.delay-750 {
+  animation-delay: 750ms;
+}
+
+/* ─── Scroll-triggered (IntersectionObserver) ───────────────────────────────── */
+.aov-hidden {
+  opacity: 0;
+  transform: translateY(30px);
+  transition:
+    opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.aov-hidden.aov-left {
+  transform: translateX(-32px);
+}
+.aov-hidden.aov-right {
+  transform: translateX(32px);
+}
+.aov-hidden.aov-scale {
+  transform: scale(0.92);
+  opacity: 0;
+}
+.aov-visible {
+  opacity: 1 !important;
+  transform: none !important;
 }
