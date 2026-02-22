@@ -3,7 +3,6 @@ import {
   Shield,
   AlertTriangle,
   Brain,
-  FileText,
   LayoutDashboard,
   Phone,
   MapPin,
@@ -13,7 +12,11 @@ import {
   Zap,
   Globe,
   Lock,
+  Activity,
+  TrendingUp,
+  CheckCircle2,
 } from "lucide-react";
+import EarthGlobe from "./components/EarthGlobe";
 
 const modules = [
   {
@@ -31,14 +34,6 @@ const modules = [
     href: "/predictions",
     color: "text-purple-500",
     bg: "bg-purple-500/10",
-  },
-  {
-    icon: FileText,
-    title: "Citizen Reporting",
-    desc: "Report incidents with photos, videos & GPS location. Track response status from submission to resolution.",
-    href: "/report",
-    color: "text-blue-500",
-    bg: "bg-blue-500/10",
   },
   {
     icon: LayoutDashboard,
@@ -91,145 +86,272 @@ const stats = [
 
 export default function Home() {
   return (
-    <div>
+    <div className="bg-white">
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-secondary via-secondary to-primary/80">
-        <div className="absolute inset-0 opacity-30" style={{backgroundImage: "url(\"data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTAgMGg0MHY0MEgweiIvPjwvZz48L2c+PC9zdmc+\")"}} />
+      <section className="relative overflow-hidden bg-white">
+        {/* Subtle dot grid */}
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle, #16a34a18 1px, transparent 1px)",
+            backgroundSize: "28px 28px",
+          }}
+        />
+        {/* Green soft wash top-right */}
+        <div className="pointer-events-none absolute -right-40 -top-40 h-[600px] w-[600px] rounded-full bg-green-100/60 blur-3xl" />
+        <div className="pointer-events-none absolute -left-20 bottom-0 h-[400px] w-[400px] rounded-full bg-green-50/80 blur-3xl" />
 
-        <div className="relative mx-auto max-w-7xl px-4 py-24 sm:px-6 sm:py-32 lg:px-8 lg:py-40">
-          <div className="max-w-3xl">
-            <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-sm text-white/90 backdrop-blur-sm">
-              <Shield className="h-4 w-4" />
-              <span>Nepal&apos;s Smart Disaster Management Platform</span>
-            </div>
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex min-h-[88vh] flex-col items-center gap-10 lg:flex-row lg:gap-0">
 
-            <h1 className="text-4xl font-extrabold leading-tight tracking-tight text-white sm:text-5xl lg:text-6xl">
-              Hamro Suraksha
-              <span className="mt-2 block text-2xl font-medium text-white/70 sm:text-3xl">
+            {/* Left — Text */}
+            <div className="flex flex-1 flex-col justify-center pt-16 lg:pt-0 lg:pr-12">
+              {/* Live badge */}
+              <div className="mb-5 inline-flex w-fit items-center gap-2 rounded-full border border-green-200 bg-green-50 px-3.5 py-1.5 text-xs font-semibold text-green-700">
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-500 opacity-75" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-green-600" />
+                </span>
+                Live Monitoring Active — 77 Districts
+              </div>
+
+              <h1 className="text-[2.8rem] font-black leading-[1.08] tracking-tight text-gray-900 sm:text-6xl lg:text-[4rem]">
+                Hamro
+                <br />
+                <span className="text-green-600">Suraksha</span>
+              </h1>
+              <p className="mt-1 text-2xl font-medium tracking-wide text-gray-400">
                 हाम्रो सुरक्षा
-              </span>
-            </h1>
+              </p>
 
-            <p className="mt-6 max-w-xl text-lg leading-relaxed text-white/80">
-              A unified platform connecting citizens, local governments &
-              emergency authorities through AI-powered alerts, real-time
-              reporting & full financial transparency of disaster relief.
-            </p>
+              <p className="mt-6 max-w-md text-base leading-relaxed text-gray-500 sm:text-lg">
+                Nepal&apos;s AI-powered disaster management platform — connecting
+                citizens, governments &amp; emergency responders through
+                real-time alerts, transparent relief funds, and one-click SOS.
+              </p>
 
-            <div className="mt-10 flex flex-col gap-4 sm:flex-row">
-              <Link
-                href="/alerts"
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3.5 text-base font-semibold text-white shadow-lg transition-all hover:bg-primary-dark hover:shadow-xl"
-              >
-                View Live Alerts
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-              <Link
-                href="/sos"
-                className="inline-flex items-center justify-center gap-2 rounded-xl border-2 border-white/30 bg-white/10 px-6 py-3.5 text-base font-semibold text-white backdrop-blur-sm transition-all hover:bg-white/20"
-              >
-                Emergency SOS
-                <Phone className="h-4 w-4" />
-              </Link>
+              {/* Feature pills */}
+              <div className="mt-6 flex flex-wrap gap-2">
+                {[
+                  { icon: Activity, label: "Real-time alerts" },
+                  { icon: Brain, label: "AI predictions" },
+                  { icon: Eye, label: "Fund transparency" },
+                  { icon: Phone, label: "Offline SOS" },
+                ].map(({ icon: Icon, label }) => (
+                  <span
+                    key={label}
+                    className="inline-flex items-center gap-1.5 rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600"
+                  >
+                    <Icon className="h-3.5 w-3.5 text-green-600" />
+                    {label}
+                  </span>
+                ))}
+              </div>
+
+              {/* CTA buttons */}
+              <div className="mt-9 flex flex-wrap items-center gap-3">
+                <Link
+                  href="/alerts"
+                  className="inline-flex items-center gap-2 rounded-full bg-green-600 px-6 py-3 text-sm font-bold text-white shadow-md shadow-green-200 transition-all hover:bg-green-700 hover:shadow-lg hover:shadow-green-300"
+                >
+                  View Live Alerts
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+                <Link
+                  href="/sos"
+                  className="inline-flex items-center gap-2 rounded-full border-2 border-gray-200 bg-white px-6 py-3 text-sm font-bold text-gray-700 transition-all hover:border-green-300 hover:text-green-700"
+                >
+                  <Phone className="h-4 w-4" />
+                  Emergency SOS
+                </Link>
+
+              </div>
+
+              {/* Mini stats row */}
+              <div className="mt-10 flex flex-wrap gap-6 border-t border-gray-100 pt-8">
+                {[
+                  { val: "77", sub: "Districts" },
+                  { val: "24/7", sub: "Monitoring" },
+                  { val: "<30s", sub: "Alert speed" },
+                  { val: "100%", sub: "Transparent" },
+                ].map(({ val, sub }) => (
+                  <div key={sub}>
+                    <div className="text-2xl font-black text-gray-900">{val}</div>
+                    <div className="text-xs text-gray-400">{sub}</div>
+                  </div>
+                ))}
+              </div>
             </div>
+
+            {/* Right — Globe */}
+            <div className="relative flex w-full items-center justify-center lg:w-[520px] lg:flex-none lg:self-stretch">
+              {/* Floating alert cards */}
+              <div className="pointer-events-none absolute left-0 top-1/4 z-10 hidden lg:block">
+                <div className="w-48 rounded-xl border border-red-100 bg-white p-3 shadow-lg shadow-gray-100">
+                  <div className="flex items-center gap-2">
+                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-red-50">
+                      <AlertTriangle className="h-4 w-4 text-red-500" />
+                    </span>
+                    <div>
+                      <p className="text-xs font-bold text-gray-800">Flood Alert</p>
+                      <p className="text-[10px] text-gray-400">Sunsari District</p>
+                    </div>
+                  </div>
+                  <div className="mt-2 flex items-center gap-1">
+                    <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-gray-100">
+                      <div className="h-full w-[72%] rounded-full bg-red-400" />
+                    </div>
+                    <span className="text-[10px] font-semibold text-red-500">72%</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pointer-events-none absolute bottom-1/3 right-0 z-10 hidden lg:block">
+                <div className="w-44 rounded-xl border border-green-100 bg-white p-3 shadow-lg shadow-gray-100">
+                  <div className="flex items-center gap-2">
+                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-green-50">
+                      <CheckCircle2 className="h-4 w-4 text-green-500" />
+                    </span>
+                    <div>
+                      <p className="text-xs font-bold text-gray-800">SOS Resolved</p>
+                      <p className="text-[10px] text-gray-400">Makwanpur</p>
+                    </div>
+                  </div>
+                  <p className="mt-1.5 text-[10px] text-gray-400">Response in 4 min 32s</p>
+                </div>
+              </div>
+
+              <div className="pointer-events-none absolute right-4 top-1/4 z-10 hidden lg:block">
+                <div className="w-40 rounded-xl border border-amber-100 bg-white p-3 shadow-lg shadow-gray-100">
+                  <div className="flex items-center gap-2">
+                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-50">
+                      <TrendingUp className="h-4 w-4 text-amber-500" />
+                    </span>
+                    <div>
+                      <p className="text-xs font-bold text-gray-800">AI Risk Score</p>
+                      <p className="text-[10px] text-gray-400">Pokhara Valley</p>
+                    </div>
+                  </div>
+                  <p className="mt-1 text-base font-black text-amber-500">58%</p>
+                </div>
+              </div>
+
+              {/* Globe */}
+              <div className="h-[420px] w-full sm:h-[520px] lg:h-full">
+                <EarthGlobe />
+              </div>
+            </div>
+
           </div>
         </div>
       </section>
 
-      {/* Stats bar */}
-      <section className="border-b border-border bg-surface">
-        <div className="mx-auto grid max-w-7xl grid-cols-2 gap-4 px-4 py-8 sm:px-6 lg:grid-cols-4 lg:px-8">
-          {stats.map((stat) => (
-            <div key={stat.label} className="text-center">
-              <div className="text-3xl font-bold text-primary">{stat.value}</div>
-              <div className="mt-1 text-sm text-muted">{stat.label}</div>
-            </div>
-          ))}
-        </div>
-      </section>
+      {/* Thin divider strip */}
+      <div className="border-t border-gray-100" />
 
       {/* Modules Grid */}
-      <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
-        <div className="text-center">
-          <h2 className="text-3xl font-bold text-foreground sm:text-4xl">
-            8 Integrated Systems
-          </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-lg text-muted">
-            Each module solves a critical gap in Nepal&apos;s disaster management
-            ecosystem — together they form a closed-loop response system.
-          </p>
-        </div>
+      <section className="bg-white px-4 py-20 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <div className="mb-12 flex flex-col items-start gap-1">
+            <span className="text-xs font-bold uppercase tracking-widest text-green-600">Platform</span>
+            <h2 className="text-3xl font-black text-gray-900 sm:text-4xl">
+              8 Integrated Systems
+            </h2>
+            <p className="mt-2 max-w-xl text-base text-gray-500">
+              Each module solves a critical gap in Nepal&apos;s disaster management
+              ecosystem — together forming a closed-loop response system.
+            </p>
+          </div>
 
-        <div className="mt-14 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {modules.map((mod) => (
-            <Link
-              key={mod.href}
-              href={mod.href}
-              className="group rounded-2xl border border-border bg-surface p-6 transition-all hover:border-primary/30 hover:shadow-lg"
-            >
-              <div
-                className={`inline-flex h-12 w-12 items-center justify-center rounded-xl ${mod.bg}`}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {modules.map((mod) => (
+              <Link
+                key={mod.href}
+                href={mod.href}
+                className="group rounded-2xl border border-gray-100 bg-gray-50/50 p-5 transition-all hover:border-green-200 hover:bg-green-50/40 hover:shadow-md"
               >
-                <mod.icon className={`h-6 w-6 ${mod.color}`} />
-              </div>
-              <h3 className="mt-4 text-lg font-semibold text-foreground group-hover:text-primary">
-                {mod.title}
-              </h3>
-              <p className="mt-2 text-sm leading-relaxed text-muted">
-                {mod.desc}
-              </p>
-              <div className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary opacity-0 transition-opacity group-hover:opacity-100">
-                Explore <ArrowRight className="h-3.5 w-3.5" />
-              </div>
-            </Link>
-          ))}
+                <div
+                  className={`inline-flex h-11 w-11 items-center justify-center rounded-xl ${mod.bg}`}
+                >
+                  <mod.icon className={`h-5 w-5 ${mod.color}`} />
+                </div>
+                <h3 className="mt-4 text-base font-bold text-gray-800 group-hover:text-green-700">
+                  {mod.title}
+                </h3>
+                <p className="mt-1.5 text-sm leading-relaxed text-gray-500">
+                  {mod.desc}
+                </p>
+                <div className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-green-600 opacity-0 transition-all group-hover:opacity-100">
+                  Explore <ArrowRight className="h-3 w-3" />
+                </div>
+              </Link>
+            ))}
+          </div>
         </div>
       </section>
 
       {/* How it works */}
-      <section className="border-t border-border bg-surface">
-        <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
-          <h2 className="text-center text-3xl font-bold text-foreground">
-            How Everything Connects
-          </h2>
-          <p className="mx-auto mt-4 max-w-xl text-center text-muted">
-            A closed-loop disaster response ecosystem — from prediction to
-            recovery.
-          </p>
+      <section className="bg-gray-950 px-4 py-20 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <div className="mb-12 text-center">
+            <span className="text-xs font-bold uppercase tracking-widest text-green-500">How it works</span>
+            <h2 className="mt-2 text-3xl font-black text-white">
+              Closed-Loop Response
+            </h2>
+            <p className="mx-auto mt-3 max-w-md text-sm text-gray-400">
+              From AI prediction to recovery — every step connected.
+            </p>
+          </div>
 
-          <div className="mt-14 grid grid-cols-1 gap-4 sm:grid-cols-3 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-px overflow-hidden rounded-2xl border border-gray-800 sm:grid-cols-3">
             {[
               {
                 step: "01",
                 icon: Brain,
                 title: "AI Predicts Risk",
-                desc: "Machine learning analyzes weather, terrain & historical data to forecast threats.",
+                desc: "Machine learning analyzes weather, terrain & historical data to forecast threats before they strike.",
+                color: "text-purple-400",
+                bg: "bg-purple-500/10",
               },
               {
                 step: "02",
                 icon: AlertTriangle,
                 title: "Alerts Dispatched",
-                desc: "Citizens receive location-based warnings. Reports flow into the dashboard.",
+                desc: "Citizens get location-based warnings instantly. Incident reports flow into the authority dashboard.",
+                color: "text-amber-400",
+                bg: "bg-amber-500/10",
               },
               {
                 step: "03",
                 icon: Phone,
-                title: "SOS & Rescue",
-                desc: "Emergency alerts trigger response teams. Evacuation centers activate.",
+                title: "SOS & Recovery",
+                desc: "Emergency SOS triggers rescue dispatch. Evacuation centers activate. Relief funds are tracked publicly.",
+                color: "text-green-400",
+                bg: "bg-green-500/10",
               },
-            ].map((item) => (
+            ].map((item, i) => (
               <div
                 key={item.step}
-                className="relative rounded-2xl border border-border p-6"
+                className="relative bg-gray-900 p-8"
               >
-                <span className="text-5xl font-black text-primary/10">
-                  {item.step}
-                </span>
-                <div className="mt-2 flex items-center gap-3">
-                  <item.icon className="h-5 w-5 text-primary" />
-                  <h3 className="font-semibold text-foreground">{item.title}</h3>
+                <div className="flex items-start gap-4">
+                  <span className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl ${item.bg}`}>
+                    <item.icon className={`h-5 w-5 ${item.color}`} />
+                  </span>
+                  <div>
+                    <p className="text-xs font-bold text-gray-600">{item.step}</p>
+                    <h3 className="mt-0.5 text-base font-bold text-white">{item.title}</h3>
+                    <p className="mt-2 text-sm leading-relaxed text-gray-400">{item.desc}</p>
+                  </div>
                 </div>
-                <p className="mt-2 text-sm text-muted">{item.desc}</p>
+                {i < 2 && (
+                  <div className="absolute right-0 top-1/2 z-10 hidden -translate-y-1/2 translate-x-1/2 sm:block">
+                    <div className="flex h-6 w-6 items-center justify-center rounded-full border border-gray-700 bg-gray-900">
+                      <ArrowRight className="h-3 w-3 text-gray-500" />
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -237,60 +359,68 @@ export default function Home() {
       </section>
 
       {/* Values */}
-      <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 gap-8 sm:grid-cols-3">
-          {[
-            {
-              icon: Zap,
-              title: "Speed",
-              desc: "Alerts delivered in under 30 seconds. Real-time monitoring across all 77 districts.",
-            },
-            {
-              icon: Lock,
-              title: "Transparency",
-              desc: "Every rupee of disaster relief funds tracked and publicly visible.",
-            },
-            {
-              icon: Globe,
-              title: "Accessibility",
-              desc: "Works offline via SMS. Supports Nepali language. Built for rural connectivity.",
-            },
-          ].map((v) => (
-            <div key={v.title} className="text-center">
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
-                <v.icon className="h-7 w-7 text-primary" />
+      <section className="bg-white px-4 py-20 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <div className="grid grid-cols-1 divide-y divide-gray-100 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+            {[
+              {
+                icon: Zap,
+                title: "Speed",
+                desc: "Alerts in under 30 seconds. Real-time monitoring across all 77 districts.",
+                accent: "bg-yellow-50 text-yellow-600",
+              },
+              {
+                icon: Lock,
+                title: "Transparency",
+                desc: "Every rupee of disaster relief funds tracked and publicly visible.",
+                accent: "bg-green-50 text-green-600",
+              },
+              {
+                icon: Globe,
+                title: "Accessibility",
+                desc: "Offline SMS fallback. Nepali language support. Built for rural Nepal.",
+                accent: "bg-blue-50 text-blue-600",
+              },
+            ].map((v) => (
+              <div key={v.title} className="px-8 py-10 first:pl-0 last:pr-0">
+                <div className={`inline-flex h-12 w-12 items-center justify-center rounded-xl ${v.accent}`}>
+                  <v.icon className="h-6 w-6" />
+                </div>
+                <h3 className="mt-4 text-lg font-bold text-gray-900">{v.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-gray-500">{v.desc}</p>
               </div>
-              <h3 className="mt-4 text-lg font-semibold text-foreground">
-                {v.title}
-              </h3>
-              <p className="mt-2 text-sm text-muted">{v.desc}</p>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </section>
 
       {/* CTA */}
-      <section className="bg-gradient-to-r from-primary to-primary-dark">
-        <div className="mx-auto max-w-7xl px-4 py-16 text-center sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-white sm:text-4xl">
+      <section className="bg-green-600 px-4 py-20 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-3xl text-center">
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-1.5 text-xs font-semibold text-white">
+            <Shield className="h-3.5 w-3.5" />
+            Hamro Suraksha
+          </div>
+          <h2 className="text-3xl font-black text-white sm:text-4xl">
             Stay Safe. Stay Informed.
           </h2>
-          <p className="mx-auto mt-4 max-w-xl text-lg text-white/80">
-            Join thousands of Nepali citizens using Hamro Suraksha for real-time
-            disaster awareness and community safety.
+          <p className="mx-auto mt-4 max-w-lg text-base text-green-100">
+            Join Nepali citizens, volunteers &amp; governments using Hamro Suraksha
+            for real-time disaster awareness and transparent relief operations.
           </p>
-          <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
+          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Link
               href="/alerts"
-              className="inline-flex items-center gap-2 rounded-xl bg-white px-8 py-3.5 text-base font-semibold text-primary shadow-lg transition-all hover:bg-gray-100"
+              className="inline-flex items-center gap-2 rounded-full bg-white px-7 py-3 text-sm font-bold text-green-700 shadow-lg transition-all hover:bg-green-50"
             >
               Get Started
               <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
               href="/volunteer"
-              className="inline-flex items-center gap-2 rounded-xl border-2 border-white/40 px-8 py-3.5 text-base font-semibold text-white transition-all hover:bg-white/10"
+              className="inline-flex items-center gap-2 rounded-full border-2 border-white/40 px-7 py-3 text-sm font-bold text-white transition-all hover:bg-white/10"
             >
+              <Users className="h-4 w-4" />
               Become a Volunteer
             </Link>
           </div>
