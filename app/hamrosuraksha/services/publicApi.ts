@@ -1,6 +1,4 @@
 // ─── API base ─────────────────────────────────────────────────────────────────
-// Use your local machine IP when testing on a physical device.
-// iOS Simulator & web: 127.0.0.1   |   Android Emulator: 10.0.2.2
 export const API_BASE = "http://127.0.0.1:8005";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -16,6 +14,59 @@ export interface ProvinceUtilization {
   used: number;
 }
 
+export interface ProvinceStat {
+  province: string;
+  total_amount: number;
+  record_count: number;
+}
+
+export interface DistrictStat {
+  district: string;
+  province: string;
+  total_amount: number;
+  record_count: number;
+}
+
+export interface DisasterStat {
+  disaster_type: string;
+  total_amount: number;
+  record_count: number;
+}
+
+export interface OfficerStat {
+  officer_id: string;
+  officer_name: string;
+  total_amount: number;
+  record_count: number;
+}
+
+export interface ReliefRecord {
+  id: string;
+  full_name: string;
+  citizenship_no: string;
+  relief_amount: number;
+  province: string;
+  district: string;
+  disaster_type: string;
+  officer_name: string;
+  officer_id: string;
+  created_at: string;
+}
+
+export interface AllRecordsData {
+  summary: {
+    total_distributed: number;
+    total_records: number;
+    unique_provinces: number;
+    unique_districts: number;
+  };
+  by_province: ProvinceStat[];
+  by_district: DistrictStat[];
+  by_disaster: DisasterStat[];
+  by_officer: OfficerStat[];
+  recent_records: ReliefRecord[];
+}
+
 // ─── API calls ────────────────────────────────────────────────────────────────
 export async function getPublicSummary(): Promise<PublicSummary> {
   const res = await fetch(`${API_BASE}/public/summary`);
@@ -26,6 +77,12 @@ export async function getPublicSummary(): Promise<PublicSummary> {
 export async function getProvinceUtilization(): Promise<ProvinceUtilization[]> {
   const res = await fetch(`${API_BASE}/public/province-utilization`);
   if (!res.ok) throw new Error("Failed to fetch province utilization");
+  return res.json();
+}
+
+export async function getAllRecords(): Promise<AllRecordsData> {
+  const res = await fetch(`${API_BASE}/records/get-all-records`);
+  if (!res.ok) throw new Error("Failed to fetch all records");
   return res.json();
 }
 

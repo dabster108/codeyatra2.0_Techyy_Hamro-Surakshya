@@ -1,13 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { UserPlus, Plus, ShieldCheck } from "lucide-react";
+import { UserPlus, Plus, Loader2 } from "lucide-react";
 import { useRelational } from "@/components/providers/relational-provider";
 import { fiscalYearData } from "@/lib/data";
 import { NEPAL_DISTRICT_MAP } from "@/lib/nepal-districts";
 import { useDashboard } from "@/components/providers/dashboard-provider";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { submitReliefRecord } from "@/lib/api";
 
 interface BeneficiaryRegistrationProps {
   defaultProvinceId?: string;
@@ -16,11 +17,11 @@ interface BeneficiaryRegistrationProps {
   compact?: boolean;
 }
 
-export function BeneficiaryRegistration({ 
-  defaultProvinceId = "", 
-  defaultDistrictId = "", 
+export function BeneficiaryRegistration({
+  defaultProvinceId = "",
+  defaultDistrictId = "",
   onSuccess,
-  compact = false
+  compact = false,
 }: BeneficiaryRegistrationProps) {
   const { fiscalYear } = useDashboard();
   const { addBeneficiary, addReliefDistribution } = useRelational();
@@ -36,21 +37,32 @@ export function BeneficiaryRegistration({
     reliefType: "Emergency Cash",
     amount: "",
     officerId: "",
-    officerName: ""
+    officerName: "",
   });
 
-  const provinces = Object.keys(fiscalYearData[fiscalYear].provinces);
-  const districts = formData.provinceId ? NEPAL_DISTRICT_MAP[formData.provinceId] : [];
+  const provinces = Object.keys(fiscalYearData[fiscalYear]?.provinces ?? {});
+  const districts = formData.provinceId
+    ? NEPAL_DISTRICT_MAP[formData.provinceId]
+    : [];
 
-  const handleAdd = (e: React.FormEvent) => {
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.fullName || !formData.citizenshipNumber || !formData.provinceId || !formData.districtId || !formData.amount) {
+    if (
+      !formData.fullName ||
+      !formData.citizenshipNumber ||
+      !formData.provinceId ||
+      !formData.districtId ||
+      !formData.amount
+    ) {
       toast.error("Please fill all required operational fields.");
       return;
     }
 
-    const benId = `ben-${Date.now()}`;
-    
+    setSubmitting(true);
+
+    // 1. Always save locally first — instant, no auth needed
     addBeneficiary({
       fullName: formData.fullName,
       citizenshipNumber: formData.citizenshipNumber,
@@ -60,7 +72,7 @@ export function BeneficiaryRegistration({
     });
 
     addReliefDistribution({
-      beneficiaryId: benId,
+      beneficiaryId: `ben-${Date.now()}`,
       districtAllocationId: `alloc-${formData.districtId}`,
       disasterType: formData.disasterType,
       reliefType: formData.reliefType,
@@ -71,26 +83,47 @@ export function BeneficiaryRegistration({
       districtId: formData.districtId,
     });
 
-    toast.success("Registration successful.");
+    toast.success("Record saved successfully.");
     setShowForm(false);
     if (onSuccess) onSuccess();
-    
     setFormData({
       ...formData,
       fullName: "",
       citizenshipNumber: "",
-      amount: ""
+      amount: "",
     });
+    setSubmitting(false);
+
+    // 2. Also try to persist to Supabase via backend (silent — no error if backend is down)
+    submitReliefRecord({
+      full_name: formData.fullName,
+      citizenship_no: formData.citizenshipNumber,
+      relief_amount: Number(formData.amount),
+      province: formData.provinceId,
+      district: formData.districtId,
+      disaster_type: formData.disasterType,
+      officer_name: formData.officerName || "Duty Officer",
+      officer_id: formData.officerId || "OFF-999",
+    })
+      .then((record) => {
+        toast.success(
+          `Also synced to Supabase — ID: ${record.id.slice(0, 8)}…`,
+          { duration: 2000 },
+        );
+      })
+      .catch(() => {
+        // backend offline or not authenticated — local save is enough for now
+      });
   };
 
   return (
     <div className="space-y-4">
       {!showForm && (
-        <button 
+        <button
           onClick={() => setShowForm(true)}
           className={cn(
             "flex items-center gap-2 px-4 py-2 bg-[#003893] text-white rounded text-xs font-bold uppercase tracking-wider hover:bg-[#002d75] transition-all shadow-md",
-            compact && "w-full justify-center"
+            compact && "w-full justify-center",
           )}
         >
           <UserPlus size={16} /> New Entry
@@ -105,11 +138,15 @@ export function BeneficiaryRegistration({
                 <Plus size={20} />
               </div>
               <div>
-                <h3 className="text-sm font-black text-slate-800 uppercase leading-none">Operational Registration</h3>
-                <p className="text-[9px] font-bold text-slate-400 uppercase mt-1">Direct Entry System</p>
+                <h3 className="text-sm font-black text-slate-800 uppercase leading-none">
+                  Operational Registration
+                </h3>
+                <p className="text-[9px] font-bold text-slate-400 uppercase mt-1">
+                  Direct Entry System
+                </p>
               </div>
             </div>
-            <button 
+            <button
               onClick={() => setShowForm(false)}
               className="text-[10px] font-bold text-slate-400 hover:text-[#DC143C] uppercase"
             >
@@ -120,67 +157,106 @@ export function BeneficiaryRegistration({
           <form onSubmit={handleAdd} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-slate-500 uppercase">Full Name</label>
-                <input 
-                  type="text" 
+                <label className="text-[10px] font-black text-slate-500 uppercase">
+                  Full Name
+                </label>
+                <input
+                  type="text"
                   required
                   className="w-full bg-white border border-slate-300 rounded px-3 py-2 text-xs font-bold outline-none focus:border-[#003893]"
                   value={formData.fullName}
-                  onChange={e => setFormData({...formData, fullName: e.target.value})}
+                  onChange={(e) =>
+                    setFormData({ ...formData, fullName: e.target.value })
+                  }
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-slate-500 uppercase">Citizenship No.</label>
-                <input 
-                  type="text" 
+                <label className="text-[10px] font-black text-slate-500 uppercase">
+                  Citizenship No.
+                </label>
+                <input
+                  type="text"
                   required
                   className="w-full bg-white border border-slate-300 rounded px-3 py-2 text-xs font-bold outline-none focus:border-[#003893]"
                   value={formData.citizenshipNumber}
-                  onChange={e => setFormData({...formData, citizenshipNumber: e.target.value})}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      citizenshipNumber: e.target.value,
+                    })
+                  }
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-slate-500 uppercase">Relief Amount</label>
-                <input 
-                  type="number" 
+                <label className="text-[10px] font-black text-slate-500 uppercase">
+                  Relief Amount
+                </label>
+                <input
+                  type="number"
                   required
                   className="w-full bg-white border border-slate-300 rounded px-3 py-2 text-xs font-bold outline-none focus:border-[#003893]"
                   value={formData.amount}
-                  onChange={e => setFormData({...formData, amount: e.target.value})}
+                  onChange={(e) =>
+                    setFormData({ ...formData, amount: e.target.value })
+                  }
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-slate-500 uppercase">Province</label>
-                <select 
+                <label className="text-[10px] font-black text-slate-500 uppercase">
+                  Province
+                </label>
+                <select
                   className="w-full bg-white border border-slate-300 rounded px-3 py-2 text-xs font-bold outline-none focus:border-[#003893]"
                   value={formData.provinceId}
-                  onChange={e => setFormData({...formData, provinceId: e.target.value, districtId: ""})}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      provinceId: e.target.value,
+                      districtId: "",
+                    })
+                  }
                 >
                   <option value="">Select</option>
-                  {provinces.map(p => <option key={p} value={p}>{p.toUpperCase()}</option>)}
+                  {provinces.map((p) => (
+                    <option key={p} value={p}>
+                      {p.toUpperCase()}
+                    </option>
+                  ))}
                 </select>
               </div>
               <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-slate-500 uppercase">District</label>
-                <select 
+                <label className="text-[10px] font-black text-slate-500 uppercase">
+                  District
+                </label>
+                <select
                   className="w-full bg-white border border-slate-300 rounded px-3 py-2 text-xs font-bold outline-none focus:border-[#003893]"
                   value={formData.districtId}
                   disabled={!formData.provinceId}
-                  onChange={e => setFormData({...formData, districtId: e.target.value})}
+                  onChange={(e) =>
+                    setFormData({ ...formData, districtId: e.target.value })
+                  }
                 >
                   <option value="">Select</option>
-                  {districts.map(d => <option key={d} value={d.toLowerCase().replace(/ /g, "-")}>{d}</option>)}
+                  {districts.map((d) => (
+                    <option key={d} value={d.toLowerCase().replace(/ /g, "-")}>
+                      {d}
+                    </option>
+                  ))}
                 </select>
               </div>
               <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-slate-500 uppercase">Disaster</label>
-                <select 
+                <label className="text-[10px] font-black text-slate-500 uppercase">
+                  Disaster
+                </label>
+                <select
                   className="w-full bg-white border border-slate-300 rounded px-3 py-2 text-xs font-bold outline-none focus:border-[#003893]"
                   value={formData.disasterType}
-                  onChange={e => setFormData({...formData, disasterType: e.target.value})}
+                  onChange={(e) =>
+                    setFormData({ ...formData, disasterType: e.target.value })
+                  }
                 >
                   <option value="Fire">Fire</option>
                   <option value="Flood">Flood</option>
@@ -188,33 +264,43 @@ export function BeneficiaryRegistration({
                 </select>
               </div>
               <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-slate-500 uppercase">Officer Name</label>
-                <input 
-                  type="text" 
+                <label className="text-[10px] font-black text-slate-500 uppercase">
+                  Officer Name
+                </label>
+                <input
+                  type="text"
                   required
                   className="w-full bg-white border border-slate-300 rounded px-3 py-2 text-xs font-bold outline-none focus:border-[#003893]"
                   value={formData.officerName}
-                  onChange={e => setFormData({...formData, officerName: e.target.value})}
+                  onChange={(e) =>
+                    setFormData({ ...formData, officerName: e.target.value })
+                  }
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-slate-500 uppercase">Officer ID</label>
-                <input 
-                  type="text" 
+                <label className="text-[10px] font-black text-slate-500 uppercase">
+                  Officer ID
+                </label>
+                <input
+                  type="text"
                   required
                   className="w-full bg-white border border-slate-300 rounded px-3 py-2 text-xs font-bold outline-none focus:border-[#003893]"
                   value={formData.officerId}
-                  onChange={e => setFormData({...formData, officerId: e.target.value})}
+                  onChange={(e) =>
+                    setFormData({ ...formData, officerId: e.target.value })
+                  }
                 />
               </div>
             </div>
 
             <div className="flex justify-end pt-2">
-              <button 
+              <button
                 type="submit"
-                className="px-8 py-3 bg-[#003893] text-white rounded text-xs font-black uppercase tracking-widest shadow-lg hover:translate-y-[-1px] transition-all"
+                disabled={submitting}
+                className="px-8 py-3 bg-[#003893] text-white rounded text-xs font-black uppercase tracking-widest shadow-lg hover:translate-y-[-1px] transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2"
               >
-                Submit Record
+                {submitting && <Loader2 size={14} className="animate-spin" />}
+                {submitting ? "Saving…" : "Submit Record"}
               </button>
             </div>
           </form>
