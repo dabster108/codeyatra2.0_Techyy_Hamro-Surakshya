@@ -81,3 +81,29 @@ class AuditLogCreate(BaseModel):
     record_id: str
     old_data: Optional[dict] = None
     new_data: Optional[dict] = None
+
+
+# Relief Records (Direct Entry)
+class ReliefRecordCreate(BaseModel):
+    full_name: str
+    citizenship_no: str
+    relief_amount: float = Field(gt=0)
+    province: str
+    district: str
+    disaster_type: str
+    officer_name: str
+    officer_id: str
+
+
+class ReliefRecordOut(BaseModel):
+    id: str
+    full_name: str
+    citizenship_no: str
+    relief_amount: float
+    province: str
+    district: str
+    disaster_type: str
+    officer_name: str
+    officer_id: str
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
