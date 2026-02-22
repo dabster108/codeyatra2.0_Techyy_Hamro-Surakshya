@@ -730,7 +730,7 @@ export default function AlertScreen() {
     });
 
   return (
-    <View style={styles.container}>
+    <Animated.View style={styles.container} entering={FadeIn.duration(350)}>
       {/* Header */}
       <View style={[styles.header, { paddingTop: insets.top }]}>
         <TouchableOpacity
@@ -928,7 +928,7 @@ export default function AlertScreen() {
       />
 
       <BottomNav activeTab="alert" />
-    </View>
+    </Animated.View>
   );
 }
 
