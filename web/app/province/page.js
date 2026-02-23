@@ -94,21 +94,27 @@ export default function ProvincePage() {
     if (!province) return;
     if (showRefresh) setRefreshing(true);
     try {
-      const [detail, aid] = await Promise.all([
+      const [detailRes, aidRes] = await Promise.allSettled([
         getProvinceDetail(province),
         getRecentAid(20),
       ]);
-      setProvinceData(detail);
-      const filteredAid = aid.filter(a => a.province === province);
-      const transformedAid = filteredAid.map(a => ({
-        id: a.id, province: a.province, district: a.district,
-        municipality: "-", recipient: a.recipient, type: "money",
-        amount: a.amount, unit: "NPR", date: a.date,
-        status: a.status || "delivered", beneficiaries: 1,
-      }));
-      setLocalAid(transformedAid);
+
+      if (detailRes.status === "fulfilled") {
+        setProvinceData(detailRes.value);
+      }
+      if (aidRes.status === "fulfilled") {
+        const aid = aidRes.value;
+        const filteredAid = aid.filter(a => a.province === province);
+        const transformedAid = filteredAid.map(a => ({
+          id: a.id, province: a.province, district: a.district,
+          municipality: "-", recipient: a.recipient, type: "money",
+          amount: a.amount, unit: "NPR", date: a.date,
+          status: a.status || "delivered", beneficiaries: 1,
+        }));
+        setLocalAid(transformedAid);
+      }
     } catch (error) {
-      console.error("Failed to fetch province data:", error);
+      // individual failures handled above via allSettled
     } finally {
       setDataLoading(false);
       if (showRefresh) setRefreshing(false);

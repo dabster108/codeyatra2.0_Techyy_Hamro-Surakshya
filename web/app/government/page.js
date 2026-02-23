@@ -39,17 +39,17 @@ export default function GovernmentPage() {
   const fetchDashboardData = async (showRefresh = false) => {
     if (showRefresh) setRefreshing(true);
     try {
-      const [national, provinces, aid] = await Promise.all([
+      const [nationalRes, provincesRes, aidRes] = await Promise.allSettled([
         getNationalDashboard(),
         getAllProvinces(),
         getRecentAid(8),
       ]);
-      
-      setNationalData(national);
-      setProvincesData(provinces);
-      setRecentAid(aid);
+
+      if (nationalRes.status === "fulfilled") setNationalData(nationalRes.value);
+      if (provincesRes.status === "fulfilled") setProvincesData(provincesRes.value);
+      if (aidRes.status === "fulfilled") setRecentAid(aidRes.value);
     } catch (error) {
-      console.error("Failed to fetch dashboard data:", error);
+      // individual failures are handled above via allSettled
     } finally {
       setDataLoading(false);
       if (showRefresh) setRefreshing(false);
