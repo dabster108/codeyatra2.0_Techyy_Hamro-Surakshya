@@ -44,8 +44,8 @@ AI Predicts Risk → Alert Sent → Citizens Report → Dashboard Notified
 
 The platform serves **three audiences**:
 
-- **Citizens** — real-time alerts, SOS, incident reporting, evacuation guidance
-- **Government Officials** — admin dashboard, resource management, announcements
+- **Citizens** — real-time alerts, emergency SOS, evacuation guidance
+- **Government Officials** — government dashboard, resource management, announcements
 - **General Public** — fund transparency, disaster statistics, relief tracking
 
 ---
@@ -258,17 +258,9 @@ Hamro-Surakshya/
 - Short-term disaster forecast cards
 - Historical trend charts
 
-### Module 3 — Citizen Incident Reporting
+### Module 4 — Government Dashboard
 
-**Route:** `/report`
-
-- Report form: image, video, GPS coordinates, description, disaster type
-- Status tracking pipeline: Submitted → Under Review → Action Taken
-- Personal report history view
-
-### Module 4 — Government Admin Dashboard
-
-**Route:** `/government` (web) | `/admin`
+**Route:** `/government`
 
 - Live incident monitoring
 - SOS alert tracking & dispatch management
@@ -281,10 +273,12 @@ Hamro-Surakshya/
 
 **Route:** `/sos` (web) | `alert.tsx` (mobile)
 
-- One-click SOS button with GPS capture
-- Automated alert dispatch to emergency services
-- Offline SMS fallback via `expo-sms`
-- Emergency contacts management
+- One-tap SOS button that immediately captures GPS coordinates via `expo-location`
+- Sends an SOS request to the backend (`/sos/create`) with live location attached
+- Offline fallback: triggers a pre-filled SMS to emergency services via `expo-sms` when no internet is available
+- `useEmergencySOS` hook manages the full SOS lifecycle — loading state, location fetch, API call, and SMS fallback
+- Emergency contacts list displayed for quick reference
+- SOS requests visible to government responders in real time on the dashboard
 
 ### Module 6 — Nearest Evacuation Center Finder
 
@@ -303,33 +297,34 @@ Hamro-Surakshya/
 - Affected population statistics
 - Government announcements feed
 
-### Module 8 — Volunteer & Relief Management
+### Module 8 — Relief Management
 
-**Route:** `/volunteer`
+**Route:** `/relief`
 
-- Volunteer registration with skill tagging (Medical, Rescue, Logistics)
-- Task assignment board
-- Donation tracking
-- Relief inventory management
+- Relief fund allocation and disbursement tracking
+- Beneficiary management with unique validation
+- Budget limit enforcement
+- Donation and inventory tracking
+- Audit trail logged to the Solana blockchain
 
 ---
 
 ## Data Flow
 
 ```
-┌────────────────┐     ┌──────────────────┐     ┌───────────────────┐
-│  AI Prediction │────▶│  Alert Dispatch  │────▶│ Citizen Reports   │
-└────────────────┘     └──────────────────┘     └────────┬──────────┘
-                                                          │
-                       ┌──────────────────┐              ▼
-                       │ Evacuation Center│     ┌───────────────────┐
-                       │    Activated     │◀────│  Admin Dashboard  │
-                       └──────────────────┘     └────────┬──────────┘
-                                                          │
-┌────────────────┐     ┌──────────────────┐              ▼
-│ Public Tracks  │◀────│  Relief Funds    │◀────┌───────────────────┐
-│ Transparency   │     │  Allocated       │     │  SOS Dispatched   │
-└────────────────┘     └──────────────────┘     └───────────────────┘
+┌────────────────┐     ┌──────────────────┐     ┌──────────────────────┐
+│  AI Prediction │────▶│  Alert Dispatch  │────▶│  Citizens Notified   │
+└────────────────┘     └──────────────────┘     └──────────┬───────────┘
+                                                             │ SOS Triggered
+                       ┌──────────────────┐                 ▼
+                       │ Evacuation Center│     ┌───────────────────────┐
+                       │    Activated     │◀────│ Government Dashboard  │
+                       └──────────────────┘     └──────────┬────────────┘
+                                                             │
+┌────────────────┐     ┌──────────────────┐                 ▼
+│ Public Tracks  │◀────│  Relief Funds    │◀────┌───────────────────────┐
+│ Transparency   │     │  Allocated       │     │   Rescue Deployed     │
+└────────────────┘     └──────────────────┘     └───────────────────────┘
          │
          ▼
 ┌────────────────────────┐
