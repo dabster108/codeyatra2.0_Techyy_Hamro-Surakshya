@@ -100,41 +100,69 @@ const MUNICIPALITIES_BY_DISTRICT = {
 };
 
 const SEV = {
+  extreme: {
+    dot: "bg-red-500",
+    bar: "bg-red-500",
+    text: "text-red-600",
+    badge: "bg-red-50 border-red-200 text-red-700",
+    label: "EXTREME",
+    bg: "bg-red-50",
+    border: "border-red-200",
+  },
+  high: {
+    dot: "bg-orange-500",
+    bar: "bg-orange-500",
+    text: "text-orange-600",
+    badge: "bg-orange-50 border-orange-200 text-orange-700",
+    label: "HIGH",
+    bg: "bg-orange-50",
+    border: "border-orange-200",
+  },
+  medium: {
+    dot: "bg-amber-400",
+    bar: "bg-amber-400",
+    text: "text-amber-600",
+    badge: "bg-amber-50 border-amber-200 text-amber-700",
+    label: "MEDIUM",
+    bg: "bg-amber-50",
+    border: "border-amber-200",
+  },
+  // low: {
+  //   dot: "bg-blue-400",
+  //   bar: "bg-blue-400",
+  //   text: "text-blue-600",
+  //   badge: "bg-blue-50 border-blue-200 text-blue-700",
+  //   label: "LOW",
+  //   bg: "bg-blue-50",
+  //   border: "border-blue-200",
+  // },
+  minimal: {
+    dot: "bg-gray-400",
+    bar: "bg-gray-400",
+    text: "text-gray-500",
+    badge: "bg-gray-50 border-gray-200 text-gray-600",
+    label: "MINIMAL",
+    bg: "bg-gray-50",
+    border: "border-gray-200",
+  },
+  // Backwards compatibility with old static data
   critical: {
     dot: "bg-red-500",
     bar: "bg-red-500",
     text: "text-red-600",
     badge: "bg-red-50 border-red-200 text-red-700",
-    label: "CRITICAL",
+    label: "EXTREME",
     bg: "bg-red-50",
     border: "border-red-200",
   },
-  high: {
-    dot: "bg-amber-500",
-    bar: "bg-amber-500",
+  moderate: {
+    dot: "bg-amber-400",
+    bar: "bg-amber-400",
     text: "text-amber-600",
     badge: "bg-amber-50 border-amber-200 text-amber-700",
-    label: "HIGH",
+    label: "MEDIUM",
     bg: "bg-amber-50",
     border: "border-amber-200",
-  },
-  moderate: {
-    dot: "bg-blue-400",
-    bar: "bg-blue-400",
-    text: "text-blue-600",
-    badge: "bg-blue-50 border-blue-200 text-blue-700",
-    label: "MODERATE",
-    bg: "bg-blue-50",
-    border: "border-blue-200",
-  },
-  low: {
-    dot: "bg-gray-400",
-    bar: "bg-gray-400",
-    text: "text-gray-500",
-    badge: "bg-gray-50 border-gray-200 text-gray-600",
-    label: "LOW",
-    bg: "bg-gray-50",
-    border: "border-gray-200",
   },
 };
 
@@ -175,7 +203,7 @@ function Select({ label, value, onChange, options }) {
 
 /* ────── PREDICTION CARD ────── */
 function PredictionCard({ item, onClick }) {
-  const sev = SEV[item.severity];
+  const sev = SEV[item.severity] || SEV.minimal; // Fallback to minimal if undefined
   const Icon = TYPE_ICON[item.type] || Activity;
   return (
     <button
@@ -227,7 +255,7 @@ function PredictionCard({ item, onClick }) {
 
 /* ────── DETAIL POPUP ────── */
 function DetailPopup({ item, onClose }) {
-  const sev = item ? SEV[item.severity] : null;
+  const sev = item ? (SEV[item.severity] || SEV.minimal) : null; // Fallback to minimal if undefined
 
   useEffect(() => {
     if (item) {
@@ -243,28 +271,6 @@ function DetailPopup({ item, onClose }) {
   if (!item) return null;
 
   const Icon = TYPE_ICON[item.type] || Activity;
-  const factors = [
-    {
-      label: "Rainfall Index",
-      value: Math.min(99, item.risk + 5),
-      bar: "bg-blue-400",
-    },
-    {
-      label: "Soil Saturation",
-      value: Math.min(99, item.risk - 8),
-      bar: "bg-amber-400",
-    },
-    {
-      label: "Slope Grade",
-      value: Math.min(99, Math.round(item.risk * 0.7)),
-      bar: "bg-purple-400",
-    },
-    {
-      label: "Historical Freq",
-      value: Math.min(99, Math.round(item.risk * 0.85)),
-      bar: "bg-emerald-400",
-    },
-  ];
 
   return (
     <div
@@ -272,32 +278,29 @@ function DetailPopup({ item, onClose }) {
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-xl rounded-3xl border border-gray-200 bg-gray-50 shadow-2xl max-h-[85vh] overflow-y-auto animate-fade-in-up"
+        className="relative w-full max-w-md rounded-3xl border border-gray-200 bg-gray-50 shadow-2xl animate-fade-in-up"
         onClick={(e) => e.stopPropagation()}
       >
         <div className={`h-1.5 w-full rounded-t-3xl ${sev.bar}`} />
 
         {/* Header */}
-        <div className="flex items-start justify-between gap-4 border-b border-gray-100 p-6 sm:px-8 sm:py-6">
-          <div>
-            <div className="flex items-center gap-3 mb-3">
-              <div
-                className={`flex h-11 w-11 items-center justify-center rounded-xl ${sev.bg} border ${sev.border} shadow-sm`}
-              >
-                <Icon className={`h-5 w-5 ${sev.text}`} />
-              </div>
-              <div className="flex flex-col gap-0.5">
-                <span
-                  className={`w-fit rounded-full border px-2.5 py-0.5 text-[9px] font-mono font-bold tracking-widest ${sev.badge}`}
-                >
-                  {sev.label}
-                </span>
-                <span className="text-[10px] font-mono font-semibold text-slate-500 uppercase tracking-wider ml-1">
-                  {item.type}
-                </span>
-              </div>
+        <div className="flex items-start justify-between gap-4 border-b border-gray-100 p-6">
+          <div className="flex items-center gap-3">
+            <div
+              className={`flex h-11 w-11 items-center justify-center rounded-xl ${sev.bg} border ${sev.border} shadow-sm`}
+            >
+              <Icon className={`h-5 w-5 ${sev.text}`} />
             </div>
-            <h2 className="text-2xl font-black text-gray-900 tracking-tight">{item.name}</h2>
+            <div className="flex flex-col gap-1">
+              <span
+                className={`w-fit rounded-full border px-2.5 py-0.5 text-[9px] font-mono font-bold tracking-widest ${sev.badge}`}
+              >
+                {sev.label}
+              </span>
+              <span className="text-[10px] font-mono font-semibold text-slate-500 uppercase tracking-wider">
+                {item.type}
+              </span>
+            </div>
           </div>
           <button
             onClick={onClose}
@@ -307,109 +310,32 @@ function DetailPopup({ item, onClose }) {
           </button>
         </div>
 
-        <div className="p-6 sm:p-8 space-y-6">
-          {/* Location grid */}
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="p-6 space-y-4">
+          {/* Location Name */}
+          <div className="text-center pb-4 border-b border-gray-200">
+            <h2 className="text-2xl font-black text-gray-900 tracking-tight">{item.name}</h2>
+          </div>
+
+          {/* Location Details */}
+          <div className="space-y-3">
             {[
-              { l: "PROVINCE", v: item.province },
-              { l: "DISTRICT", v: item.district },
-              { l: "MUNICIPALITY", v: item.municipality },
-              { l: "PREDICTED", v: item.date },
+              { l: "PROVINCE", v: item.province, icon: MapPin },
+              { l: "DISTRICT", v: item.district, icon: MapPin },
+              { l: "MUNICIPALITY", v: item.municipality, icon: MapPin },
             ].map((d) => (
               <div
                 key={d.l}
-                className="rounded-2xl border border-gray-200 bg-gray-50 p-4 transition-colors hover:border-emerald-200 hover:bg-emerald-50/30"
+                className="flex items-center justify-between rounded-xl border border-gray-200 bg-white p-4"
               >
-                <span className="text-[9px] font-mono font-bold tracking-widest text-slate-400">
-                  {d.l}
-                </span>
-                <p className="mt-1 text-xs font-bold text-gray-900 line-clamp-1">{d.v}</p>
+                <div className="flex items-center gap-3">
+                  <d.icon className="h-4 w-4 text-slate-400" />
+                  <span className="text-[10px] font-mono font-bold tracking-widest text-slate-500">
+                    {d.l}
+                  </span>
+                </div>
+                <p className="text-sm font-bold text-gray-900">{d.v}</p>
               </div>
             ))}
-          </div>
-
-          {/* Risk score */}
-          <div className={`rounded-2xl border ${sev.border} ${sev.bg} p-6 shadow-sm`}>
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-[10px] font-mono font-bold tracking-widest text-slate-600">
-                AI RISK SCORE
-              </span>
-              <span className={`text-4xl font-black font-mono ${sev.text} drop-shadow-sm`}>
-                {item.risk}%
-              </span>
-            </div>
-            <div className="h-3 w-full rounded-full bg-white/80 overflow-hidden shadow-inner border border-white/50">
-              <div
-                className={`h-full ${sev.bar} rounded-full transition-all duration-1000 ease-out`}
-                style={{ width: `${item.risk}%` }}
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-            {/* 7-day forecast */}
-            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-5 shadow-sm">
-              <span className="text-[10px] font-mono font-bold tracking-widest text-slate-400">
-                7-DAY FORECAST
-              </span>
-              <div className="mt-4 flex justify-between gap-1.5">
-                {FORECAST.map((f) => {
-                  const val = Math.max(10, Math.min(99, item.risk + f.delta));
-                  const barColor =
-                    val >= 80
-                      ? "bg-red-500"
-                      : val >= 60
-                        ? "bg-amber-500"
-                        : val >= 40
-                          ? "bg-blue-400"
-                          : "bg-gray-400";
-                  return (
-                    <div
-                      key={f.day}
-                      className="flex flex-1 flex-col items-center gap-1.5 group"
-                    >
-                      <span className="text-[9px] font-mono text-slate-400 group-hover:text-emerald-600 transition-colors">
-                        {f.day}
-                      </span>
-                      <div className="w-full h-16 bg-gray-100 rounded-lg relative overflow-hidden transition-all group-hover:bg-gray-200">
-                        <div
-                          className={`absolute bottom-0 w-full rounded-b-lg ${barColor} transition-all duration-500`}
-                          style={{ height: `${val}%` }}
-                        />
-                      </div>
-                      <span className="text-[9px] font-mono font-bold text-gray-700">
-                        {val}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Contributing factors */}
-            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-5 shadow-sm">
-              <span className="text-[10px] font-mono font-bold tracking-widest text-slate-400">
-                CONTRIBUTING FACTORS
-              </span>
-              <div className="mt-4 space-y-3.5">
-                {factors.map((f) => (
-                  <div key={f.label} className="flex items-center gap-3">
-                    <span className="w-24 text-[10px] font-mono font-medium text-slate-500">
-                      {f.label}
-                    </span>
-                    <div className="flex-1 h-2 rounded-full bg-gray-100 overflow-hidden shadow-inner">
-                      <div
-                        className={`h-full ${f.bar} rounded-full transition-all duration-700`}
-                        style={{ width: `${f.value}%` }}
-                      />
-                    </div>
-                    <span className="w-6 text-right text-[10px] font-mono font-bold text-gray-700">
-                      {f.value}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -457,7 +383,7 @@ export default function PredictionsPage() {
 
       // Build filters
       const filters = {
-        minFireProb: 0.3, // Show predictions with 30%+ probability
+        minFireProb: 0.8, // Show predictions with 80%+ probability (medium risk and above)
         limit: 1000
       };
       
@@ -538,10 +464,11 @@ export default function PredictionsPage() {
   const handleMarkerClick = useCallback((p) => setSelected(p), []);
 
   const counts = {
-    critical: filtered.filter((p) => p.severity === "critical").length,
+    extreme: filtered.filter((p) => p.severity === "extreme" || p.severity === "critical").length, // Include old "critical"
     high: filtered.filter((p) => p.severity === "high").length,
-    moderate: filtered.filter((p) => p.severity === "moderate").length,
+    medium: filtered.filter((p) => p.severity === "medium" || p.severity === "moderate").length, // Include old "moderate"
     low: filtered.filter((p) => p.severity === "low").length,
+    minimal: filtered.filter((p) => p.severity === "minimal").length,
     total: filtered.length,
   };
 
@@ -568,11 +495,11 @@ export default function PredictionsPage() {
           </div>
 
           {/* Stats */}
-          <div className="flex flex-wrap gap-4 animate-slide-up-fade delay-100">
+          {/* <div className="flex flex-wrap gap-4 animate-slide-up-fade delay-100">
             {[
               {
-                label: "CRITICAL",
-                value: counts.critical,
+                label: "EXTREME",
+                value: counts.extreme,
                 color: "text-red-600",
                 bg: "bg-red-50",
                 border: "border-red-100",
@@ -580,16 +507,16 @@ export default function PredictionsPage() {
               { 
                 label: "HIGH", 
                 value: counts.high, 
+                color: "text-orange-600",
+                bg: "bg-orange-50",
+                border: "border-orange-100",
+              },
+              {
+                label: "MEDIUM",
+                value: counts.medium,
                 color: "text-amber-600",
                 bg: "bg-amber-50",
                 border: "border-amber-100",
-              },
-              {
-                label: "MODERATE",
-                value: counts.moderate,
-                color: "text-blue-600",
-                bg: "bg-blue-50",
-                border: "border-blue-100",
               },
               { 
                 label: "TOTAL ALERT", 
@@ -608,7 +535,7 @@ export default function PredictionsPage() {
                 </div>
               </div>
             ))}
-          </div>
+          </div> */}
         </div>
 
         {/* Filters */}
@@ -697,10 +624,11 @@ export default function PredictionsPage() {
             </div>
             <div className="space-y-2.5">
               {[
-                { label: "Critical (80+)", color: "bg-red-500", text: "text-red-700", bg: "bg-red-50" },
-                { label: "High (60-79)", color: "bg-amber-500", text: "text-amber-700", bg: "bg-amber-50" },
-                { label: "Moderate (40-59)", color: "bg-blue-400", text: "text-blue-700", bg: "bg-blue-50" },
-                { label: "Low (<40)", color: "bg-gray-400", text: "text-gray-600", bg: "bg-gray-50" },
+                { label: "High", color: "bg-red-500", text: "text-red-700", bg: "bg-red-50" },
+                { label: "Medium", color: "bg-orange-500", text: "text-orange-700", bg: "bg-orange-50" },
+                { label: "Low", color: "bg-amber-400", text: "text-amber-700", bg: "bg-amber-50" },
+                // { label: "Low (50-80%)", color: "bg-blue-400", text: "text-blue-600", bg: "bg-blue-50" },
+                { label: "Minimal", color: "bg-gray-400", text: "text-gray-600", bg: "bg-gray-50" },
               ].map((l) => (
                 <div key={l.label} className="flex items-center gap-2.5">
                   <span className={`flex h-5 w-5 items-center justify-center rounded-md ${l.bg}`}>
@@ -713,7 +641,7 @@ export default function PredictionsPage() {
           </div>
 
           {/* Results count */}
-          <div className="absolute right-4 top-4 z-[5] flex items-center gap-2 rounded-xl border border-gray-200 bg-white/95 backdrop-blur-md px-4 py-2.5 shadow-lg">
+          {/* <div className="absolute right-4 top-4 z-[5] flex items-center gap-2 rounded-xl border border-gray-200 bg-white/95 backdrop-blur-md px-4 py-2.5 shadow-lg">
             <div className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100">
                 <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
             </div>
@@ -723,11 +651,11 @@ export default function PredictionsPage() {
             <span className="text-[10px] font-mono font-bold tracking-widest text-slate-500">
               TRACKED AREAS
             </span>
-          </div>
+          </div> */}
         </div>
 
         {/* AI Info Cards */}
-        <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-3 animate-slide-up-fade delay-400">
+        {/* <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-3 animate-slide-up-fade delay-400">
           {[
             {
               icon: Brain,
@@ -764,7 +692,7 @@ export default function PredictionsPage() {
               </p>
             </div>
           ))}
-        </div>
+        </div> */}
       </div>
 
       <DetailPopup item={selected} onClose={() => setSelected(null)} />
