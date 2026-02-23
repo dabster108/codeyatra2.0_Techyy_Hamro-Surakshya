@@ -37,9 +37,20 @@ export default function TransparencyPage() {
     async function load() {
       try {
         setLoading(true);
+        
+        // Add timeout to all fetch calls
+        const fetchWithTimeout = (url, timeout = 10000) => {
+          return Promise.race([
+            fetch(url),
+            new Promise((_, reject) => 
+              setTimeout(() => reject(new Error('Request timeout')), timeout)
+            )
+          ]);
+        };
+
         const [sumRes, recRes] = await Promise.all([
-          fetch(`${BASE}/public/summary`).then(r => r.json()),
-          fetch(`${BASE}/records/get-all-records`).then(r => r.json()),
+          fetchWithTimeout(`${BASE}/public/summary`).then(r => r.json()).catch(() => ({ total_allocated: 0, total_used: 0, total_relief_records: 0, total_beneficiaries: 0 })),
+          fetchWithTimeout(`${BASE}/records/get-all-records`).then(r => r.json()).catch(() => ({ by_province: [], recent_records: [] })),
         ]);
         
         setNational({
@@ -115,7 +126,7 @@ export default function TransparencyPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <div className="h-8 w-8 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin"/>
           <p className="text-sm font-mono font-bold text-slate-500 tracking-widest animate-pulse">SYNCING RECORDS</p>
@@ -125,7 +136,7 @@ export default function TransparencyPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50/50">
+    <div className="min-h-screen bg-white">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         
         {/* Header */}
@@ -173,7 +184,7 @@ export default function TransparencyPage() {
             { label: "DISASTERS", value: disasterCounts.length, color: "text-amber-600", icon: AlertTriangle },
             { label: "BENEFICIARIES", value: aidRecords.length, color: "text-red-600", icon: Users },
           ].map((s) => (
-            <div key={s.label} className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm hover:shadow-md hover:border-emerald-200 transition-all">
+            <div key={s.label} className="rounded-2xl border border-gray-200 bg-gray-50 p-5 shadow-sm hover:shadow-md hover:border-emerald-200 transition-all">
               <div className="flex items-center gap-2 mb-2">
                 <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-gray-50 border border-gray-100">
                   <s.icon className={`h-3.5 w-3.5 ${s.color}`} />
@@ -186,7 +197,7 @@ export default function TransparencyPage() {
         </div>
 
         {/* Utilization bar */}
-        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm mb-8 animate-slide-up-fade delay-200">
+        <div className="rounded-2xl border border-gray-200 bg-gray-50 p-6 shadow-sm mb-8 animate-slide-up-fade delay-200">
           <div className="flex items-center justify-between mb-4">
             <span className="text-[10px] font-mono font-bold tracking-widest text-slate-600">NATIONAL UTILIZATION</span>
             <span className="text-2xl font-black font-mono text-emerald-500">{pct(national?.distributed, national?.total)}%</span>
@@ -219,7 +230,7 @@ export default function TransparencyPage() {
               const bgClass = isHigh ? "bg-emerald-500" : isMid ? "bg-amber-500" : "bg-blue-500";
               
               return (
-                <div key={prov.province} className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm hover:shadow-md hover:border-emerald-200 transition-all group">
+                <div key={prov.province} className="rounded-2xl border border-gray-200 bg-gray-50 p-5 shadow-sm hover:shadow-md hover:border-emerald-200 transition-all group">
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="text-sm font-bold text-gray-900">{prov.province}</h3>
                     <span className={`text-[11px] font-mono font-black ${colorClass}`}>
@@ -255,7 +266,7 @@ export default function TransparencyPage() {
           </div>
 
           {/* Aid Filters */}
-          <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm mb-5 transition-all hover:shadow-md hover:border-emerald-200">
+          <div className="rounded-2xl border border-gray-200 bg-gray-50 p-5 shadow-sm mb-5 transition-all hover:shadow-md hover:border-emerald-200">
             <div className="flex items-center gap-2 mb-4">
               <Filter className="h-3.5 w-3.5 text-emerald-500" />
               <span className="text-[10px] font-mono font-bold tracking-[0.2em] text-emerald-600">FILTER AUDIT LOG</span>
@@ -295,7 +306,7 @@ export default function TransparencyPage() {
           </div>
 
           {/* Table */}
-          <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+          <div className="rounded-2xl border border-gray-200 bg-gray-50 shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
                 <thead>
