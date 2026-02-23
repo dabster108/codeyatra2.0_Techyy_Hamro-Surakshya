@@ -32,11 +32,10 @@ export function ProvinceTable() {
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: "asc" | "desc" } | null>(null);
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-NP", {
-      style: "currency",
-      currency: "NPR",
-      maximumFractionDigits: 0,
-    }).format(amount);
+    if (amount >= 1_000_000_000) return `NPR ${(amount / 1_000_000_000).toFixed(2)}B`;
+    if (amount >= 1_000_000) return `NPR ${(amount / 1_000_000).toFixed(2)}M`;
+    if (amount >= 1_000) return `NPR ${(amount / 1_000).toFixed(2)}K`;
+    return `NPR ${amount.toLocaleString()}`;
   };
 
   const sortedData = [...data].sort((a, b) => {

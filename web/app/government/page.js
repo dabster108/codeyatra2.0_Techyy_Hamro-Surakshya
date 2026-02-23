@@ -6,17 +6,17 @@ import { useAuth } from "../context/AuthContext";
 import {
   Landmark, TrendingUp, Users, AlertTriangle, ArrowUpRight,
   DollarSign, Building2, ChevronDown, X, Send, Shield,
-  BarChart3, MapPin,
+  BarChart3, MapPin, RefreshCw,
 } from "lucide-react";
-import {
-  NATIONAL_BUDGET, PROVINCE_BUDGETS, AID_RECORDS, PROVINCES,
-} from "../data/budget";
+import { getNationalDashboard, getAllProvinces, getRecentAid } from "../lib/government-api";
 
-const fmtNPR = (n) => `NPR ${(n / 1_000_000_000).toFixed(2)}B`;
-const fmtNPRm = (n) => n >= 1_000_000 ? `NPR ${(n / 1_000_000).toFixed(1)}M` : `NPR ${n.toLocaleString()}`;
+const fmtNPR = (n) => {
+  if (n >= 1_000_000_000) return `NPR ${(n / 1_000_000_000).toFixed(2)}B`;
+  if (n >= 1_000_000) return `NPR ${(n / 1_000_000).toFixed(2)}M`;
+  if (n >= 1_000) return `NPR ${(n / 1_000).toFixed(2)}K`;
+  return `NPR ${n.toLocaleString()}`;
+};
 const pct = (a, b) => b ? Math.round((a / b) * 100) : 0;
-
-const BASE = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8005";
 
 export default function GovernmentPage() {
   const { user, loading } = useAuth();
@@ -26,70 +26,35 @@ export default function GovernmentPage() {
   const [distAmount, setDistAmount] = useState("");
   const [distributions, setDistributions] = useState([]);
   
-  // Real data state
-  const [nationalRes, setNationalRes] = useState(null);
-  const [provStats, setProvStats] = useState([]);
-  const [aidRecords, setAidRecords] = useState([]);
-  const [fetching, setFetching] = useState(true);
+  // Dynamic data state
+  const [nationalData, setNationalData] = useState(null);
+  const [provincesData, setProvincesData] = useState([]);
+  const [recentAid, setRecentAid] = useState([]);
+  const [dataLoading, setDataLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    async function fetchStats() {
-      try {
-        const [sumResRaw, recResRaw] = await Promise.all([
-          fetch(`${BASE}/public/summary`),
-          fetch(`${BASE}/records/get-all-records`)
-        ]);
-        const sumRes = await sumResRaw.json();
-        const recRes = await recResRaw.json();
+  const PROVINCES = ["Koshi", "Madhesh", "Bagmati", "Gandaki", "Lumbini", "Karnali", "Sudurpashchim"];
 
-        setNationalRes({
-          ...sumRes,
-          total_budget: 12500000000, // Maintaining the fixed hypothetical central ceiling unless returned by API
-        });
-
-        // Map live province groupings
-        const provMap = {};
-        PROVINCES.forEach(p => provMap[p] = { allocated: 0, distributed: 0, disasters: 0, affected: 0 });
-        if (recRes.by_province) {
-          recRes.by_province.forEach(p => {
-             const matchedK = PROVINCES.find(prov => prov.toLowerCase() === (p.province || "").toLowerCase());
-             if (matchedK && provMap[matchedK]) {
-                 provMap[matchedK].distributed = p.total_amount;
-                 provMap[matchedK].affected = p.record_count; 
-             }
-          });
-        }
-        
-        // Setup equitable proportional allocations
-        const totalAlloc = sumRes.total_allocated || 500000000;
-        const baseAllocPerProv = totalAlloc / PROVINCES.length;
-        Object.keys(provMap).forEach((p) => {
-             provMap[p].allocated = baseAllocPerProv + (provMap[p].distributed * 1.5); 
-        });
-        
-        setProvStats(Object.entries(provMap).map(([k,v]) => ({ province: k, ...v })));
-
-        if (recRes.recent_records) {
-             setAidRecords(recRes.recent_records.map(r => ({
-                id: r.id,
-                recipient: r.full_name || "Unknown",
-                type: "money",
-                amount: r.relief_amount,
-                unit: "NPR",
-                province: PROVINCES.find(prov => prov.toLowerCase() === (r.province || "").toLowerCase()) || r.province,
-                district: r.district,
-                date: new Date(r.created_at).toISOString().split('T')[0],
-                status: "delivered", // Processed from backend
-             })));
-        }
-      } catch (err) {
-        console.error("Dashboard fetching failed", err);
-      } finally {
-        setFetching(false);
-      }
+  // Fetch dashboard data
+  const fetchDashboardData = async (showRefresh = false) => {
+    if (showRefresh) setRefreshing(true);
+    try {
+      const [national, provinces, aid] = await Promise.all([
+        getNationalDashboard(),
+        getAllProvinces(),
+        getRecentAid(8),
+      ]);
+      
+      setNationalData(national);
+      setProvincesData(provinces);
+      setRecentAid(aid);
+    } catch (error) {
+      console.error("Failed to fetch dashboard data:", error);
+    } finally {
+      setDataLoading(false);
+      if (showRefresh) setRefreshing(false);
     }
-    fetchStats();
-  }, []);
+  };
 
   useEffect(() => {
     if (!loading && (!user || user.role !== "government")) {
@@ -97,15 +62,29 @@ export default function GovernmentPage() {
     }
   }, [user, loading, router]);
 
+  useEffect(() => {
+    if (user && user.role === "government") {
+      fetchDashboardData();
+    }
+  }, [user]);
+
   if (loading || !user || user.role !== "government") return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50/50">
-      <div className="h-8 w-8 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin" />
+    <div className="flex min-h-screen items-center justify-center bg-white">
+      <div className="h-6 w-6 border-2 border-emerald-500 border-t-transparent animate-spin" />
     </div>
   );
 
-  const totalAffected = nationalRes?.total_beneficiaries || Object.values(provStats).reduce((s, p) => s + p.affected, 0) || 0;
-  const totalDisasters = aidRecords.length > 0 ? Array.from(new Set(aidRecords.map(a => a.disaster_type))).length : 0;
-  const recentAid = aidRecords.slice(0, 8);
+  if (dataLoading) return (
+    <div className="flex min-h-screen items-center justify-center bg-white">
+      <div className="text-center">
+        <div className="h-8 w-8 border-2 border-blue-500 border-t-transparent animate-spin mx-auto mb-3" />
+        <p className="text-sm text-gray-500">Loading dashboard data...</p>
+      </div>
+    </div>
+  );
+
+  const totalAffected = provincesData.reduce((s, p) => s + (p.affected || 0), 0);
+  const totalDisasters = provincesData.reduce((s, p) => s + (p.disasters || 0), 0);
 
   const handleDistribute = () => {
     if (!distAmount || isNaN(Number(distAmount))) return;
@@ -121,74 +100,75 @@ export default function GovernmentPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50/50 pb-16">
+    <div className="min-h-screen bg-white">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between mb-8 animate-slide-up-fade">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between mb-8">
           <div>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-100 border border-blue-200 shadow-sm">
-                <Landmark className="h-4 w-4 text-blue-600" />
-              </span>
-              <span className="text-[10px] font-mono font-bold tracking-[0.2em] text-blue-600">CENTRAL COMMAND</span>
+            <div className="flex items-center gap-2 mb-1">
+              <Landmark className="h-4 w-4 text-blue-400" />
+              <span className="text-[10px] font-mono font-bold tracking-[0.2em] text-blue-400">CENTRAL COMMAND</span>
             </div>
-            <h1 className="text-3xl font-black text-gray-900 tracking-tight">Government Dashboard</h1>
-            <p className="mt-1 text-sm text-slate-500 font-medium">
-              Operator: <span className="font-bold text-gray-700">{user.name}</span> — FY 2082/83
+            <h1 className="text-2xl font-black text-gray-900">Government Dashboard</h1>
+            <p className="mt-1 text-xs text-gray-500 font-mono">
+              Operator: {user.name} — FY {nationalData?.fiscal_year || "2082/83"}
             </p>
           </div>
-          <button onClick={() => setShowDistribute(true)}
-            className="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-6 py-3 text-sm font-bold tracking-wider text-white shadow-sm transition-all duration-300 hover:bg-gray-800 hover:-translate-y-0.5 hover:shadow-md">
-            <Send className="h-4 w-4 text-emerald-400" /> ALLOCATE FUNDS
-          </button>
+          <div className="flex items-center gap-2">
+            <button onClick={() => fetchDashboardData(true)} disabled={refreshing}
+              className="inline-flex items-center gap-2 bg-gray-100 border border-gray-200 px-4 py-2.5 text-xs font-bold tracking-wider text-gray-700 hover:bg-gray-200 disabled:opacity-50">
+              <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? 'animate-spin' : ''}`} /> 
+              {refreshing ? 'REFRESHING...' : 'REFRESH'}
+            </button>
+            <button onClick={() => setShowDistribute(true)}
+              className="inline-flex items-center gap-2 bg-emerald-600 px-5 py-2.5 text-xs font-bold tracking-wider text-white hover:bg-emerald-500">
+              <Send className="h-4 w-4" /> ALLOCATE FUNDS
+            </button>
+          </div>
         </div>
 
         {/* National stats */}
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-5 mb-8 animate-slide-up-fade delay-100">
+        <div className="grid grid-cols-2 gap-px bg-gray-200 sm:grid-cols-5 mb-8">
           {[
-            { label: "TOTAL BUDGET", value: fmtNPR(nationalRes?.total_budget || 12500000000), color: "text-slate-900", iconColor: "text-slate-600", bg: "bg-white", iconBg: "bg-slate-100", border: "border-gray-200", icon: DollarSign },
-            { label: "ALLOCATED", value: fmtNPR(nationalRes?.total_allocated || 0), color: "text-emerald-700", iconColor: "text-emerald-600", bg: "bg-emerald-50", iconBg: "bg-white", border: "border-emerald-200", icon: TrendingUp },
-            { label: "DISTRIBUTED", value: fmtNPR(nationalRes?.total_used || 0), color: "text-blue-700", iconColor: "text-blue-600", bg: "bg-blue-50", iconBg: "bg-white", border: "border-blue-200", icon: ArrowUpRight },
-            { label: "DISASTERS", value: totalDisasters, color: "text-amber-700", iconColor: "text-amber-600", bg: "bg-amber-50", iconBg: "bg-white", border: "border-amber-200", icon: AlertTriangle },
-            { label: "AFFECTED", value: totalAffected.toLocaleString(), color: "text-red-700", iconColor: "text-red-600", bg: "bg-red-50", iconBg: "bg-white", border: "border-red-200", icon: Users },
-          ].map((s, idx) => (
-            <div key={s.label} className={`rounded-2xl border ${s.border} ${s.bg} p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md`} style={{ animationDelay: `${idx * 100 + 100}ms` }}>
-              <div className="flex items-center gap-2 mb-3">
-                <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${s.iconBg} shadow-sm border ${s.border}`}>
-                  <s.icon className={`h-4 w-4 ${s.iconColor}`} />
-                </div>
-                <span className="text-[10px] font-mono font-bold tracking-widest text-slate-500 uppercase">{s.label}</span>
+            { label: "TOTAL BUDGET", value: fmtNPR(nationalData?.total || 0), color: "text-gray-900", icon: DollarSign },
+            { label: "ALLOCATED", value: fmtNPR(nationalData?.allocated || 0), color: "text-emerald-400", icon: TrendingUp },
+            { label: "DISBURSED", value: fmtNPR(nationalData?.disbursed || 0), color: "text-blue-400", icon: ArrowUpRight },
+            { label: "DISASTERS", value: totalDisasters, color: "text-amber-400", icon: AlertTriangle },
+            { label: "AFFECTED", value: totalAffected.toLocaleString(), color: "text-red-400", icon: Users },
+          ].map((s) => (
+            <div key={s.label} className="bg-white p-4">
+              <div className="flex items-center gap-2 mb-1">
+                <s.icon className={`h-3.5 w-3.5 ${s.color}`} />
+                <span className="text-[9px] font-mono tracking-widest text-gray-500">{s.label}</span>
               </div>
-              <p className={`text-xl font-black font-mono tracking-tight ${s.color}`}>{s.value}</p>
+              <p className={`text-lg font-black font-mono ${s.color}`}>{s.value}</p>
             </div>
           ))}
         </div>
 
         {/* Budget utilization bars */}
-        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm mb-8 animate-slide-up-fade delay-300">
-          <h2 className="text-sm font-bold text-gray-900 mb-6 flex items-center gap-3 pb-4 border-b border-gray-100">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 border border-emerald-200">
-              <BarChart3 className="h-4 w-4 text-emerald-600" />
-            </div>
+        <div className="border border-gray-200 bg-white p-5 mb-8">
+          <h2 className="text-xs font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <BarChart3 className="h-4 w-4 text-emerald-500" />
             National Budget Utilization
           </h2>
-          <div className="space-y-6">
+          <div className="space-y-3">
             {[
-              { label: "Allocated / Total Budget", value: pct(nationalRes?.total_allocated, nationalRes?.total_budget || 12500000000), a: fmtNPR(nationalRes?.total_allocated || 0), b: fmtNPR(nationalRes?.total_budget || 12500000000) },
-              { label: "Distributed / Allocated", value: pct(nationalRes?.total_used, nationalRes?.total_allocated), a: fmtNPR(nationalRes?.total_used || 0), b: fmtNPR(nationalRes?.total_allocated || 0) },
-              { label: "Distributed / Total Budget", value: pct(nationalRes?.total_used, nationalRes?.total_budget || 12500000000), a: fmtNPR(nationalRes?.total_used || 0), b: fmtNPR(nationalRes?.total_budget || 12500000000) },
+              { label: "Allocated / Total", value: pct(nationalData?.allocated || 0, nationalData?.total || 1), a: fmtNPR(nationalData?.allocated || 0), b: fmtNPR(nationalData?.total || 0) },
+              { label: "Disbursed / Allocated", value: pct(nationalData?.disbursed || 0, nationalData?.allocated || 1), a: fmtNPR(nationalData?.disbursed || 0), b: fmtNPR(nationalData?.allocated || 0) },
+              { label: "Disbursed / Total", value: pct(nationalData?.disbursed || 0, nationalData?.total || 1), a: fmtNPR(nationalData?.disbursed || 0), b: fmtNPR(nationalData?.total || 0) },
             ].map((bar) => (
               <div key={bar.label}>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-semibold text-slate-600">{bar.label}</span>
-                  <span className="text-[11px] font-mono font-bold tracking-tight text-slate-400">{bar.a} <span className="text-slate-300">/</span> {bar.b}</span>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[10px] font-mono text-gray-500">{bar.label}</span>
+                  <span className="text-[10px] font-mono text-gray-500">{bar.a} / {bar.b}</span>
                 </div>
-                <div className="flex items-center gap-4">
-                  <div className="flex-1 h-3 rounded-full bg-gray-100 shadow-inner overflow-hidden">
-                    <div className={`h-full transition-all duration-1000 ease-out ${bar.value >= 80 ? "bg-emerald-500" : bar.value >= 50 ? "bg-amber-500" : "bg-red-500"}`}
-                      style={{ width: `${Math.max(bar.value, 1)}%` }} />
+                <div className="flex items-center gap-3">
+                  <div className="flex-1 h-2 bg-gray-800">
+                    <div className={`h-full transition-all ${bar.value >= 80 ? "bg-emerald-500" : bar.value >= 50 ? "bg-amber-500" : "bg-red-500"}`}
+                      style={{ width: `${bar.value}%` }} />
                   </div>
-                  <span className={`w-12 text-right text-sm font-black font-mono ${bar.value >= 80 ? "text-emerald-500" : bar.value >= 50 ? "text-amber-500" : "text-red-500"}`}>
+                  <span className={`w-10 text-right text-xs font-mono font-bold ${bar.value >= 80 ? "text-emerald-400" : bar.value >= 50 ? "text-amber-400" : "text-red-400"}`}>
                     {bar.value}%
                   </span>
                 </div>
@@ -197,55 +177,51 @@ export default function GovernmentPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_380px] animate-slide-up-fade delay-500">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_380px]">
           {/* Province allocation table */}
-          <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden flex flex-col">
-            <div className="p-5 border-b border-gray-100 flex items-center gap-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 border border-emerald-200 shadow-sm">
-                <Building2 className="h-4 w-4 text-emerald-600" />
-              </div>
-              <h2 className="text-sm font-bold text-gray-900">
-                Province Fund Allocation
-              </h2>
-            </div>
-            <div className="overflow-x-auto flex-1">
+          <div>
+            <h2 className="text-xs font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <Building2 className="h-4 w-4 text-emerald-500" />
+              Province Fund Allocation
+            </h2>
+            <div className="border border-gray-200 overflow-x-auto">
               <table className="w-full text-xs">
                 <thead>
-                  <tr className="border-b border-gray-200 bg-gray-50/50">
-                    <th className="px-5 py-4 text-left text-[10px] font-mono font-bold tracking-widest text-slate-500 uppercase">PROVINCE</th>
-                    <th className="px-5 py-4 text-right text-[10px] font-mono font-bold tracking-widest text-slate-500 uppercase">ALLOCATED</th>
-                    <th className="px-5 py-4 text-right text-[10px] font-mono font-bold tracking-widest text-slate-500 uppercase">DISTRIBUTED</th>
-                    <th className="px-5 py-4 text-center text-[10px] font-mono font-bold tracking-widest text-slate-500 uppercase">UTIL %</th>
-                    <th className="px-5 py-4 text-right text-[10px] font-mono font-bold tracking-widest text-slate-500 uppercase">EVENTS</th>
-                    <th className="px-5 py-4 text-right text-[10px] font-mono font-bold tracking-widest text-slate-500 uppercase">AFFECTED</th>
+                  <tr className="border-b border-gray-200 bg-gray-50">
+                    <th className="px-4 py-3 text-left text-[10px] font-mono font-bold tracking-widest text-gray-500">PROVINCE</th>
+                    <th className="px-4 py-3 text-right text-[10px] font-mono font-bold tracking-widest text-gray-500">ALLOCATED</th>
+                    <th className="px-4 py-3 text-right text-[10px] font-mono font-bold tracking-widest text-gray-500">DISBURSED</th>
+                    <th className="px-4 py-3 text-center text-[10px] font-mono font-bold tracking-widest text-gray-500">UTIL %</th>
+                    <th className="px-4 py-3 text-right text-[10px] font-mono font-bold tracking-widest text-gray-500">EVENTS</th>
+                    <th className="px-4 py-3 text-right text-[10px] font-mono font-bold tracking-widest text-gray-500">AFFECTED</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {provStats.map((prov) => {
-                    const util = pct(prov.distributed, prov.allocated);
+                <tbody>
+                  {provincesData.map((province) => {
+                    const util = pct(province.disbursed, province.allocated);
                     return (
-                      <tr key={prov.province} className="bg-white hover:bg-gray-50 transition-colors">
-                        <td className="px-5 py-4 whitespace-nowrap">
+                      <tr key={province.province} className="border-b border-gray-200 bg-white hover:bg-gray-50 transition-colors">
+                        <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
-                            <MapPin className="h-4 w-4 text-slate-400" />
-                            <span className="font-bold text-gray-900 leading-none pb-px">{prov.province}</span>
+                            <MapPin className="h-3.5 w-3.5 text-gray-500" />
+                            <span className="font-bold text-gray-900">{province.province}</span>
                           </div>
                         </td>
-                        <td className="px-5 py-4 text-right font-mono font-semibold text-gray-600">{fmtNPR(prov.allocated)}</td>
-                        <td className="px-5 py-4 text-right font-mono font-semibold text-gray-900">{fmtNPR(prov.distributed)}</td>
-                        <td className="px-5 py-4">
-                          <div className="flex items-center justify-center gap-3">
-                            <div className="w-16 h-1.5 rounded-full bg-gray-100 overflow-hidden">
-                              <div className={`h-full transition-all duration-1000 ease-out ${util >= 80 ? "bg-emerald-500" : util >= 60 ? "bg-amber-500" : "bg-red-500"}`}
-                                style={{ width: `${Math.max(util, 1)}%` }} />
+                        <td className="px-4 py-3 text-right font-mono text-gray-900">{fmtNPR(province.allocated)}</td>
+                        <td className="px-4 py-3 text-right font-mono text-gray-900">{fmtNPR(province.disbursed)}</td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center justify-center gap-2">
+                            <div className="w-16 h-1.5 bg-gray-800">
+                              <div className={`h-full ${util >= 80 ? "bg-emerald-500" : util >= 60 ? "bg-amber-500" : "bg-red-500"}`}
+                                style={{ width: `${util}%` }} />
                             </div>
-                            <span className={`text-[10px] font-mono font-bold ${util >= 80 ? "text-emerald-600" : util >= 60 ? "text-amber-600" : "text-red-500"}`}>
+                            <span className={`text-[10px] font-mono font-bold ${util >= 80 ? "text-emerald-400" : util >= 60 ? "text-amber-400" : "text-red-400"}`}>
                               {util}%
                             </span>
                           </div>
                         </td>
-                        <td className="px-5 py-4 text-right font-mono font-bold text-amber-600">{prov.disasters}</td>
-                        <td className="px-5 py-4 text-right font-mono font-bold text-rose-600">{prov.affected.toLocaleString()}</td>
+                        <td className="px-4 py-3 text-right font-mono text-amber-400">{province.disasters || 0}</td>
+                        <td className="px-4 py-3 text-right font-mono text-red-400">{(province.affected || 0).toLocaleString()}</td>
                       </tr>
                     );
                   })}
@@ -255,20 +231,20 @@ export default function GovernmentPage() {
 
             {/* Local distributions */}
             {distributions.length > 0 && (
-              <div className="mt-8 p-5 rounded-bl-2xl rounded-br-2xl bg-gray-50/50">
-                <h3 className="text-xs font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <Send className="h-4 w-4 text-emerald-600" />
+              <div className="mt-6">
+                <h3 className="text-xs font-bold text-gray-900 mb-3 flex items-center gap-2">
+                  <Send className="h-3.5 w-3.5 text-emerald-500" />
                   Session Distributions
                 </h3>
-                <div className="space-y-3">
+                <div className="space-y-2">
                   {distributions.map((d) => (
-                    <div key={d.id} className="flex items-center justify-between rounded-xl border border-emerald-100 bg-emerald-50/50 p-4 shadow-sm">
+                    <div key={d.id} className="flex items-center justify-between border border-emerald-500/20 bg-emerald-500/5 p-3">
                       <div className="flex items-center gap-3">
-                        <span className="h-2 w-2 rounded-full bg-emerald-500 shadow-sm" />
-                        <span className="text-sm font-bold text-gray-900">{d.province}</span>
-                        <span className="text-[10px] font-mono text-slate-500">{d.date} {d.time}</span>
+                        <span className="h-2 w-2 bg-emerald-400" />
+                        <span className="text-xs font-bold text-gray-900">{d.province}</span>
+                        <span className="text-[10px] font-mono text-gray-500">{d.date} {d.time}</span>
                       </div>
-                      <span className="font-mono text-sm font-black text-emerald-700">{fmtNPRm(d.amount)}</span>
+                      <span className="font-mono text-sm font-bold text-emerald-400">{fmtNPR(d.amount)}</span>
                     </div>
                   ))}
                 </div>
@@ -277,31 +253,27 @@ export default function GovernmentPage() {
           </div>
 
           {/* Recent Aid Dispatches */}
-          <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm flex flex-col">
-            <h2 className="text-sm font-bold text-gray-900 mb-6 flex items-center gap-3 pb-4 border-b border-gray-100">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-100 border border-blue-200 shadow-sm">
-                <Shield className="h-4 w-4 text-blue-600" />
-              </div>
-              Recent Data Pulls (API)
+          <div>
+            <h2 className="text-xs font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <Shield className="h-4 w-4 text-emerald-500" />
+              Recent Aid Dispatches
             </h2>
-            <div className="space-y-3 flex-1 overflow-y-auto">
-              {recentAid.length > 0 ? recentAid.map((r, i) => {
-                const st = r.status === "delivered" ? "text-emerald-700 bg-emerald-50 border-emerald-200" : r.status === "in-transit" ? "text-amber-700 bg-amber-50 border-amber-200" : "text-blue-700 bg-blue-50 border-blue-200";
+            <div className="space-y-2">
+              {recentAid.map((r) => {
+                const st = r.status === "delivered" ? "text-emerald-400" : r.status === "in-transit" ? "text-amber-400" : "text-blue-400";
                 return (
-                  <div key={r.id} className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm hover:shadow-md transition-shadow duration-300 animate-slide-up-fade" style={{ animationDelay: `${i * 100 + 400}ms` }}>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-bold text-gray-900 truncate pr-2">{r.recipient}</span>
-                      <span className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded-full border ${st}`}>{r.status.toUpperCase()}</span>
+                  <div key={r.id} className="border border-gray-200 bg-white p-3">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs font-bold text-gray-900 truncate pr-2">{r.recipient}</span>
+                      <span className={`text-[9px] font-mono font-bold ${st}`}>{r.status.toUpperCase()}</span>
                     </div>
-                    <div className="flex items-center justify-between text-[11px] font-mono font-medium text-slate-500">
+                    <div className="flex items-center justify-between text-[10px] font-mono text-gray-500">
                       <span>{r.district}, {r.province}</span>
                       <span>{r.date}</span>
                     </div>
                   </div>
                 );
-              }) : (
-                 <div className="flex items-center justify-center h-40 text-sm text-slate-400 font-mono">NO RECORDS FOUND</div>
-              )}
+              })}
             </div>
           </div>
         </div>
@@ -309,41 +281,40 @@ export default function GovernmentPage() {
 
       {/* Distribution Modal */}
       {showDistribute && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 animate-in fade-in duration-200" onClick={() => setShowDistribute(false)}>
-          <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white shadow-2xl overflow-hidden animate-slide-up-fade" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between border-b border-gray-100 bg-gray-50/80 px-6 py-5">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4" onClick={() => setShowDistribute(false)}>
+          <div className="w-full max-w-md border border-gray-200 bg-white" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-gray-200 p-5">
               <div>
-                <h2 className="text-lg font-black text-gray-900">Allocate Funds</h2>
-                <p className="text-xs font-medium text-slate-500 mt-1">Distribute emergency budget</p>
+                <h2 className="text-sm font-bold text-gray-900">Allocate Funds</h2>
+                <p className="text-[10px] font-mono text-gray-500 mt-0.5">Distribute budget to province</p>
               </div>
               <button onClick={() => setShowDistribute(false)}
-                className="flex h-8 w-8 items-center justify-center rounded-full text-slate-400 hover:bg-slate-200 hover:text-slate-600 transition-colors">
-                <X className="h-5 w-5" />
+                className="flex h-8 w-8 items-center justify-center border border-gray-200 text-gray-500 hover:text-gray-900 transition-colors">
+                <X className="h-4 w-4" />
               </button>
             </div>
-            <div className="p-6 space-y-5">
+            <div className="p-5 space-y-4">
               <div>
-                <label className="block text-[10px] font-mono font-bold tracking-widest text-slate-500 mb-2">TARGET PROVINCE</label>
+                <label className="block text-[10px] font-mono font-bold tracking-widest text-gray-500 mb-1.5">TARGET PROVINCE</label>
                 <div className="relative">
                   <select value={distProvince} onChange={(e) => setDistProvince(e.target.value)}
-                    className="w-full appearance-none rounded-xl border border-gray-300 bg-white px-4 py-3 pr-10 text-sm font-semibold text-gray-900 shadow-sm transition-colors focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20">
+                    className="w-full appearance-none border border-gray-200 bg-gray-50 px-3 py-2.5 pr-8 text-sm text-gray-900 focus:border-emerald-500/50 focus:outline-none">
                     {PROVINCES.map((p) => <option key={p} value={p}>{p}</option>)}
                   </select>
-                  <ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
                 </div>
               </div>
               <div>
-                <label className="block text-[10px] font-mono font-bold tracking-widest text-slate-500 mb-2">AMOUNT (NPR)</label>
+                <label className="block text-[10px] font-mono font-bold tracking-widest text-gray-500 mb-1.5">AMOUNT (NPR)</label>
                 <input type="number" value={distAmount} onChange={(e) => setDistAmount(e.target.value)}
                   placeholder="e.g. 50000000"
-                  className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm font-mono font-bold text-gray-900 shadow-sm placeholder:text-slate-300 placeholder:font-sans transition-colors focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20" />
+                  className="w-full border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm font-mono text-gray-900 placeholder:text-gray-400 focus:border-emerald-500/50 focus:outline-none" />
                 {distAmount && !isNaN(Number(distAmount)) && Number(distAmount) > 0 && (
-                  <p className="mt-2 text-[10px] font-mono font-bold text-emerald-600">{fmtNPRm(Number(distAmount))}</p>
+                  <p className="mt-1 text-[10px] font-mono text-emerald-400">{fmtNPR(Number(distAmount))}</p>
                 )}
               </div>
               <button onClick={handleDistribute} disabled={!distAmount || isNaN(Number(distAmount)) || Number(distAmount) <= 0}
-                className="group relative w-full flex items-center justify-center gap-2 overflow-hidden rounded-xl bg-gray-900 mt-2 px-8 py-4 text-sm font-bold tracking-wider text-white shadow-sm transition-all duration-300 hover:bg-gray-800 disabled:opacity-50 hover:shadow-lg disabled:hover:shadow-none outline-none">
-                <div className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-emerald-400 via-emerald-500 to-emerald-400 opacity-60" />
+                className="w-full flex items-center justify-center gap-2 bg-emerald-600 py-2.5 text-xs font-bold tracking-wider text-white hover:bg-emerald-500 disabled:opacity-30">
                 <Send className="h-4 w-4" /> CONFIRM ALLOCATION
               </button>
             </div>

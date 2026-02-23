@@ -46,18 +46,26 @@ export default function Navbar() {
   }, []);
 
   const navLinks = [...publicLinks];
-  if (user?.role === "government")
+  if (user?.role === "government") {
     navLinks.splice(3, 0, {
       href: "/government",
       label: "GOV CMD",
       icon: Landmark,
     });
-  if (user?.role === "province")
+    // Redirect SOS to government SOS dashboard
+    const sosIdx = navLinks.findIndex((l) => l.label === "SOS");
+    if (sosIdx !== -1) navLinks[sosIdx] = { ...navLinks[sosIdx], href: "/government/sos" };
+  }
+  if (user?.role === "province") {
     navLinks.splice(3, 0, {
       href: "/province",
       label: "PROV CMD",
       icon: Building2,
     });
+    // Redirect SOS to province SOS dashboard
+    const sosIdx = navLinks.findIndex((l) => l.label === "SOS");
+    if (sosIdx !== -1) navLinks[sosIdx] = { ...navLinks[sosIdx], href: "/province/sos" };
+  }
 
   const handleLogout = () => {
     logout();
