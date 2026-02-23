@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -20,6 +20,10 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import BottomNav from "@/components/ui/BottomNav";
 import { useLang } from "@/context/LanguageContext";
+import {
+  getWildfirePredictions,
+  WildfirePrediction,
+} from "@/services/publicApi";
 
 type EvacuationType = "Police" | "Hospital" | "Area 3" | null;
 type DisasterType = "Flood" | "Landslide" | "Fire" | "Other" | null;
@@ -35,6 +39,10 @@ export default function MapScreen() {
   const [disasterFilter, setDisasterFilter] = useState<DisasterType>(null);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [wildfirePredictions, setWildfirePredictions] = useState<
+    WildfirePrediction[]
+  >([]);
+  const [loadingWildfire, setLoadingWildfire] = useState(false);
 
   // UI State
   const [isEvacDropdownOpen, setIsEvacDropdownOpen] = useState(false);
@@ -90,6 +98,63 @@ export default function MapScreen() {
     overflow: "hidden",
   }));
 
+  // Fetch wildfire predictions when Fire disaster type is selected
+  useEffect(() => {
+    if (disasterFilter === t.fire || disasterFilter === "Fire") {
+      fetchWildfireData();
+    } else {
+      setWildfirePredictions([]);
+    }
+  }, [disasterFilter, selectedDate]);
+
+  const fetchWildfireData = async () => {
+    setLoadingWildfire(true);
+    try {
+      // Format date to YYYY-MM-DD
+      const dateStr = selectedDate.toISOString().split("T")[0];
+
+      const predictions = await getWildfirePredictions({
+        date: dateStr, // Use single date for prediction day
+        min_fire_prob: 0.5, // Show predictions with 50%+ probability for better visualization
+        limit: 500, // Limit to 500 predictions
+      });
+
+      setWildfirePredictions(predictions);
+      console.log(
+        `Fetched ${predictions.length} wildfire predictions for ${dateStr}`,
+      );
+    } catch (error) {
+      console.error("Failed to fetch wildfire predictions:", error);
+      setWildfirePredictions([]);
+    } finally {
+      setLoadingWildfire(false);
+    }
+  };
+
+  // Get risk severity based on fire probability (same logic as web)
+  const getRiskSeverity = (fireProb: number): string => {
+    if (fireProb > 0.99) return "extreme";
+    if (fireProb > 0.94) return "high";
+    if (fireProb > 0.8) return "medium";
+    return "minimal";
+  };
+
+  // Get color based on severity
+  const getSeverityColor = (severity: string): string => {
+    switch (severity) {
+      case "extreme":
+        return "#8B0000"; // Dark red
+      case "high":
+        return "#FF0000"; // Red
+      case "medium":
+        return "#FF6B00"; // Orange
+      case "minimal":
+        return "#FFA500"; // Light orange
+      default:
+        return "#FF5722";
+    }
+  };
+
   // Generating Leaflet HTML based on filters
   const getLeafletHtml = () => {
     // Icons as SVGs
@@ -99,8 +164,26 @@ export default function MapScreen() {
       area3: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#4CAF50" width="24px" height="24px"><path d="M0 0h24v24H0z" fill="none"/><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>`,
       flood: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#00BCD4" width="24px" height="24px"><path d="M0 0h24v24H0z" fill="none"/><path d="M12 2L2 22h20L12 2zm0 3.99L19.53 19H4.47L12 5.99zM13 18h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>`,
       landslide: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#795548" width="24px" height="24px"><g><path d="M12,2L2.5,19h19L12,2z M13,16h-2v-2h2V16z M13,12h-2V7h2V12z"/></g></svg>`,
-      fire: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#FF5722" width="24px" height="24px"><path d="M0 0h24v24H0z" fill="none"/><path d="M19.48 12.35c-1.57-4.08-7.16-4.3-5.81-10.23.1-.44-.37-.78-.75-.55C9.29 3.71 6.68 8 8.87 13.62c.18.46-.36.89-.75.59-1.81-1.37-2-3.34-1.84-4.75.06-.52-.62-.77-.91-.34C4.69 10.16 4 11.84 4 14.37c.38 5.6 5.11 7.32 6.81 7.54 2.43.31 5.06-.14 6.95-1.87 2.98-2.73 2.85-5.84 1.72-7.69zM12 20c-2.35-.57-4.26-2.89-3.32-5.74 0 0 1.25 1.57 2.12 1.45.71-.1 1.2-1.46 1.25-1.5.05.04 1.13 2.58 2.37 2.03 0 0-.8 2.76-2.42 3.76z"/></svg>`,
     };
+
+    // Prepare wildfire markers as small colored dots
+    const wildfireMarkers = wildfirePredictions.map((p: WildfirePrediction) => {
+      const severity = getRiskSeverity(p.fire_prob);
+      const color = getSeverityColor(severity);
+      // Use the selected date (not database date which is 7 days behind)
+      const displayDate = selectedDate.toLocaleDateString();
+      return {
+        lat: p.latitude,
+        lng: p.longitude,
+        type: `${p.district}`,
+        category: "Disaster",
+        subType: "Fire",
+        isFireDot: true,
+        color: color,
+        severity: severity,
+        popup: `<b>${p.district}</b><br/>Fire Probability: ${(p.fire_prob * 100).toFixed(1)}%<br/>Severity: ${severity.toUpperCase()}<br/>Prediction Date: ${displayDate}`,
+      };
+    });
 
     return `
     <!DOCTYPE html>
@@ -123,6 +206,13 @@ export default function MapScreen() {
             border: 2px solid white;
             box-shadow: 0 2px 4px rgba(0,0,0,0.25);
           }
+          .fire-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 0 8px rgba(0,0,0,0.4);
+          }
         </style>
       </head>
       <body>
@@ -136,7 +226,8 @@ export default function MapScreen() {
               maxZoom: 19
             }).addTo(map);
 
-            const locations = [
+            // Static locations for evacuation areas and other disasters
+            const staticLocations = [
               { lat: 27.7172, lng: 85.3240, type: 'Teaching Hospital', category: 'Hospital', icon: '${svgs.hospital}' },
               { lat: 27.6915, lng: 85.3420, type: 'Civil Hospital', category: 'Hospital', icon: '${svgs.hospital}' },
               { lat: 27.7100, lng: 85.3300, type: 'Police HQ', category: 'Police', icon: '${svgs.police}' },
@@ -144,8 +235,13 @@ export default function MapScreen() {
               { lat: 27.6710, lng: 85.3230, type: 'Jawalakhel Area', category: 'Area 3', icon: '${svgs.area3}' },
               { lat: 27.7000, lng: 85.3000, type: 'Severe Flood', category: 'Disaster', subType: 'Flood', icon: '${svgs.flood}' },
               { lat: 27.7400, lng: 85.3500, type: 'Landslide Zone', category: 'Disaster', subType: 'Landslide', icon: '${svgs.landslide}' },
-              { lat: 27.6800, lng: 85.2900, type: 'Factory Fire', category: 'Disaster', subType: 'Fire', icon: '${svgs.fire}' }
             ];
+
+            // Wildfire predictions from API
+            const wildfireLocations = ${JSON.stringify(wildfireMarkers)};
+
+            // Combine static and wildfire locations
+            const locations = [...staticLocations, ...wildfireLocations];
 
             const activeEvacFilter = "${evacuationFilter || ""}";
             const activeDisasterFilter = "${disasterFilter || ""}";
@@ -167,14 +263,30 @@ export default function MapScreen() {
             if (filtered.length > 0) {
                 const group = new L.featureGroup();
                 filtered.forEach(loc => {
-                  const icon = L.divIcon({
-                    className: 'custom-icon',
-                    html: loc.icon,
-                    iconSize: [40, 40],
-                    iconAnchor: [20, 20]
-                  });
-                  const marker = L.marker([loc.lat, loc.lng], { icon: icon })
-                   .bindPopup('<b>' + loc.type + '</b><br>' + (loc.subType || loc.category));
+                  let marker;
+                  
+                  // Use small colored dots for wildfire predictions
+                  if (loc.isFireDot) {
+                    const icon = L.divIcon({
+                      className: '',
+                      html: '<div class="fire-dot" style="background-color: ' + loc.color + ';"></div>',
+                      iconSize: [10, 10],
+                      iconAnchor: [5, 5]
+                    });
+                    marker = L.marker([loc.lat, loc.lng], { icon: icon });
+                  } else {
+                    // Use regular icons for static locations
+                    const icon = L.divIcon({
+                      className: 'custom-icon',
+                      html: loc.icon,
+                      iconSize: [40, 40],
+                      iconAnchor: [20, 20]
+                    });
+                    marker = L.marker([loc.lat, loc.lng], { icon: icon });
+                  }
+                  
+                  const popupText = loc.popup || ('<b>' + loc.type + '</b><br>' + (loc.subType || loc.category));
+                  marker.bindPopup(popupText);
                   group.addLayer(marker);
                 });
                 group.addTo(map);
@@ -392,6 +504,14 @@ export default function MapScreen() {
               style={styles.map}
               scrollEnabled={false}
             />
+          )}
+
+          {/* Loading indicator for wildfire data */}
+          {loadingWildfire && (
+            <View style={styles.loadingOverlay}>
+              <ActivityIndicator size="large" color="#FF5722" />
+              <Text style={styles.loadingText}>Loading wildfire data...</Text>
+            </View>
           )}
 
           {/* Fullscreen Toggle Button */}
@@ -612,5 +732,22 @@ const styles = StyleSheet.create({
     zIndex: 999,
     borderWidth: 1,
     borderColor: "#eee",
+  },
+  loadingOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 998,
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: "#FF5722",
+    fontWeight: "600",
   },
 });
