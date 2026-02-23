@@ -112,7 +112,7 @@ export default function SOSPage() {
             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-100 border border-red-200">
               <AlertTriangle className="h-4 w-4 text-red-600" />
             </span>
-            <span className="text-[10px] font-mono font-bold tracking-[0.2em] text-red-600">
+            <span className="text-xs font-mono font-bold tracking-[0.2em] text-red-600">
               EMERGENCY
             </span>
           </div>
@@ -126,7 +126,7 @@ export default function SOSPage() {
 
           {/* LEFT SIDE — SOS Button */}
           <div className="flex flex-col items-center justify-center rounded-3xl border-2 border-dashed border-red-200 bg-red-50/30 p-8 lg:p-12 min-h-[500px]">
-            <p className="text-sm text-slate-500 max-w-xs text-center mb-8">
+            <p className="text-base text-slate-500 max-w-xs text-center mb-8">
               Press the button to send your name & location to authorities immediately.
             </p>
 
@@ -139,7 +139,7 @@ export default function SOSPage() {
                 >
                   <Siren className="h-14 w-14 mb-2" />
                   <span className="text-2xl font-black tracking-tight">SOS</span>
-                  <span className="text-[10px] font-bold tracking-widest opacity-80 mt-1">TAP FOR HELP</span>
+                  <span className="text-xs font-bold tracking-widest opacity-80 mt-1">TAP FOR HELP</span>
                 </button>
               )}
 
@@ -149,14 +149,14 @@ export default function SOSPage() {
                   className="relative h-48 w-48 rounded-full bg-gradient-to-br from-red-600 to-red-800 text-white shadow-[0_0_80px_rgba(239,68,68,0.6)] animate-pulse flex flex-col items-center justify-center"
                 >
                   <span className="text-7xl font-black">{countdown}</span>
-                  <span className="text-xs font-bold tracking-widest opacity-80 mt-2">TAP TO CANCEL</span>
+                  <span className="text-sm font-bold tracking-widest opacity-80 mt-2">TAP TO CANCEL</span>
                 </button>
               )}
 
               {phase === "sending" && (
                 <div className="relative h-48 w-48 rounded-full bg-gradient-to-br from-amber-500 to-amber-700 text-white shadow-[0_0_60px_rgba(245,158,11,0.4)] flex flex-col items-center justify-center">
                   <div className="h-12 w-12 border-4 border-white/30 border-t-white rounded-full animate-spin mb-3" />
-                  <span className="text-sm font-bold tracking-widest">SENDING...</span>
+                  <span className="text-base font-bold tracking-widest">SENDING...</span>
                 </div>
               )}
 
@@ -164,7 +164,7 @@ export default function SOSPage() {
                 <div className="relative h-48 w-48 rounded-full bg-gradient-to-br from-green-500 to-green-700 text-white shadow-[0_0_60px_rgba(34,197,94,0.4)] flex flex-col items-center justify-center">
                   <CheckCircle2 className="h-14 w-14 mb-2" />
                   <span className="text-lg font-black">SENT!</span>
-                  <span className="text-[10px] font-bold tracking-widest opacity-80 mt-1">HELP IS COMING</span>
+                  <span className="text-xs font-bold tracking-widest opacity-80 mt-1">HELP IS COMING</span>
                 </div>
               )}
 
@@ -174,16 +174,16 @@ export default function SOSPage() {
                   className="relative h-48 w-48 rounded-full bg-gradient-to-br from-gray-600 to-gray-800 text-white shadow-[0_0_60px_rgba(107,114,128,0.4)] flex flex-col items-center justify-center"
                 >
                   <AlertTriangle className="h-14 w-14 mb-2" />
-                  <span className="text-sm font-bold">FAILED</span>
-                  <span className="text-[10px] font-bold tracking-widest opacity-80 mt-1">TAP TO RETRY</span>
+                  <span className="text-base font-bold">FAILED</span>
+                  <span className="text-xs font-bold tracking-widest opacity-80 mt-1">TAP TO RETRY</span>
                 </button>
               )}
             </div>
 
             {/* Status info */}
-            <div className="flex items-center gap-4 text-xs text-gray-500">
+            <div className="flex items-center gap-4 text-sm text-gray-500">
               <div className="flex items-center gap-1.5">
-                <MapPin className="h-3.5 w-3.5" />
+                <MapPin className="h-4 w-4" />
                 {location ? (
                   <span className="text-green-600 font-semibold">Location detected</span>
                 ) : (
@@ -215,9 +215,9 @@ export default function SOSPage() {
           {/* RIGHT SIDE — Emergency Numbers */}
           <div>
             <div className="flex items-center gap-2 mb-5">
-              <PhoneCall className="h-4 w-4 text-red-600" />
-              <span className="text-[10px] font-mono font-bold tracking-[0.2em] text-red-600">DIRECTORY</span>
-              <span className="ml-1 text-lg font-black text-gray-900">Emergency Numbers</span>
+              <PhoneCall className="h-5 w-5 text-red-600" />
+              <span className="text-xs font-mono font-bold tracking-[0.2em] text-red-600">DIRECTORY</span>
+              <span className="ml-1 text-xl font-black text-gray-900">Emergency Numbers</span>
             </div>
 
             <div className="grid grid-cols-1 gap-3">
@@ -229,14 +229,14 @@ export default function SOSPage() {
                     href={`tel:${item.number}`}
                     className={`group flex items-center p-4 rounded-xl border border-gray-200 bg-white transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md hover:${item.border}`}
                   >
-                    <div className={`flex h-10 w-10 flex-none items-center justify-center rounded-lg border ${item.border} ${item.bg}`}>
-                      <Icon className={`h-4 w-4 ${item.color}`} />
+                    <div className={`flex h-11 w-11 flex-none items-center justify-center rounded-lg border ${item.border} ${item.bg}`}>
+                      <Icon className={`h-5 w-5 ${item.color}`} />
                     </div>
                     <div className="ml-3 flex-1 min-w-0">
-                      <h3 className="text-sm font-bold text-gray-900">{item.name}</h3>
-                      <p className="text-[11px] text-slate-500 truncate">{item.desc}</p>
+                      <h3 className="text-base font-bold text-gray-900">{item.name}</h3>
+                      <p className="text-xs text-slate-500 truncate">{item.desc}</p>
                     </div>
-                    <span className={`text-base font-black font-mono ${item.color} ml-2`}>{item.number}</span>
+                    <span className={`text-lg font-black font-mono ${item.color} ml-2`}>{item.number}</span>
                   </a>
                 );
               })}

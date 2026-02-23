@@ -199,19 +199,19 @@ export default function ProvincePage() {
               <span className={`flex h-8 w-8 items-center justify-center rounded-lg bg-white ${theme.border} border shadow-sm`}>
                 <MapPin className={`h-4 w-4 ${theme.icon}`} />
               </span>
-              <span className={`text-[10px] font-mono font-bold tracking-[0.2em] ${theme.text} uppercase opacity-70`}>
+              <span className={`text-xs font-mono font-bold tracking-[0.2em] ${theme.text} uppercase opacity-70`}>
                 PROVINCE COMMAND
               </span>
             </div>
             <h1 className="text-3xl font-black text-gray-900 tracking-tight">{province} Province</h1>
-            <p className="mt-1 text-sm text-slate-500 font-medium">
+            <p className="mt-1 text-base text-slate-500 font-medium">
               Operator: <span className="font-bold text-gray-700">{user.name}</span>
             </p>
           </div>
           <div className="flex items-center gap-2">
             <button onClick={() => fetchProvinceData(true)} disabled={refreshing}
-              className="inline-flex items-center gap-2 rounded-xl bg-white border border-gray-200 px-4 py-2.5 text-xs font-bold tracking-wider text-gray-700 hover:bg-gray-50 shadow-sm disabled:opacity-50 transition-all">
-              <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+              className="inline-flex items-center gap-2 rounded-xl bg-white border border-gray-200 px-4 py-2.5 text-sm font-bold tracking-wider text-gray-700 hover:bg-gray-50 shadow-sm disabled:opacity-50 transition-all">
+              <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
               {refreshing ? 'REFRESHING...' : 'REFRESH'}
             </button>
             <button onClick={() => setShowDispatch(true)}
@@ -229,7 +229,7 @@ export default function ProvincePage() {
             { key: "aid", label: "AID RECORDS" },
           ].map((t) => (
             <button key={t.key} onClick={() => setTab(t.key)}
-              className={`px-5 py-2.5 text-xs font-bold tracking-widest rounded-xl transition-all duration-300 ${
+              className={`px-5 py-2.5 text-sm font-bold tracking-widest rounded-xl transition-all duration-300 ${
                 tab === t.key
                   ? `${theme.btn} text-white shadow-md`
                   : "bg-white border border-gray-200 text-slate-500 hover:text-gray-900 hover:border-gray-300 shadow-sm"
@@ -259,7 +259,7 @@ export default function ProvincePage() {
                     <div className={`flex h-8 w-8 items-center justify-center rounded-lg bg-white shadow-sm border ${theme.border}`}>
                       <s.icon className={`h-4 w-4 ${theme.icon}`} />
                     </div>
-                    <span className="text-[10px] font-mono font-bold tracking-widest text-slate-500 uppercase">{s.label}</span>
+                    <span className="text-xs font-mono font-bold tracking-widest text-slate-500 uppercase">{s.label}</span>
                   </div>
                   <p className="text-xl font-black font-mono tracking-tight text-gray-900 relative z-10">{s.value}</p>
                 </div>
@@ -269,7 +269,7 @@ export default function ProvincePage() {
             {/* Utilization */}
             <div className={`rounded-2xl border ${theme.border} bg-white p-6 shadow-sm`}>
               <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-100">
-                <span className="text-sm font-bold text-gray-900 flex items-center gap-3">
+                <span className="text-base font-bold text-gray-900 flex items-center gap-3">
                   <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${theme.light} border ${theme.border}`}>
                     <BarChart3 className={`h-4 w-4 ${theme.icon}`} />
                   </div>
@@ -281,7 +281,7 @@ export default function ProvincePage() {
                 <div className={`h-full transition-all duration-1000 ease-out ${theme.btn}`}
                   style={{ width: `${Math.max(budget.utilization, 1)}%` }} />
               </div>
-              <div className="mt-3 flex justify-between text-xs font-mono font-medium text-slate-500">
+              <div className="mt-3 flex justify-between text-sm font-mono font-medium text-slate-500">
                 <span>Disbursed: <strong className="text-gray-900">{fmtNPR(budget.disbursed)}</strong></span>
                 <span>Remaining: <strong className="text-gray-900">{fmtNPR(budget.remaining)}</strong></span>
               </div>
@@ -289,7 +289,7 @@ export default function ProvincePage() {
 
             {/* District quick view */}
             <div>
-              <h3 className="text-sm font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <h3 className="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
                 <Building2 className={`h-4 w-4 ${theme.icon}`} /> District Overview
               </h3>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -299,8 +299,8 @@ export default function ProvincePage() {
                     <div key={d.district}
                       className={`rounded-2xl border ${theme.border} bg-white p-5 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1`}>
                       <div className="flex items-center justify-between mb-3 pb-2 border-b border-gray-100">
-                        <h4 className="text-sm font-bold text-gray-900">{d.district}</h4>
-                        <span className={`text-[10px] font-mono font-bold ${util >= 80 ? "text-emerald-600" : util >= 60 ? "text-amber-600" : "text-red-500"}`}>
+                        <h4 className="text-base font-bold text-gray-900">{d.district}</h4>
+                        <span className={`text-xs font-mono font-bold ${util >= 80 ? "text-emerald-600" : util >= 60 ? "text-amber-600" : "text-red-500"}`}>
                           {util}%
                         </span>
                       </div>
@@ -308,7 +308,7 @@ export default function ProvincePage() {
                         <div className={`h-full transition-all duration-1000 ${util >= 80 ? "bg-emerald-500" : util >= 60 ? "bg-amber-500" : "bg-red-500"}`}
                           style={{ width: `${Math.max(util, 1)}%` }} />
                       </div>
-                      <div className="grid grid-cols-2 gap-2 text-[10px] font-mono font-medium text-slate-500">
+                      <div className="grid grid-cols-2 gap-2 text-xs font-mono font-medium text-slate-500">
                         <span className="bg-gray-50 px-2 py-1.5 rounded-md flex justify-between">
                           Affected: <span className="text-red-600 font-bold">{(d.affected || 0).toLocaleString()}</span>
                         </span>
@@ -328,15 +328,15 @@ export default function ProvincePage() {
         {tab === "districts" && (
           <div className={`rounded-2xl border ${theme.border} bg-white shadow-sm overflow-hidden animate-slide-up-fade delay-200`}>
             <div className="overflow-x-auto">
-              <table className="w-full text-xs">
+              <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-gray-200 bg-gray-50/50">
-                    <th className="px-5 py-4 text-left text-[10px] font-mono font-bold tracking-widest text-slate-500 uppercase">DISTRICT</th>
-                    <th className="px-5 py-4 text-right text-[10px] font-mono font-bold tracking-widest text-slate-500 uppercase">ALLOCATED</th>
-                    <th className="px-5 py-4 text-right text-[10px] font-mono font-bold tracking-widest text-slate-500 uppercase">DISBURSED</th>
-                    <th className="px-5 py-4 text-center text-[10px] font-mono font-bold tracking-widest text-slate-500 uppercase">UTIL %</th>
-                    <th className="px-5 py-4 text-right text-[10px] font-mono font-bold tracking-widest text-slate-500 uppercase">AFFECTED</th>
-                    <th className="px-5 py-4 text-right text-[10px] font-mono font-bold tracking-widest text-slate-500 uppercase">EVENTS</th>
+                    <th className="px-5 py-4 text-left text-xs font-mono font-bold tracking-widest text-slate-500 uppercase">DISTRICT</th>
+                    <th className="px-5 py-4 text-right text-xs font-mono font-bold tracking-widest text-slate-500 uppercase">ALLOCATED</th>
+                    <th className="px-5 py-4 text-right text-xs font-mono font-bold tracking-widest text-slate-500 uppercase">DISBURSED</th>
+                    <th className="px-5 py-4 text-center text-xs font-mono font-bold tracking-widest text-slate-500 uppercase">UTIL %</th>
+                    <th className="px-5 py-4 text-right text-xs font-mono font-bold tracking-widest text-slate-500 uppercase">AFFECTED</th>
+                    <th className="px-5 py-4 text-right text-xs font-mono font-bold tracking-widest text-slate-500 uppercase">EVENTS</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -353,7 +353,7 @@ export default function ProvincePage() {
                               <div className={`h-full transition-all duration-1000 ease-out ${util >= 80 ? "bg-emerald-500" : util >= 60 ? "bg-amber-500" : "bg-red-500"}`}
                                 style={{ width: `${Math.max(util, 1)}%` }} />
                             </div>
-                            <span className={`text-[10px] font-mono font-bold ${util >= 80 ? "text-emerald-600" : util >= 60 ? "text-amber-600" : "text-red-500"}`}>
+                            <span className={`text-xs font-mono font-bold ${util >= 80 ? "text-emerald-600" : util >= 60 ? "text-amber-600" : "text-red-500"}`}>
                               {util}%
                             </span>
                           </div>
@@ -375,11 +375,11 @@ export default function ProvincePage() {
             <div className={`rounded-2xl border ${theme.border} bg-white p-6 shadow-sm mb-6`}>
               <div className="flex items-center gap-2 mb-4">
                 <Filter className={`h-4 w-4 ${theme.icon}`} />
-                <span className={`text-[10px] font-mono font-bold tracking-[0.2em] ${theme.icon}`}>FILTER AID</span>
+                <span className={`text-xs font-mono font-bold tracking-[0.2em] ${theme.icon}`}>FILTER AID</span>
               </div>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="block text-[10px] font-mono font-bold uppercase tracking-widest text-slate-500 mb-2">Search</label>
+                  <label className="block text-xs font-mono font-bold uppercase tracking-widest text-slate-500 mb-2">Search</label>
                   <div className="relative">
                     <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                     <input value={aidSearch} onChange={(e) => setAidSearch(e.target.value)} placeholder="Recipient or district..."
@@ -387,14 +387,14 @@ export default function ProvincePage() {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-[10px] font-mono font-bold uppercase tracking-widest text-slate-500 mb-2">Type</label>
+                  <label className="block text-xs font-mono font-bold uppercase tracking-widest text-slate-500 mb-2">Type</label>
                   <div className="relative">
                     <select value={aidType} onChange={(e) => setAidType(e.target.value)}
                       className="w-full appearance-none rounded-xl border border-gray-300 bg-white px-4 py-3 pr-10 text-sm font-semibold text-gray-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-200">
                       <option value="All">All Types</option>
                       {Object.entries(AID_TYPES).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
                     </select>
-                    <ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+                    <ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                   </div>
                 </div>
               </div>
@@ -402,15 +402,15 @@ export default function ProvincePage() {
 
             <div className={`rounded-2xl border ${theme.border} bg-white shadow-sm overflow-hidden`}>
               <div className="overflow-x-auto">
-                <table className="w-full text-xs">
+                <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-gray-200 bg-gray-50/50">
-                      <th className="px-5 py-4 text-left text-[10px] font-mono font-bold tracking-widest text-slate-500 uppercase">RECIPIENT</th>
-                      <th className="px-5 py-4 text-left text-[10px] font-mono font-bold tracking-widest text-slate-500 uppercase">TYPE</th>
-                      <th className="px-5 py-4 text-left text-[10px] font-mono font-bold tracking-widest text-slate-500 uppercase">AMOUNT</th>
-                      <th className="px-5 py-4 text-left text-[10px] font-mono font-bold tracking-widest text-slate-500 uppercase">DISTRICT</th>
-                      <th className="px-5 py-4 text-left text-[10px] font-mono font-bold tracking-widest text-slate-500 uppercase">DATE</th>
-                      <th className="px-5 py-4 text-left text-[10px] font-mono font-bold tracking-widest text-slate-500 uppercase">STATUS</th>
+                      <th className="px-5 py-4 text-left text-xs font-mono font-bold tracking-widest text-slate-500 uppercase">RECIPIENT</th>
+                      <th className="px-5 py-4 text-left text-xs font-mono font-bold tracking-widest text-slate-500 uppercase">TYPE</th>
+                      <th className="px-5 py-4 text-left text-xs font-mono font-bold tracking-widest text-slate-500 uppercase">AMOUNT</th>
+                      <th className="px-5 py-4 text-left text-xs font-mono font-bold tracking-widest text-slate-500 uppercase">DISTRICT</th>
+                      <th className="px-5 py-4 text-left text-xs font-mono font-bold tracking-widest text-slate-500 uppercase">DATE</th>
+                      <th className="px-5 py-4 text-left text-xs font-mono font-bold tracking-widest text-slate-500 uppercase">STATUS</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
@@ -422,8 +422,8 @@ export default function ProvincePage() {
                         <tr key={r.id} className="bg-white hover:bg-gray-50 transition-colors">
                           <td className="px-5 py-4 font-bold text-gray-900 whitespace-nowrap">{r.recipient}</td>
                           <td className="px-5 py-4">
-                            <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[9px] font-mono font-bold tracking-wider ${ac.text} ${ac.border} ${ac.bg}`}>
-                              <Icon className="h-3.5 w-3.5" />
+                            <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-mono font-bold tracking-wider ${ac.text} ${ac.border} ${ac.bg}`}>
+                              <Icon className="h-4 w-4" />
                               {AID_TYPES[r.type]?.label?.toUpperCase() || r.type.toUpperCase()}
                             </span>
                           </td>
@@ -435,7 +435,7 @@ export default function ProvincePage() {
                           <td className="px-5 py-4">
                             <span className="flex items-center gap-1.5">
                               <span className={`h-1.5 w-1.5 rounded-full ${st.dot}`} />
-                              <span className={`text-[10px] font-mono font-bold ${st.text}`}>{st.label}</span>
+                              <span className={`text-xs font-mono font-bold ${st.text}`}>{st.label}</span>
                             </span>
                           </td>
                         </tr>
@@ -446,7 +446,7 @@ export default function ProvincePage() {
               </div>
               {filteredAid.length === 0 && (
                 <div className="bg-white p-12 text-center">
-                  <p className="text-sm text-slate-500">No records match filters</p>
+                  <p className="text-base text-slate-500">No records match filters</p>
                 </div>
               )}
             </div>
@@ -470,14 +470,14 @@ export default function ProvincePage() {
             </div>
             <div className="p-6 space-y-5">
               <div>
-                <label className="block text-[10px] font-mono font-bold tracking-widest text-slate-500 mb-2">AID TYPE</label>
+                <label className="block text-xs font-mono font-bold tracking-widest text-slate-500 mb-2">AID TYPE</label>
                 <div className="grid grid-cols-4 gap-2">
                   {Object.entries(AID_TYPES).map(([key, val]) => {
                     const Icon = AID_ICONS[key];
                     const ac = AID_COLORS[key] || AID_COLORS.money;
                     return (
                       <button key={key} onClick={() => setDispType(key)}
-                        className={`flex flex-col items-center gap-1 p-3 text-[10px] font-mono rounded-xl transition-all ${
+                        className={`flex flex-col items-center gap-1 p-3 text-xs font-mono rounded-xl transition-all ${
                           dispType === key ? `${ac.bg} ${ac.text} border ${ac.border} shadow-sm` : "bg-gray-50 text-gray-500 hover:text-gray-900 border border-transparent"
                         }`}>
                         {Icon && <Icon className="h-4 w-4" />}
@@ -488,7 +488,7 @@ export default function ProvincePage() {
                 </div>
               </div>
               <div>
-                <label className="block text-[10px] font-mono font-bold tracking-widest text-slate-500 mb-2">TARGET DISTRICT</label>
+                <label className="block text-xs font-mono font-bold tracking-widest text-slate-500 mb-2">TARGET DISTRICT</label>
                 <div className="relative">
                   <select value={dispDistrict} onChange={(e) => setDispDistrict(e.target.value)}
                     className="w-full appearance-none rounded-xl border border-gray-300 bg-white px-4 py-3 pr-10 text-sm font-semibold text-gray-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-200">
@@ -498,12 +498,12 @@ export default function ProvincePage() {
                 </div>
               </div>
               <div>
-                <label className="block text-[10px] font-mono font-bold tracking-widest text-slate-500 mb-2">RECIPIENT / GROUP</label>
+                <label className="block text-xs font-mono font-bold tracking-widest text-slate-500 mb-2">RECIPIENT / GROUP</label>
                 <input value={dispRecipient} onChange={(e) => setDispRecipient(e.target.value)} placeholder="Camp or group name"
                   className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-900 shadow-sm placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-gray-200" />
               </div>
               <div>
-                <label className="block text-[10px] font-mono font-bold tracking-widest text-slate-500 mb-2">
+                <label className="block text-xs font-mono font-bold tracking-widest text-slate-500 mb-2">
                   AMOUNT {dispType === "money" ? "(NPR)" : dispType === "food" ? "(PACKETS)" : dispType === "shelter" ? "(TENTS)" : "(SETS)"}
                 </label>
                 <input type="number" value={dispAmount} onChange={(e) => setDispAmount(e.target.value)} placeholder="e.g. 500000"

@@ -446,14 +446,14 @@ const STATUS_STYLE = {
 function Select({ label, value, onChange, options }) {
   return (
     <div>
-      <label className="block text-[10px] font-mono font-semibold uppercase tracking-widest text-slate-400 mb-1.5">
+      <label className="block text-xs font-mono font-semibold uppercase tracking-widest text-slate-400 mb-1.5">
         {label}
       </label>
       <div className="relative">
         <select
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="w-full appearance-none rounded-xl border border-gray-200 bg-white px-3 py-2 pr-8 text-xs text-gray-800 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100 transition-all"
+          className="w-full appearance-none rounded-xl border border-gray-200 bg-white px-3 py-2.5 pr-8 text-sm text-gray-800 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100 transition-all"
         >
           {options.map((o) => (
             <option key={o} value={o}>
@@ -461,7 +461,7 @@ function Select({ label, value, onChange, options }) {
             </option>
           ))}
         </select>
-        <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+        <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
       </div>
     </div>
   );
@@ -482,44 +482,44 @@ function AlertCard({ alert, onClick }) {
         <div className="flex items-center justify-between gap-2 mb-3">
           <div className="flex items-center gap-2">
             <div
-              className={`flex h-7 w-7 items-center justify-center rounded-lg ${bgClass} border ${borderClass}`}
+              className={`flex h-8 w-8 items-center justify-center rounded-lg ${bgClass} border ${borderClass}`}
             >
-              <alert.icon className={`h-3.5 w-3.5 ${sev.text}`} />
+              <alert.icon className={`h-4 w-4 ${sev.text}`} />
             </div>
             <span
-              className={`rounded-full border px-2 py-0.5 text-[9px] font-mono font-bold tracking-widest ${sev.badge}`}
+              className={`rounded-full border px-2.5 py-1 text-xs font-mono font-bold tracking-widest ${sev.badge}`}
             >
               {sev.label}
             </span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className={`h-1.5 w-1.5 rounded-full ${st.dot}`} />
-            <span className={`text-[9px] font-mono font-bold ${st.text}`}>
+            <span className={`h-2 w-2 rounded-full ${st.dot}`} />
+            <span className={`text-xs font-mono font-bold ${st.text}`}>
               {st.label}
             </span>
           </div>
         </div>
-        <h3 className="text-sm font-bold text-gray-900 leading-snug group-hover:text-emerald-700 transition-colors">
+        <h3 className="text-base font-bold text-gray-900 leading-snug group-hover:text-emerald-700 transition-colors">
           {alert.title}
         </h3>
-        <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] font-mono text-slate-500">
+        <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-mono text-slate-500">
           <span className="flex items-center gap-1">
-            <MapPin className="h-3 w-3" />
+            <MapPin className="h-3.5 w-3.5" />
             {alert.district}, {alert.province}
           </span>
           <span className="flex items-center gap-1">
-            <Clock className="h-3 w-3" />
+            <Clock className="h-3.5 w-3.5" />
             {alert.date} · {alert.time}
           </span>
           {alert.affectedPeople > 0 && (
             <span className="flex items-center gap-1">
-              <Users className="h-3 w-3" />
+              <Users className="h-3.5 w-3.5" />
               {alert.affectedPeople.toLocaleString()} affected
             </span>
           )}
         </div>
-        <div className="mt-3 flex items-center gap-1 text-[10px] font-semibold text-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity">
-          View details <ChevronRight className="h-3 w-3" />
+        <div className="mt-3 flex items-center gap-1 text-xs font-semibold text-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity">
+          View details <ChevronRight className="h-3.5 w-3.5" />
         </div>
       </div>
     </button>
@@ -558,24 +558,24 @@ function AlertModal({ alert, onClose }) {
           <div>
             <div className="flex items-center gap-2 mb-2">
               <span
-                className={`rounded-full border px-2.5 py-0.5 text-[10px] font-mono font-bold tracking-widest ${sev.badge}`}
+                className={`rounded-full border px-3 py-1 text-xs font-mono font-bold tracking-widest ${sev.badge}`}
               >
                 {sev.label}
               </span>
               <span
-                className={`flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[10px] font-mono font-bold ${st.badge}`}
+                className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-mono font-bold ${st.badge}`}
               >
                 <span className={`h-1.5 w-1.5 rounded-full ${st.dot}`} />
                 {st.label}
               </span>
             </div>
-            <h2 className="text-lg font-black text-gray-900">{alert.title}</h2>
+            <h2 className="text-xl font-black text-gray-900">{alert.title}</h2>
           </div>
           <button
             onClick={onClose}
             className="flex h-8 w-8 flex-none items-center justify-center rounded-xl border border-gray-200 text-slate-400 hover:border-red-200 hover:text-red-600 hover:bg-red-50 transition-colors"
           >
-            <X className="h-4 w-4" />
+            <X className="h-5 w-5" />
           </button>
         </div>
         <div className="p-5 space-y-5">
@@ -590,20 +590,20 @@ function AlertModal({ alert, onClose }) {
                 key={item.label}
                 className="rounded-xl border border-gray-200 bg-gray-50 p-3"
               >
-                <span className="text-[9px] font-mono font-semibold tracking-widest text-slate-400">
+                <span className="text-xs font-mono font-semibold tracking-widest text-slate-400">
                   {item.label}
                 </span>
-                <p className="mt-1 text-xs font-bold text-gray-900">
+                <p className="mt-1 text-sm font-bold text-gray-900">
                   {item.value}
                 </p>
               </div>
             ))}
           </div>
           <div>
-            <h3 className="text-[10px] font-mono font-bold tracking-widest text-slate-400 mb-2">
+            <h3 className="text-xs font-mono font-bold tracking-widest text-slate-400 mb-2">
               SITUATION REPORT
             </h3>
-            <p className="text-sm text-slate-600 leading-relaxed">
+            <p className="text-base text-slate-600 leading-relaxed">
               {alert.description}
             </p>
           </div>
@@ -613,17 +613,17 @@ function AlertModal({ alert, onClose }) {
                 <Users className="h-5 w-5 text-amber-700" />
               </div>
               <div>
-                <p className="text-[10px] font-mono font-bold tracking-widest text-amber-600">
+                <p className="text-xs font-mono font-bold tracking-widest text-amber-600">
                   AFFECTED POPULATION
                 </p>
-                <p className="text-2xl font-black text-gray-900">
+                <p className="text-3xl font-black text-gray-900">
                   {alert.affectedPeople.toLocaleString()}
                 </p>
               </div>
             </div>
           )}
           <div>
-            <h3 className="text-[10px] font-mono font-bold tracking-widest text-slate-400 mb-3">
+            <h3 className="text-xs font-mono font-bold tracking-widest text-slate-400 mb-3">
               REQUIRED ACTIONS
             </h3>
             <div className="space-y-2">
@@ -635,7 +635,7 @@ function AlertModal({ alert, onClose }) {
                   <span
                     className={`mt-1 h-2 w-2 flex-none rounded-full ${sev.dot}`}
                   />
-                  <span className="text-xs text-slate-700 leading-relaxed">
+                  <span className="text-sm text-slate-700 leading-relaxed">
                     {a}
                   </span>
                 </div>
@@ -733,7 +733,7 @@ export default function AlertsPage() {
             mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
           }`}
         >
-          <h2 className="text-center text-xl font-black tracking-[0.2em] text-gray-900 mb-5">
+          <h2 className="text-center text-2xl font-black tracking-[0.2em] text-gray-900 mb-5">
             ACTIVE DISASTER CATEGORIES
           </h2>
           <div className="flex flex-wrap justify-center gap-4">
@@ -750,23 +750,23 @@ export default function AlertsPage() {
                 <div
                   className={`inline-flex rounded-xl border p-2.5 ${cat.bg} ${cat.border}`}
                 >
-                  <cat.icon className={`h-5 w-5 ${cat.color}`} />
+                  <cat.icon className={`h-6 w-6 ${cat.color}`} />
                 </div>
                 <div>
                   <p
-                    className={`text-xs font-bold transition-colors ${type === cat.type ? cat.color : "text-gray-900 group-hover:text-emerald-700"}`}
+                    className={`text-sm font-bold transition-colors ${type === cat.type ? cat.color : "text-gray-900 group-hover:text-emerald-700"}`}
                   >
                     {cat.type.toUpperCase()}
                   </p>
-                  <p className="text-[10px] font-mono text-slate-500 mt-0.5">
+                  <p className="text-xs font-mono text-slate-500 mt-0.5">
                     {cat.location}
                   </p>
-                  <p className="text-[10px] text-slate-400">{cat.region}</p>
+                  <p className="text-xs text-slate-400">{cat.region}</p>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <span className={`h-1.5 w-1.5 rounded-full ${cat.dot}`} />
                   <span
-                    className={`text-[9px] font-mono font-bold ${cat.color}`}
+                    className={`text-xs font-mono font-bold ${cat.color}`}
                   >
                     MONITORING
                   </span>
@@ -786,11 +786,11 @@ export default function AlertsPage() {
             <div className="flex items-center justify-between border-b border-gray-100 px-5 py-3">
               <div className="flex items-center gap-2">
                 <Radio className="h-4 w-4 text-red-600" />
-                <span className="text-[10px] font-mono font-bold tracking-[0.2em] text-red-600">
+                <span className="text-xs font-mono font-bold tracking-[0.2em] text-red-600">
                   LIVE FEED
                 </span>
               </div>
-              <span className="text-sm font-bold text-gray-900">
+              <span className="text-base font-bold text-gray-900">
                 Disaster Alerts
               </span>
             </div>
@@ -830,12 +830,12 @@ export default function AlertsPage() {
                   className={`flex items-center gap-4 px-6 py-5 ${s.bg}`}
                 >
                   <div>
-                    <div className={`text-3xl font-black font-mono ${s.color}`}>
+                    <div className={`text-4xl font-black font-mono ${s.color}`}>
                       {s.value}
                     </div>
                     <div className="flex items-center gap-1.5 mt-1">
                       <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} />
-                      <span className="text-[9px] font-mono font-bold tracking-widest text-slate-500">
+                      <span className="text-xs font-mono font-bold tracking-widest text-slate-500">
                         {s.label}
                       </span>
                     </div>
@@ -855,15 +855,15 @@ export default function AlertsPage() {
           <div className="rounded-2xl border border-gray-200 bg-white shadow-sm p-5">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <Filter className="h-3.5 w-3.5 text-emerald-600" />
-                <span className="text-[10px] font-mono font-bold tracking-[0.2em] text-emerald-600">
+                <Filter className="h-4 w-4 text-emerald-600" />
+                <span className="text-xs font-mono font-bold tracking-[0.2em] text-emerald-600">
                   FILTERS
                 </span>
               </div>
               {hasFilters && (
                 <button
                   onClick={clearFilters}
-                  className="text-[10px] font-mono font-semibold text-red-500 hover:text-red-700 transition-colors"
+                  className="text-xs font-mono font-semibold text-red-500 hover:text-red-700 transition-colors"
                 >
                   CLEAR ALL
                 </button>
@@ -871,16 +871,16 @@ export default function AlertsPage() {
             </div>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-7">
               <div className="col-span-2 sm:col-span-1">
-                <label className="block text-[10px] font-mono font-semibold uppercase tracking-widest text-slate-400 mb-1.5">
+                <label className="block text-xs font-mono font-semibold uppercase tracking-widest text-slate-400 mb-1.5">
                   Search
                 </label>
                 <div className="relative">
-                  <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+                  <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                   <input
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     placeholder="Title, district..."
-                    className="w-full rounded-xl border border-gray-200 bg-white pl-8 pr-3 py-2 text-xs text-gray-800 shadow-sm placeholder:text-slate-400 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100 transition-all"
+                    className="w-full rounded-xl border border-gray-200 bg-white pl-8 pr-3 py-2.5 text-sm text-gray-800 shadow-sm placeholder:text-slate-400 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100 transition-all"
                   />
                 </div>
               </div>
@@ -916,25 +916,25 @@ export default function AlertsPage() {
                 options={municipalities}
               />
               <div>
-                <label className="block text-[10px] font-mono font-semibold uppercase tracking-widest text-slate-400 mb-1.5">
+                <label className="block text-xs font-mono font-semibold uppercase tracking-widest text-slate-400 mb-1.5">
                   From
                 </label>
                 <input
                   type="date"
                   value={from}
                   onChange={(e) => setFrom(e.target.value)}
-                  className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs text-gray-800 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100 transition-all"
+                  className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-800 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100 transition-all"
                 />
               </div>
               <div>
-                <label className="block text-[10px] font-mono font-semibold uppercase tracking-widest text-slate-400 mb-1.5">
+                <label className="block text-xs font-mono font-semibold uppercase tracking-widest text-slate-400 mb-1.5">
                   To
                 </label>
                 <input
                   type="date"
                   value={to}
                   onChange={(e) => setTo(e.target.value)}
-                  className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs text-gray-800 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100 transition-all"
+                  className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-800 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100 transition-all"
                 />
               </div>
             </div>
@@ -948,11 +948,11 @@ export default function AlertsPage() {
           }`}
         >
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-mono font-bold tracking-[0.2em] text-gray-900">
+            <h2 className="text-base font-mono font-bold tracking-[0.2em] text-gray-900">
               {filtered.length} ALERT{filtered.length !== 1 ? "S" : ""}
             </h2>
             {hasFilters && (
-              <span className="text-[10px] font-mono text-slate-400">
+              <span className="text-xs font-mono text-slate-400">
                 showing filtered results
               </span>
             )}
@@ -963,14 +963,14 @@ export default function AlertsPage() {
               <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-white border border-gray-200 shadow-sm">
                 <Shield className="h-7 w-7 text-emerald-500" />
               </div>
-              <p className="text-sm font-bold text-gray-900">No Alerts Found</p>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="text-base font-bold text-gray-900">No Alerts Found</p>
+              <p className="mt-1 text-sm text-slate-500">
                 Adjust your filters or check back later
               </p>
               {hasFilters && (
                 <button
                   onClick={clearFilters}
-                  className="mt-4 rounded-xl border border-gray-200 bg-white px-4 py-2 text-xs font-semibold text-slate-600 hover:border-emerald-300 hover:text-emerald-700 transition-colors shadow-sm"
+                  className="mt-4 rounded-xl border border-gray-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-600 hover:border-emerald-300 hover:text-emerald-700 transition-colors shadow-sm"
                 >
                   Clear Filters
                 </button>

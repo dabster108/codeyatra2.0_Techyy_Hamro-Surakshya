@@ -58,7 +58,7 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-gray-50/50">
       <div className="text-center animate-pulse">
         <div className="mx-auto h-8 w-8 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin mb-4" />
-        <p className="text-xs font-mono font-bold tracking-widest text-slate-500">AUTHENTICATING ACCESS...</p>
+        <p className="text-sm font-mono font-bold tracking-widest text-slate-500">AUTHENTICATING ACCESS...</p>
       </div>
     </div>
   );
@@ -105,7 +105,7 @@ export default function LoginPage() {
                       <span className={`h-2 w-2 rounded-full ${role.color.replace("text-", "bg-")} animate-pulse`} />
                     )}
                   </div>
-                  <p className="text-xs font-medium text-slate-500 mt-1 leading-relaxed pr-2">{role.desc}</p>
+                  <p className="text-sm font-medium text-slate-500 mt-1 leading-relaxed pr-2">{role.desc}</p>
                 </div>
               </div>
             </button>
@@ -117,7 +117,7 @@ export default function LoginPage() {
           <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 mb-6 shadow-sm animate-slide-up-fade delay-400">
             <div className="flex items-center gap-2 mb-3">
                <MapPin className="h-4 w-4 text-amber-600" />
-               <label className="text-xs font-mono font-bold tracking-widest text-amber-700">
+               <label className="text-sm font-mono font-bold tracking-widest text-amber-700">
                  SELECT JURISDICTION
                </label>
             </div>
@@ -138,21 +138,21 @@ export default function LoginPage() {
           <div className="rounded-2xl border border-gray-200 bg-white p-5 mb-8 shadow-sm animate-slide-up-fade delay-400">
             <div className="flex items-center gap-2 mb-4 PB-1 border-b border-gray-100 pb-3">
                <Shield className="h-4 w-4 text-emerald-500" />
-               <span className="text-[10px] font-mono font-bold tracking-widest text-emerald-600">DEMO CREDENTIALS LOADED</span>
+               <span className="text-xs font-mono font-bold tracking-widest text-emerald-600">DEMO CREDENTIALS LOADED</span>
             </div>
             
             <div className="space-y-4">
               <div>
-                <label className="block text-[10px] font-mono font-bold tracking-widest text-slate-400 mb-1.5 ml-1">AUTHORIZED EMAIL</label>
+                <label className="block text-xs font-mono font-bold tracking-widest text-slate-400 mb-1.5 ml-1">AUTHORIZED EMAIL</label>
                 <input readOnly value={demoUser.email}
-                  className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-xs font-mono font-semibold text-emerald-600 focus:outline-none" />
+                  className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm font-mono font-semibold text-emerald-600 focus:outline-none" />
               </div>
               <div>
-                <label className="block text-[10px] font-mono font-bold tracking-widest text-slate-400 mb-1.5 ml-1">ACCESS TOKEN</label>
+                <label className="block text-xs font-mono font-bold tracking-widest text-slate-400 mb-1.5 ml-1">ACCESS TOKEN</label>
                 <input readOnly value="••••••••" type="password"
-                  className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-xs font-mono font-semibold text-emerald-600 focus:outline-none tracking-widest" />
+                  className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm font-mono font-semibold text-emerald-600 focus:outline-none tracking-widest" />
               </div>
-              <div className="flex items-center gap-2 pt-2 px-1 text-[11px] font-medium text-slate-500">
+              <div className="flex items-center gap-2 pt-2 px-1 text-xs font-medium text-slate-500">
                 <Eye className="h-3.5 w-3.5 text-emerald-500" />
                 <span>Demo mode active. One-click authentication enabled.</span>
               </div>
@@ -181,7 +181,7 @@ export default function LoginPage() {
       
       {/* Footer Tag */}
       <div className="fixed bottom-6 text-center animate-slide-up-fade delay-700">
-        <p className="text-[10px] font-mono font-bold tracking-[0.2em] text-slate-400">
+        <p className="text-xs font-mono font-bold tracking-[0.2em] text-slate-400">
           HAMRO SURAKSHA — RESTRICTED ACCESS
         </p>
       </div>

@@ -12,13 +12,13 @@ export default function Footer() {
           <div>
             <div className="mb-4 flex items-center gap-2.5">
               <div className="rounded-md bg-slate-100 p-1.5">
-                <Shield className="h-4 w-4 text-emerald-600" />
+                <Shield className="h-5 w-5 text-emerald-600" />
               </div>
-              <h3 className="text-sm font-bold tracking-[0.15em] text-slate-900">
+              <h3 className="text-base font-bold tracking-[0.15em] text-slate-900">
                 HAMRO SURAKSHA
               </h3>
             </div>
-            <p className="max-w-xs text-xs leading-relaxed text-slate-500">
+            <p className="max-w-xs text-sm leading-relaxed text-slate-500">
               Nepal&apos;s national disaster command center. AI-powered alerts,
               transparent fund tracking, emergency response coordination for all
               77 districts.
@@ -27,7 +27,7 @@ export default function Footer() {
 
           {/* Operations */}
           <div>
-            <h4 className="mb-4 text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400">
+            <h4 className="mb-4 text-xs font-bold uppercase tracking-[0.15em] text-slate-400">
               Operations
             </h4>
             <ul className="space-y-3">
@@ -39,7 +39,7 @@ export default function Footer() {
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-xs font-medium text-slate-500 transition-colors hover:text-slate-900"
+                    className="text-sm font-medium text-slate-500 transition-colors hover:text-slate-900"
                   >
                     {link.label}
                   </Link>
@@ -50,7 +50,7 @@ export default function Footer() {
 
           {/* Administration */}
           <div>
-            <h4 className="mb-4 text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400">
+            <h4 className="mb-4 text-xs font-bold uppercase tracking-[0.15em] text-slate-400">
               Administration
             </h4>
             <ul className="space-y-3">
@@ -62,7 +62,7 @@ export default function Footer() {
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-xs font-medium text-slate-500 transition-colors hover:text-slate-900"
+                    className="text-sm font-medium text-slate-500 transition-colors hover:text-slate-900"
                   >
                     {link.label}
                   </Link>
@@ -73,10 +73,10 @@ export default function Footer() {
 
           {/* Emergency Lines */}
           <div>
-            <h4 className="mb-4 text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400">
+            <h4 className="mb-4 text-xs font-bold uppercase tracking-[0.15em] text-slate-400">
               Emergency Lines
             </h4>
-            <ul className="space-y-2.5 text-xs font-mono">
+            <ul className="space-y-2.5 text-sm font-mono">
               {[
                 { name: "Nepal Police", number: "100" },
                 { name: "Fire Brigade", number: "101" },
@@ -100,7 +100,7 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="mt-10 flex flex-col items-center justify-between gap-4 border-t border-gray-100 pt-6 text-[10px] font-mono text-slate-400 sm:flex-row">
+        <div className="mt-10 flex flex-col items-center justify-between gap-4 border-t border-gray-100 pt-6 text-xs font-mono text-slate-400 sm:flex-row">
           <span>
             © {new Date().getFullYear()} HAMRO SURAKSHA — GOVT OF NEPAL
           </span>

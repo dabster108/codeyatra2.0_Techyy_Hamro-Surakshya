@@ -162,17 +162,17 @@ export default function TransparencyPage() {
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between mb-8 animate-slide-up-fade">
           <div>
             <div className="flex items-center gap-2 mb-3">
-              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 border border-emerald-200">
-                <Eye className="h-4 w-4 text-emerald-600" />
-              </span>
-              <span className="text-[10px] font-mono font-bold tracking-[0.2em] text-emerald-600">
+              {/* <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-100 border border-emerald-200">
+                <Eye className="h-5 w-5 text-emerald-600" />
+              </span> */}
+              <span className="text-xs font-mono font-bold tracking-[0.2em] text-emerald-600">
                 PUBLIC AUDIT LOG
               </span>
             </div>
-            <h1 className="text-3xl font-black text-gray-900 sm:text-4xl lg:text-5xl tracking-tight">
+            <h1 className="text-4xl font-black text-gray-900 sm:text-5xl lg:text-6xl tracking-tight">
               Fund <span className="text-emerald-500">Transparency</span>
             </h1>
-            <p className="mt-3 text-sm sm:text-base text-slate-500 max-w-2xl">
+            <p className="mt-3 text-base sm:text-lg text-slate-500 max-w-2xl">
               Real-time synchronization with NDRRMA databases. Tracking disaster relief budgets, allocations, and live disbursements.
             </p>
           </div>
@@ -182,11 +182,11 @@ export default function TransparencyPage() {
               { label: "TOTAL DISTRIBUTED", value: fmtNPR(national?.distributed), color: "text-blue-600", bg: "bg-blue-50", border: "border-blue-100" },
               { label: "RECORD COUNT", value: aidRecords.length, color: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-100" },
             ].map(s => (
-              <div key={s.label} className={`flex flex-col items-center justify-center rounded-2xl border ${s.border} ${s.bg} px-6 py-4 shadow-sm transition-all hover:-translate-y-1 hover:shadow-md`}>
-                <div className={`text-2xl font-black font-mono ${s.color}`}>
+              <div key={s.label} className={`flex flex-col items-center justify-center rounded-2xl border ${s.border} ${s.bg} px-8 py-5 shadow-sm transition-all hover:-translate-y-1 hover:shadow-md`}>
+                <div className={`text-3xl font-black font-mono ${s.color}`}>
                   {s.value}
                 </div>
-                <div className="mt-1 text-[9px] font-mono tracking-widest text-slate-500 font-bold">
+                <div className="mt-1.5 text-xs font-mono tracking-widest text-slate-500 font-bold">
                   {s.label}
                 </div>
               </div>
@@ -203,14 +203,14 @@ export default function TransparencyPage() {
             { label: "DISASTERS", value: disasterCounts.length, color: "text-amber-600", icon: AlertTriangle },
             { label: "BENEFICIARIES", value: aidRecords.length, color: "text-red-600", icon: Users },
           ].map((s) => (
-            <div key={s.label} className="rounded-2xl border border-gray-200 bg-gray-50 p-5 shadow-sm hover:shadow-md hover:border-emerald-200 transition-all">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-gray-50 border border-gray-100">
-                  <s.icon className={`h-3.5 w-3.5 ${s.color}`} />
+            <div key={s.label} className="rounded-2xl border border-gray-200 bg-gray-50 p-6 shadow-sm hover:shadow-md hover:border-emerald-200 transition-all">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-50 border border-gray-100">
+                  <s.icon className={`h-4 w-4 ${s.color}`} />
                 </span>
-                <span className="text-[9px] font-mono font-bold tracking-widest text-slate-400">{s.label}</span>
+                <span className="text-xs font-mono font-bold tracking-widest text-slate-400">{s.label}</span>
               </div>
-              <p className={`text-xl font-black font-mono ${s.color} truncate`}>{s.value}</p>
+              <p className={`text-2xl font-black font-mono ${s.color} truncate`}>{s.value}</p>
             </div>
           ))}
         </div>
@@ -218,17 +218,17 @@ export default function TransparencyPage() {
         {/* Utilization bar */}
         <div className="rounded-2xl border border-gray-200 bg-gray-50 p-6 shadow-sm mb-8 animate-slide-up-fade delay-200">
           <div className="flex items-center justify-between mb-4">
-            <span className="text-[10px] font-mono font-bold tracking-widest text-slate-600">NATIONAL UTILIZATION</span>
-            <span className="text-2xl font-black font-mono text-emerald-500">{pct(national?.distributed, national?.total)}%</span>
+            <span className="text-sm font-mono font-bold tracking-widest text-slate-600">NATIONAL UTILIZATION</span>
+            <span className="text-3xl font-black font-mono text-emerald-500">{pct(national?.distributed, national?.total)}%</span>
           </div>
-          <div className="h-3.5 w-full rounded-full bg-gray-100 overflow-hidden shadow-inner flex">
+          <div className="h-5 w-full rounded-full bg-gray-100 overflow-hidden shadow-inner flex">
             <div className="h-full bg-emerald-500 transition-all duration-1000 ease-out" style={{ width: `${pct(national?.distributed, national?.total)}%` }} />
             <div className="h-full bg-emerald-200 transition-all duration-1000 ease-out" style={{ width: `${Math.max(0, pct(national?.allocated, national?.total) - pct(national?.distributed, national?.total))}%` }} />
           </div>
-          <div className="mt-4 flex flex-wrap gap-5 text-[10px] text-slate-500 font-mono font-bold">
-            <span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-emerald-500 shadow-sm" /> Distributed</span>
-            <span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-emerald-200 shadow-sm" /> Allocated</span>
-            <span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-gray-200 shadow-sm" /> Unallocated</span>
+          <div className="mt-4 flex flex-wrap gap-5 text-sm text-slate-500 font-mono font-bold">
+            <span className="flex items-center gap-2"><span className="h-3 w-3 rounded-full bg-emerald-500 shadow-sm" /> Distributed</span>
+            <span className="flex items-center gap-2"><span className="h-3 w-3 rounded-full bg-emerald-200 shadow-sm" /> Allocated</span>
+            <span className="flex items-center gap-2"><span className="h-3 w-3 rounded-full bg-gray-200 shadow-sm" /> Unallocated</span>
           </div>
         </div>
 
@@ -243,14 +243,14 @@ export default function TransparencyPage() {
                   <Lock className="h-5 w-5 text-violet-600" />
                 </span>
                 <div>
-                  <h3 className="text-sm font-black text-gray-900 flex items-center gap-2">
+                  <h3 className="text-base font-black text-gray-900 flex items-center gap-2">
                     Solana Blockchain Verification
-                    <span className="flex items-center gap-1 rounded-full bg-violet-100 border border-violet-200 px-2 py-0.5 text-[9px] font-mono font-bold text-violet-700">
+                    <span className="flex items-center gap-1 rounded-full bg-violet-100 border border-violet-200 px-2.5 py-1 text-xs font-mono font-bold text-violet-700">
                       <span className={`h-1.5 w-1.5 rounded-full ${blockchainStatus?.active ? 'bg-emerald-500 animate-pulse' : 'bg-red-400'}`} />
                       {blockchainStatus?.active ? 'LIVE' : 'CONNECTING...'}
                     </span>
                   </h3>
-                  <p className="text-[11px] text-slate-500 mt-0.5">
+                  <p className="text-sm text-slate-500 mt-1">
                     Each relief record is hashed (SHA-256) and anchored to Solana {blockchainStatus?.network || 'devnet'} — immutable, publicly verifiable, tamper-proof.
                   </p>
                 </div>
@@ -259,16 +259,16 @@ export default function TransparencyPage() {
                 {blockchainStats && (
                   <>
                     <div className="flex flex-col items-center rounded-xl border border-violet-200 bg-white/70 px-4 py-2 shadow-sm">
-                      <span className="text-lg font-black font-mono text-violet-600">{blockchainStats.blockchain_anchored || 0}</span>
-                      <span className="text-[8px] font-mono font-bold tracking-widest text-slate-400">ON-CHAIN</span>
+                      <span className="text-2xl font-black font-mono text-violet-600">{blockchainStats.blockchain_anchored || 0}</span>
+                      <span className="text-xs font-mono font-bold tracking-widest text-slate-400">ON-CHAIN</span>
                     </div>
-                    <div className="flex flex-col items-center rounded-xl border border-violet-200 bg-white/70 px-4 py-2 shadow-sm">
-                      <span className="text-lg font-black font-mono text-emerald-600">{blockchainStats.coverage_percent || 0}%</span>
-                      <span className="text-[8px] font-mono font-bold tracking-widest text-slate-400">COVERAGE</span>
+                    <div className="flex flex-col items-center rounded-xl border border-violet-200 bg-white/70 px-5 py-3 shadow-sm">
+                      <span className="text-2xl font-black font-mono text-emerald-600">{blockchainStats.coverage_percent || 0}%</span>
+                      <span className="text-xs font-mono font-bold tracking-widest text-slate-400">COVERAGE</span>
                     </div>
-                    <div className="flex flex-col items-center rounded-xl border border-amber-200 bg-white/70 px-4 py-2 shadow-sm">
-                      <span className="text-lg font-black font-mono text-amber-600">{blockchainStats.pending || 0}</span>
-                      <span className="text-[8px] font-mono font-bold tracking-widest text-slate-400">PENDING</span>
+                    <div className="flex flex-col items-center rounded-xl border border-amber-200 bg-white/70 px-5 py-3 shadow-sm">
+                      <span className="text-2xl font-black font-mono text-amber-600">{blockchainStats.pending || 0}</span>
+                      <span className="text-xs font-mono font-bold tracking-widest text-slate-400">PENDING</span>
                     </div>
                   </>
                 )}
@@ -277,20 +277,20 @@ export default function TransparencyPage() {
                     href={`https://explorer.solana.com/address/${blockchainStatus.wallet_address}?cluster=devnet`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-1.5 rounded-xl border border-violet-200 bg-white/70 px-4 py-2 shadow-sm hover:bg-violet-50 transition-all text-[10px] font-mono font-bold text-violet-600 hover:text-violet-800"
+                    className="flex items-center gap-1.5 rounded-xl border border-violet-200 bg-white/70 px-5 py-3 shadow-sm hover:bg-violet-50 transition-all text-sm font-mono font-bold text-violet-600 hover:text-violet-800"
                   >
-                    <Cpu className="h-3 w-3" />
+                    <Cpu className="h-4 w-4" />
                     {blockchainStatus.wallet_address.slice(0, 4)}...{blockchainStatus.wallet_address.slice(-4)}
-                    <ExternalLink className="h-2.5 w-2.5" />
+                    <ExternalLink className="h-3.5 w-3.5" />
                   </a>
                 )}
               </div>
             </div>
           </div>
 
-          <h2 className="text-base font-black text-gray-900 mb-5 flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-50 border border-emerald-100">
-              <Building2 className="h-3.5 w-3.5 text-emerald-500" />
+          <h2 className="text-xl font-black text-gray-900 mb-6 flex items-center gap-2">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-50 border border-emerald-100">
+              <Building2 className="h-5 w-5 text-emerald-500" />
             </div>
             Province Budget Distribution
           </h2>
@@ -305,18 +305,18 @@ export default function TransparencyPage() {
               return (
                 <div key={prov.province} className="rounded-2xl border border-gray-200 bg-gray-50 p-5 shadow-sm hover:shadow-md hover:border-emerald-200 transition-all group">
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-sm font-bold text-gray-900">{prov.province}</h3>
-                    <span className={`text-[11px] font-mono font-black ${colorClass}`}>
+                    <h3 className="text-base font-bold text-gray-900">{prov.province}</h3>
+                    <span className={`text-sm font-mono font-black ${colorClass}`}>
                       {util}%
                     </span>
                   </div>
-                  <div className="h-2 w-full rounded-full bg-gray-100 shadow-inner overflow-hidden mb-4">
+                  <div className="h-3 w-full rounded-full bg-gray-100 shadow-inner overflow-hidden mb-4">
                     <div className={`h-full transition-all duration-1000 ${bgClass}`} style={{ width: `${util}%` }} />
                   </div>
-                  <div className="grid grid-cols-2 gap-3 text-[9px] font-mono font-semibold text-slate-400">
-                    <div>ALLOCATED: <p className="text-[11px] text-gray-900 font-bold">{fmtNPR(prov.allocated)}</p></div>
-                    <div>DISTRIBUTED: <p className="text-[11px] text-gray-900 font-bold">{fmtNPR(prov.distributed)}</p></div>
-                    <div>RECORDS: <p className="text-[11px] text-amber-600 font-bold">{prov.affected}</p></div>
+                  <div className="grid grid-cols-2 gap-3 text-xs font-mono font-semibold text-slate-400">
+                    <div>ALLOCATED: <p className="text-sm text-gray-900 font-bold">{fmtNPR(prov.allocated)}</p></div>
+                    <div>DISTRIBUTED: <p className="text-sm text-gray-900 font-bold">{fmtNPR(prov.distributed)}</p></div>
+                    <div>RECORDS: <p className="text-sm text-amber-600 font-bold">{prov.affected}</p></div>
                   </div>
                 </div>
               );
@@ -327,13 +327,13 @@ export default function TransparencyPage() {
         {/* Aid Distribution */}
         <div className="animate-slide-up-fade delay-400">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between mb-5">
-            <h2 className="text-base font-black text-gray-900 flex items-center gap-2">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-50 border border-emerald-100">
-                 <Shield className="h-3.5 w-3.5 text-emerald-500" />
+            <h2 className="text-xl font-black text-gray-900 flex items-center gap-2">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-50 border border-emerald-100">
+                 <Shield className="h-5 w-5 text-emerald-500" />
               </div>
               Direct Relief Distribution Log
             </h2>
-            <span className="flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-mono font-bold text-slate-500 shadow-sm">
+            <span className="flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-1.5 text-sm font-mono font-bold text-slate-500 shadow-sm">
                {filteredAid.length} RECORDS
             </span>
           </div>
@@ -341,23 +341,23 @@ export default function TransparencyPage() {
           {/* Aid Filters */}
           <div className="rounded-2xl border border-gray-200 bg-gray-50 p-5 shadow-sm mb-5 transition-all hover:shadow-md hover:border-emerald-200">
             <div className="flex items-center gap-2 mb-4">
-              <Filter className="h-3.5 w-3.5 text-emerald-500" />
-              <span className="text-[10px] font-mono font-bold tracking-[0.2em] text-emerald-600">FILTER AUDIT LOG</span>
+              <Filter className="h-4 w-4 text-emerald-500" />
+              <span className="text-sm font-mono font-bold tracking-[0.2em] text-emerald-600">FILTER AUDIT LOG</span>
             </div>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               <div>
-                <label className="block text-[10px] font-mono font-bold uppercase tracking-widest text-slate-500 mb-1.5 ml-1">Search</label>
+                <label className="block text-xs font-mono font-bold uppercase tracking-widest text-slate-500 mb-2 ml-1">Search</label>
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
                   <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search recipient or district..."
-                    className="w-full appearance-none rounded-xl border border-gray-200 bg-gray-50 pl-10 pr-4 py-2.5 text-xs font-semibold text-gray-700 shadow-sm focus:bg-white focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100 transition-all hover:border-emerald-300" />
+                    className="w-full appearance-none rounded-xl border border-gray-200 bg-gray-50 pl-11 pr-4 py-3 text-sm font-semibold text-gray-700 shadow-sm focus:bg-white focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100 transition-all hover:border-emerald-300" />
                 </div>
               </div>
               <div>
-                <label className="block text-[10px] font-mono font-bold uppercase tracking-widest text-slate-500 mb-1.5 ml-1">Province</label>
+                <label className="block text-xs font-mono font-bold uppercase tracking-widest text-slate-500 mb-2 ml-1">Province</label>
                 <div className="relative">
                   <select value={filterProv} onChange={(e) => setFilterProv(e.target.value)}
-                    className="w-full appearance-none rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 pr-10 text-xs font-semibold text-gray-700 shadow-sm focus:bg-white focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100 transition-all hover:border-emerald-300 cursor-pointer">
+                    className="w-full appearance-none rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 pr-10 text-sm font-semibold text-gray-700 shadow-sm focus:bg-white focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100 transition-all hover:border-emerald-300 cursor-pointer">
                     <option value="All">All Provinces</option>
                     {PROVINCES.map((p) => <option key={p} value={p}>{p}</option>)}
                   </select>
@@ -365,10 +365,10 @@ export default function TransparencyPage() {
                 </div>
               </div>
               <div>
-                <label className="block text-[10px] font-mono font-bold uppercase tracking-widest text-slate-500 mb-1.5 ml-1">Aid Type</label>
+                <label className="block text-xs font-mono font-bold uppercase tracking-widest text-slate-500 mb-2 ml-1">Aid Type</label>
                 <div className="relative">
                   <select value={filterType} onChange={(e) => setFilterType(e.target.value)}
-                    className="w-full appearance-none rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 pr-10 text-xs font-semibold text-gray-700 shadow-sm focus:bg-white focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100 transition-all hover:border-emerald-300 cursor-pointer">
+                    className="w-full appearance-none rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 pr-10 text-sm font-semibold text-gray-700 shadow-sm focus:bg-white focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100 transition-all hover:border-emerald-300 cursor-pointer">
                     <option value="All">All Types</option>
                     {Object.entries(AID_TYPES).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
                   </select>
@@ -381,16 +381,16 @@ export default function TransparencyPage() {
           {/* Table */}
           <div className="rounded-2xl border border-gray-200 bg-gray-50 shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-xs">
+              <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-gray-100 bg-gray-50/80">
-                    <th className="px-5 py-4 text-left text-[10px] font-mono font-bold tracking-widest text-slate-500 uppercase">Track ID</th>
-                    <th className="px-5 py-4 text-left text-[10px] font-mono font-bold tracking-widest text-slate-500 uppercase">Recipient</th>
-                    <th className="px-5 py-4 text-left text-[10px] font-mono font-bold tracking-widest text-slate-500 uppercase">Disaster Type</th>
-                    <th className="px-5 py-4 text-left text-[10px] font-mono font-bold tracking-widest text-slate-500 uppercase">Amount Distributed</th>
-                    <th className="px-5 py-4 text-left text-[10px] font-mono font-bold tracking-widest text-slate-500 uppercase">Location</th>
-                    <th className="px-5 py-4 text-left text-[10px] font-mono font-bold tracking-widest text-slate-500 uppercase">Date Logged</th>
-                    <th className="px-5 py-4 text-left text-[10px] font-mono font-bold tracking-widest text-slate-500 uppercase">Blockchain</th>
+                    <th className="px-5 py-4 text-left text-xs font-mono font-bold tracking-widest text-slate-500 uppercase">Track ID</th>
+                    <th className="px-5 py-4 text-left text-xs font-mono font-bold tracking-widest text-slate-500 uppercase">Recipient</th>
+                    <th className="px-5 py-4 text-left text-xs font-mono font-bold tracking-widest text-slate-500 uppercase">Disaster Type</th>
+                    <th className="px-5 py-4 text-left text-xs font-mono font-bold tracking-widest text-slate-500 uppercase">Amount Distributed</th>
+                    <th className="px-5 py-4 text-left text-xs font-mono font-bold tracking-widest text-slate-500 uppercase">Location</th>
+                    <th className="px-5 py-4 text-left text-xs font-mono font-bold tracking-widest text-slate-500 uppercase">Date Logged</th>
+                    <th className="px-5 py-4 text-left text-xs font-mono font-bold tracking-widest text-slate-500 uppercase">Blockchain</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -406,8 +406,8 @@ export default function TransparencyPage() {
                           <p className="font-bold text-gray-900">{r.recipient}</p>
                         </td>
                         <td className="px-5 py-4">
-                          <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[9px] font-mono font-bold tracking-wider ${ac.text} ${ac.border} ${ac.bg}`}>
-                            <Icon className={`h-3 w-3 ${ac.iconText}`} />
+                          <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-mono font-bold tracking-wider ${ac.text} ${ac.border} ${ac.bg}`}>
+                            <Icon className={`h-3.5 w-3.5 ${ac.iconText}`} />
                             {r.disaster_type?.toUpperCase() || r.type.toUpperCase()}
                           </span>
                         </td>
@@ -419,7 +419,7 @@ export default function TransparencyPage() {
                         <td className="px-5 py-4 font-semibold text-slate-600">
                           {r.district}, <span className="text-slate-400 font-normal">{r.province}</span>
                         </td>
-                        <td className="px-5 py-4 font-mono text-slate-500 text-[11px]">{r.date}</td>
+                        <td className="px-5 py-4 font-mono text-slate-500 text-sm">{r.date}</td>
                         <td className="px-5 py-4">
                           {r.blockchain_verified ? (
                             <div className="flex flex-col gap-1">
@@ -430,17 +430,17 @@ export default function TransparencyPage() {
                                 className="flex items-center gap-1.5 w-fit rounded-full bg-violet-50 border border-violet-200 px-2.5 py-0.5 hover:bg-violet-100 transition-all group/link"
                               >
                                 <span className="h-1.5 w-1.5 rounded-full bg-violet-500 animate-pulse" />
-                                <span className="text-[9px] font-mono font-bold text-violet-700">SOLANA VERIFIED</span>
-                                <ExternalLink className="h-2.5 w-2.5 text-violet-400 group-hover/link:text-violet-600" />
+                                <span className="text-xs font-mono font-bold text-violet-700">SOLANA VERIFIED</span>
+                                <ExternalLink className="h-3.5 w-3.5 text-violet-400 group-hover/link:text-violet-600" />
                               </a>
-                              <span className="text-[8px] font-mono text-slate-400 truncate max-w-[120px]" title={r.record_hash}>
+                              <span className="text-[10px] font-mono text-slate-400 truncate max-w-[140px]" title={r.record_hash}>
                                 #{r.record_hash?.slice(0, 8)}...
                               </span>
                             </div>
                           ) : (
                             <span className="flex items-center gap-1.5 w-fit rounded-full bg-amber-50 border border-amber-200 px-2.5 py-0.5">
                               <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
-                              <span className="text-[9px] font-mono font-bold text-amber-600">PENDING</span>
+                              <span className="text-xs font-mono font-bold text-amber-600">PENDING</span>
                             </span>
                           )}
                         </td>
@@ -455,8 +455,8 @@ export default function TransparencyPage() {
                 <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-gray-50 border border-gray-200 mb-4">
                    <Search className="h-5 w-5 text-slate-400" />
                 </div>
-                <h3 className="text-sm font-bold text-gray-900 mb-1">No records found</h3>
-                <p className="text-xs text-slate-500">Try adjusting your filters or search term to find what you're looking for.</p>
+                <h3 className="text-base font-bold text-gray-900 mb-1">No records found</h3>
+                <p className="text-sm text-slate-500">Try adjusting your filters or search term to find what you're looking for.</p>
               </div>
             )}
           </div>
