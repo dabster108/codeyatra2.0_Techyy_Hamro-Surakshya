@@ -1,10 +1,11 @@
-fastapi
-uvicorn[standard]
-supabase
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+supabase>=2.0.0
 python-jose[cryptography]
 python-dotenv
 pyjwt[crypto]
 passlib[bcrypt]
+pydantic>=2.0.0
 pydantic[email]
 python-multipart
 pytest

@@ -20,7 +20,7 @@ export default function NepalMap({ onSelect, selected, predictions, data, onMark
       center={[28.1, 84.1]}
       zoom={7}
       zoomControl={false}
-      style={{ height: "100%", width: "100%", background: "#f8fafc" }} // Light background
+      style={{ height: "100%", width: "100%", background: "#f8fafc", position: "relative", zIndex: 1 }}
     >
       <ZoomControl position="bottomright" />
       <TileLayer
