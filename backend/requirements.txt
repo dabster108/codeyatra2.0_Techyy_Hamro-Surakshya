@@ -12,6 +12,7 @@ pytest
 httpx
 pandas
 psycopg2-binary
+asyncpg
 sqlalchemy
 solana>=0.34.0
 solders>=0.21.0

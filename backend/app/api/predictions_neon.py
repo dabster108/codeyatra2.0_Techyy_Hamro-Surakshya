@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Query
 from typing import Optional, List
 from datetime import datetime
-from app.db.neon import execute_query
+from app.db.neon import execute_query_async
 from app.models.schemas import WildfirePrediction, WildfireDistrictSummary
 
 router = APIRouter(prefix="/predictions/neon", tags=["predictions-neon"])
@@ -72,12 +72,8 @@ async def get_wildfire_predictions(
     params.append(limit)
     
     try:
-        # Convert $1, $2 placeholders to %s for psycopg2
-        query_psycopg = query
-        for i in range(param_count, 0, -1):
-            query_psycopg = query_psycopg.replace(f"${i}", "%s")
-        
-        results = execute_query(query_psycopg, tuple(params))
+        # asyncpg uses $1/$2 notation — no placeholder conversion needed
+        results = await execute_query_async(query, tuple(params))
         
         # Convert to response model
         predictions = []
@@ -119,7 +115,7 @@ async def get_high_risk_areas(
     params.append(limit)
     
     try:
-        results = execute_query(query, tuple(params))
+        results = await execute_query_async(query, tuple(params))
         return results
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
@@ -151,7 +147,7 @@ async def get_predictions_by_district(
     query += " ORDER BY max_fire_prob DESC"
     
     try:
-        results = execute_query(query, tuple(params) if params else None)
+        results = await execute_query_async(query, tuple(params) if params else None)
         return results
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
@@ -177,7 +173,7 @@ async def get_predictions_by_province():
     """
     
     try:
-        results = execute_query(query)
+        results = await execute_query_async(query)
         return results
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
@@ -217,7 +213,7 @@ async def get_map_data(
     query += " ORDER BY fire_prob DESC"
     
     try:
-        results = execute_query(query, tuple(params))
+        results = await execute_query_async(query, tuple(params))
         
         # Format for map
         map_points = []
@@ -252,7 +248,7 @@ async def get_latest_prediction_date():
     query = "SELECT MAX(valid_time) as latest_date FROM wildfire_predictions"
     
     try:
-        result = execute_query(query, fetch_one=True)
+        result = await execute_query_async(query, fetch_one=True)
         
         if result and result.get("latest_date"):
             return {
@@ -278,7 +274,7 @@ async def get_wildfire_stats():
     query = "SELECT * FROM get_wildfire_stats()"
     
     try:
-        result = execute_query(query, fetch_one=True)
+        result = await execute_query_async(query, fetch_one=True)
         
         if not result:
             return {
@@ -298,7 +294,7 @@ async def get_wildfire_stats():
             FROM wildfire_predictions
             GROUP BY fire_category
         """
-        categories = execute_query(category_query)
+        categories = await execute_query_async(category_query)
         category_counts = {row["fire_category"]: row["count"] for row in categories}
         
         return {
@@ -321,7 +317,7 @@ async def health_check():
     Check if Neon database connection is healthy.
     """
     try:
-        result = execute_query("SELECT 1 as status", fetch_one=True)
+        result = await execute_query_async("SELECT 1 as status", fetch_one=True)
         return {
             "status": "healthy",
             "database": "neon",

@@ -3,6 +3,7 @@ import os
 import uvicorn
 import webbrowser
 import threading
+from contextlib import asynccontextmanager
 
 # Make `app.*` imports work when running as `python3 app/main.py` from backend/
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -11,8 +12,23 @@ from fastapi import FastAPI, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 from app.api import auth, dashboard, relief, public, records, predictions, predictions_neon, government, sos, blockchain
 from app.core.config import settings
+from app.db.neon import init_neon_pool, close_neon_pool
 
-app = FastAPI(title=settings.PROJECT_NAME)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    Application lifespan handler.
+    - Startup:  initialise the asyncpg connection pool so the first request
+                does not pay the cold-connection penalty.
+    - Shutdown: gracefully drain and close the pool.
+    """
+    await init_neon_pool()
+    yield
+    await close_neon_pool()
+
+
+app = FastAPI(title=settings.PROJECT_NAME, lifespan=lifespan)
 
 # CORS
 app.add_middleware(
