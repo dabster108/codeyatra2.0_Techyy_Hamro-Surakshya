@@ -103,10 +103,11 @@ async def get_all_provinces():
             pid = r.get("province_id")
             budget_by_province[pid] = budget_by_province.get(pid, 0) + float(r.get("allocated_amount", 0))
         
-        # Aggregate by province
+        # Aggregate by province (normalize to title case)
         province_stats = {}
         for record in records:
-            prov = record.get("province", "Unknown")
+            prov_raw = record.get("province", "Unknown")
+            prov = prov_raw.strip().title() if prov_raw else "Unknown"
             if prov not in province_stats:
                 province_stats[prov] = {
                     "province": prov,
@@ -168,12 +169,17 @@ async def get_province_detail(province_name: str):
     supabase = _supabase()
     
     try:
-        # Get all records for this province
-        rr_res = supabase.table("relief_records").select("*").eq("province", province_name).execute()
+        # Normalize province name: DB stores provinces in lowercase
+        normalized_name = province_name.strip().title()
+        # Use ilike for case-insensitive matching (handles 'bagmati', 'Bagmati', etc.)
+        rr_res = supabase.table("relief_records").select("*").eq(
+            "province", province_name.strip().lower()
+        ).execute()
         records = rr_res.data or []
         
         # Get budget for province from province_allocation table
-        province_id = PROVINCE_MAP.get(province_name)
+        # Try both title case and original for PROVINCE_MAP lookup
+        province_id = PROVINCE_MAP.get(normalized_name) or PROVINCE_MAP.get(province_name)
         province_budget = 0
         if province_id:
             pa_res = supabase.table("province_allocation").select("allocated_amount").eq("province_id", province_id).execute()
@@ -221,7 +227,7 @@ async def get_province_detail(province_name: str):
         districts.sort(key=lambda x: x["disbursed"], reverse=True)
         
         return {
-            "province": province_name,
+            "province": normalized_name or province_name,
             "budget": {
                 "allocated": province_budget,
                 "disbursed": total_disbursed,
