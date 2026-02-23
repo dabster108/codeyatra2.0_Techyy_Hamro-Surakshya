@@ -19,8 +19,12 @@ import {
   Shield,
   AlertTriangle,
   ChevronRight,
+  Database,
+  RefreshCw,
+  AlertCircle,
 } from "lucide-react";
 import { PREDICTIONS } from "../data/predictions";
+import WildfireAPI from "../lib/wildfire-api";
 const NepalMap = dynamic(() => import("../components/NepalMap"), {
   ssr: false,
 });
@@ -176,7 +180,7 @@ function PredictionCard({ item, onClick }) {
   return (
     <button
       onClick={onClick}
-      className="group w-full text-left rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden transition-all duration-200 hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-md"
+      className="group w-full text-left rounded-2xl border border-gray-200 bg-gray-50 shadow-sm overflow-hidden transition-all duration-200 hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-md"
     >
       <div className={`h-1 w-full ${sev.bar}`} />
       <div className="p-4">
@@ -268,7 +272,7 @@ function DetailPopup({ item, onClose }) {
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-xl rounded-3xl border border-gray-200 bg-white shadow-2xl max-h-[85vh] overflow-y-auto animate-fade-in-up"
+        className="relative w-full max-w-xl rounded-3xl border border-gray-200 bg-gray-50 shadow-2xl max-h-[85vh] overflow-y-auto animate-fade-in-up"
         onClick={(e) => e.stopPropagation()}
       >
         <div className={`h-1.5 w-full rounded-t-3xl ${sev.bar}`} />
@@ -344,7 +348,7 @@ function DetailPopup({ item, onClose }) {
 
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
             {/* 7-day forecast */}
-            <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-5 shadow-sm">
               <span className="text-[10px] font-mono font-bold tracking-widest text-slate-400">
                 7-DAY FORECAST
               </span>
@@ -383,7 +387,7 @@ function DetailPopup({ item, onClose }) {
             </div>
 
             {/* Contributing factors */}
-            <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-5 shadow-sm">
               <span className="text-[10px] font-mono font-bold tracking-widest text-slate-400">
                 CONTRIBUTING FACTORS
               </span>
@@ -422,6 +426,83 @@ export default function PredictionsPage() {
   const [date, setDate] = useState("");
   const [selected, setSelected] = useState(null);
   const [hovered, setHovered] = useState(null);
+  
+  // Wildfire data state
+  const [useRealWildfireData, setUseRealWildfireData] = useState(false);
+  const [wildfireData, setWildfireData] = useState([]);
+  const [wildfireLoading, setWildfireLoading] = useState(false);
+  const [wildfireStats, setWildfireStats] = useState(null);
+  const [wildfireError, setWildfireError] = useState(null);
+
+  // Auto-enable and fetch real wildfire data when Wildfire type is selected
+  useEffect(() => {
+    if (type === "Wildfire") {
+      setUseRealWildfireData(true);
+      fetchWildfireData();
+    } else {
+      setUseRealWildfireData(false);
+    }
+  }, [type, province, district]);
+
+  const fetchWildfireData = async () => {
+    setWildfireLoading(true);
+    setWildfireError(null);
+    
+    try {
+      // Check if backend is available first
+      const isHealthy = await WildfireAPI.checkHealth();
+      if (!isHealthy) {
+        throw new Error('Backend API is not running. Please start the backend server: python app/main.py');
+      }
+
+      // Build filters
+      const filters = {
+        minFireProb: 0.3, // Show predictions with 30%+ probability
+        limit: 1000
+      };
+      
+      if (province !== "All") {
+        const provinceNum = getProvinceNumber(province);
+        if (provinceNum) filters.province = provinceNum;
+      }
+      
+      if (district !== "All") {
+        filters.district = district;
+      }
+
+      // Fetch predictions and stats in parallel
+      const [predictions, stats] = await Promise.all([
+        WildfireAPI.getPredictions(filters),
+        WildfireAPI.getStats()
+      ]);
+
+      // Transform to frontend format (includes date adjustment)
+      const transformedData = WildfireAPI.transformToFrontendFormat(predictions);
+      setWildfireData(transformedData);
+      setWildfireStats(stats);
+      setWildfireError(null);
+    } catch (error) {
+      console.error('Failed to fetch wildfire data:', error);
+      setWildfireData([]);
+      setWildfireStats(null);
+      setWildfireError(error.message);
+    } finally {
+      setWildfireLoading(false);
+    }
+  };
+
+  const getProvinceNumber = (provinceName) => {
+    const provinceMap = {
+      "Koshi": 1,
+      "Madhesh": 2,
+      "Bagmati": 3,
+      "Gandaki": 4,
+      "Lumbini": 5,
+      "Karnali": 6,
+      "Sudurpashchim": 7
+    };
+    return provinceMap[provinceName];
+  };
 
   const districts =
     province !== "All" && DISTRICTS_BY_PROVINCE[province]
@@ -432,8 +513,18 @@ export default function PredictionsPage() {
       ? ["All", ...MUNICIPALITIES_BY_DISTRICT[district]]
       : ["All"];
 
+  // Combine static and real wildfire data
+  const allPredictions = useMemo(() => {
+    if (useRealWildfireData && type === "Wildfire" && wildfireData.length > 0) {
+      // Use real wildfire data from Neon database
+      return wildfireData;
+    }
+    // Use static predictions
+    return PREDICTIONS;
+  }, [useRealWildfireData, type, wildfireData]);
+
   const filtered = useMemo(() => {
-    return PREDICTIONS.filter((p) => {
+    return allPredictions.filter((p) => {
       if (type !== "All" && p.type !== type) return false;
       if (province !== "All" && p.province !== province) return false;
       if (district !== "All" && p.district !== district) return false;
@@ -442,7 +533,7 @@ export default function PredictionsPage() {
       if (date && p.date !== date) return false;
       return true;
     });
-  }, [type, province, district, municipality, date]);
+  }, [allPredictions, type, province, district, municipality, date]);
 
   const handleMarkerClick = useCallback((p) => setSelected(p), []);
 
@@ -455,7 +546,7 @@ export default function PredictionsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50/50">
+    <div className="min-h-screen bg-white">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between mb-8">
@@ -521,9 +612,9 @@ export default function PredictionsPage() {
         </div>
 
         {/* Filters */}
-        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm mb-8 animate-slide-up-fade delay-200 transition-all hover:shadow-md hover:border-emerald-200">
+        <div className="rounded-2xl border border-gray-200 bg-gray-50 p-6 shadow-sm mb-8 animate-slide-up-fade delay-200 transition-all hover:shadow-md hover:border-emerald-200">
           <div className="flex items-center gap-2 mb-5">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-50 border border-emerald-100">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100 border border-emerald-200">
                 <Filter className="h-3.5 w-3.5 text-emerald-500" />
             </div>
             <span className="text-[10px] font-mono font-bold tracking-[0.2em] text-emerald-600">
@@ -591,13 +682,13 @@ export default function PredictionsPage() {
         </div>
 
         {/* Map */}
-        <div className="relative overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm animate-slide-up-fade delay-300 transition-all hover:shadow-md hover:border-emerald-200">
+        <div className="relative overflow-hidden rounded-2xl border border-gray-200 bg-gray-50 shadow-sm animate-slide-up-fade delay-300 transition-all hover:shadow-md hover:border-emerald-200">
           <div className="h-[500px] lg:h-[600px] w-full bg-slate-50/50">
             <NepalMap data={filtered} onMarkerClick={handleMarkerClick} />
           </div>
 
           {/* Legend overlay */}
-          <div className="absolute left-4 top-4 z-[10] rounded-xl border border-gray-200 bg-white/95 backdrop-blur-md p-4 shadow-lg">
+          <div className="absolute left-4 top-4 z-[5] rounded-xl border border-gray-200 bg-white/95 backdrop-blur-md p-4 shadow-lg">
             <div className="flex items-center gap-2 mb-3">
               <Layers className="h-3.5 w-3.5 text-slate-400" />
               <span className="text-[10px] font-mono font-bold tracking-widest text-slate-500">
@@ -622,7 +713,7 @@ export default function PredictionsPage() {
           </div>
 
           {/* Results count */}
-          <div className="absolute right-4 top-4 z-[10] flex items-center gap-2 rounded-xl border border-gray-200 bg-white/95 backdrop-blur-md px-4 py-2.5 shadow-lg">
+          <div className="absolute right-4 top-4 z-[5] flex items-center gap-2 rounded-xl border border-gray-200 bg-white/95 backdrop-blur-md px-4 py-2.5 shadow-lg">
             <div className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100">
                 <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
             </div>
@@ -663,7 +754,7 @@ export default function PredictionsPage() {
               border: "border-blue-200 hover:border-blue-300",
             },
           ].map((card) => (
-            <div key={card.title} className={`group rounded-2xl border ${card.border} bg-white p-6 shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg`}>
+            <div key={card.title} className={`group rounded-2xl border ${card.border} bg-gray-50 p-6 shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg`}>
               <div className={`mb-4 inline-flex rounded-xl ${card.bg} p-3 transition-transform group-hover:scale-110 border border-white`}>
                 <card.icon className={`h-5 w-5 ${card.color}`} />
               </div>
