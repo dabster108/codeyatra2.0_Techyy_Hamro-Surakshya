@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Query
 from typing import Optional, List
-from datetime import datetime
+from datetime import datetime, date as date_type
 from app.db.neon import execute_query_async
 from app.models.schemas import WildfirePrediction, WildfireDistrictSummary
 
@@ -49,12 +49,12 @@ async def get_wildfire_predictions(
     
     if start_date:
         conditions.append(f"valid_time >= ${param_count}")
-        params.append(start_date)
+        params.append(date_type.fromisoformat(start_date))
         param_count += 1
     
     if end_date:
         conditions.append(f"valid_time <= ${param_count}")
-        params.append(end_date)
+        params.append(date_type.fromisoformat(end_date))
         param_count += 1
     
     where_clause = " AND ".join(conditions) if conditions else "1=1"
