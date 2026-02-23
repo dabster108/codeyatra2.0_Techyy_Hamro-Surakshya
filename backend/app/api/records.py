@@ -118,58 +118,6 @@ async def by_province():
     return sorted(summary.values(), key=lambda x: x["total_distributed"], reverse=True)
 
 
-@router.get("/province-summary")
-async def get_province_summary(province: str):
-    """
-    Get detailed summary for a specific province.
-    Returns: Allocated, Distributed, Remaining, Utilization, Disasters, Affected.
-    Logic: Uses real DB data only. Allocation is fixed/mocked for now as it's not in records table.
-    """
-    supabase = _supabase()
-    
-    # Budget Allocations (Fixed Targets)
-    ALLOCATIONS = {
-        "Koshi":         2_100_000_000,
-        "Madhesh":       1_800_000_000,
-        "Bagmati":       1_900_000_000,
-        "Gandaki":       1_200_000_000,
-        "Lumbini":       1_100_000_000,
-        "Karnali":         900_000_000,
-        "Sudurpashchim":   800_000_000,
-    }
-
-    target = ALLOCATIONS.get(province, 1_000_000_000)
-
-    try:
-        # Fetch actual records for this province from DB
-        res = supabase.table("relief_records") \
-            .select("relief_amount, district, disaster_type") \
-            .eq("province", province) \
-            .execute()
-        rows = res.data or []
-    except Exception:
-        rows = []
-
-    # Calculate real-time stats from records
-    total_distributed = sum(float(r["relief_amount"]) for r in rows)
-    disasters_count = len(set(r["disaster_type"] for r in rows))
-    
-    # Estimate affected people (e.g. 1 record = ~4 people)
-    affected_estimated = len(rows) * 4
-
-    return {
-        "province": province,
-        "allocated": target,
-        "distributed": total_distributed,
-        "remaining": max(target - total_distributed, 0),
-        "utilization_percent": round((total_distributed / target * 100) if target else 0, 1),
-        "disasters_count": disasters_count,
-        "affected_estimated": affected_estimated,
-        "record_count": len(rows)
-    }
-
-
-
 @router.get("/by-district")
 async def by_district():
     """District-wise totals."""
