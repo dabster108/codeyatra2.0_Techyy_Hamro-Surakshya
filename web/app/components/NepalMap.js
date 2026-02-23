@@ -5,10 +5,14 @@ import "leaflet/dist/leaflet.css";
 import { PREDICTIONS } from "../data/predictions";
 
 const RISK_COLORS = {
-  critical: { fill: "#ef4444", stroke: "#b91c1c" },
-  high:     { fill: "#f97316", stroke: "#c2410c" },
-  moderate: { fill: "#3b82f6", stroke: "#1d4ed8" }, // Changed to match blue theme
-  low:      { fill: "#9ca3af", stroke: "#4b5563" }, // Changed to grayish
+  extreme:  { fill: "#ef4444", stroke: "#b91c1c" }, // Red for extreme
+  high:     { fill: "#f97316", stroke: "#c2410c" }, // Orange for high
+  medium:   { fill: "#f59e0b", stroke: "#d97706" }, // Amber for medium
+  // low:      { fill: "#3b82f6", stroke: "#1d4ed8" }, // Blue for low
+  minimal:  { fill: "#9ca3af", stroke: "#4b5563" }, // Gray for minimal
+  // Backwards compatibility with old severity names
+  critical: { fill: "#ef4444", stroke: "#b91c1c" }, // Map to extreme
+  moderate: { fill: "#f59e0b", stroke: "#d97706" }, // Map to medium
 };
 
 export default function NepalMap({ onSelect, selected, predictions, data, onMarkerClick }) {
@@ -28,8 +32,8 @@ export default function NepalMap({ onSelect, selected, predictions, data, onMark
         url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" // Light map tiles
       />
       {mapData.map((p) => {
-        const col = RISK_COLORS[p.severity];
-        const radius = 7 + (p.risk / 100) * 8;
+        const col = RISK_COLORS[p.severity] || RISK_COLORS.minimal; // Fallback to minimal if undefined
+        const radius = 7 + (p.risk / 100) * 5;
         const isSelected = selected?.id === p.id;
         return (
           <CircleMarker key={p.id} center={[p.lat, p.lng]}
@@ -42,8 +46,7 @@ export default function NepalMap({ onSelect, selected, predictions, data, onMark
             <Tooltip permanent={false} direction="top" offset={[0, -6]}>
               <div className="text-xs font-semibold text-slate-800">
                 <span className="block font-bold">{p.name}</span>
-                <span className="text-slate-500">{p.type} — </span>
-                <span style={{ color: col.fill }} className="font-black">{p.risk}% risk</span>
+                <span className="text-slate-500">{p.type}</span>
               </div>
             </Tooltip>
           </CircleMarker>

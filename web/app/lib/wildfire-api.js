@@ -243,12 +243,14 @@ export class WildfireAPI {
 
   /**
    * Convert fire probability to risk severity
+   * Thresholds: >0.99=extreme, >0.94=high, >0.8=medium, >0.5=low, else=minimal
    */
   static getRiskSeverity(fireProb) {
-    if (fireProb >= 0.9) return "critical";
-    if (fireProb >= 0.7) return "high";
-    if (fireProb >= 0.4) return "moderate";
-    return "low";
+    if (fireProb > 0.99) return "extreme";
+    if (fireProb > 0.94) return "high";
+    if (fireProb > 0.8) return "medium";
+    // if (fireProb > 0.5) return "low";
+    return "minimal";
   }
 }
 
