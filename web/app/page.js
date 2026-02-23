@@ -111,7 +111,7 @@ export default function Home() {
           <div className="flex min-h-[88vh] flex-col items-center gap-8 lg:flex-row lg:gap-0">
             {/* Left */}
             <div className="flex flex-1 flex-col justify-center pt-12 lg:pt-0 lg:pr-12">
-              <div className="animate-fade-in-up mb-5 inline-flex w-fit items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-1.5 text-[10px] font-mono font-bold tracking-widest text-emerald-700 shadow-sm transition-all hover:bg-emerald-100">
+              <div className="animate-fade-in-up mb-5 inline-flex w-fit items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-xs font-mono font-bold tracking-widest text-emerald-700 shadow-sm transition-all hover:bg-emerald-100">
                 <span className="relative flex h-2 w-2">
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
                   <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
@@ -128,7 +128,7 @@ export default function Home() {
                 हाम्रो सुरक्षा
               </p>
 
-              <p className="animate-slide-up-fade delay-300 mt-6 max-w-lg text-sm leading-relaxed text-slate-600">
+              <p className="animate-slide-up-fade delay-300 mt-6 max-w-lg text-base leading-relaxed text-slate-600">
                 Nepal&apos;s national disaster management command center —
                 AI-powered risk predictions, real-time emergency alerts,
                 transparent relief fund tracking, and one-press SOS for every
@@ -145,9 +145,9 @@ export default function Home() {
                 ].map(({ icon: Icon, label }) => (
                   <span
                     key={label}
-                    className="inline-flex items-center gap-1.5 rounded-md border border-gray-200 bg-white px-2.5 py-1 text-[10px] font-mono font-semibold tracking-wider text-slate-600 shadow-sm hover:border-emerald-300 hover:text-emerald-700 transition-colors"
+                    className="inline-flex items-center gap-1.5 rounded-md border border-gray-200 bg-white px-3 py-1.5 text-xs font-mono font-semibold tracking-wider text-slate-600 shadow-sm hover:border-emerald-300 hover:text-emerald-700 transition-colors"
                   >
-                    <Icon className="h-3 w-3 text-emerald-500" /> {label}
+                    <Icon className="h-3.5 w-3.5 text-emerald-500" /> {label}
                   </span>
                 ))}
               </div>
@@ -156,13 +156,13 @@ export default function Home() {
               <div className="animate-slide-up-fade delay-500 mt-10 flex flex-wrap items-center gap-4">
                 <Link
                   href="/alerts"
-                  className="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-6 py-3 text-xs font-bold tracking-wider text-white shadow-md transition-all hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-lg"
+                  className="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-7 py-3.5 text-sm font-bold tracking-wider text-white shadow-md transition-all hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-lg"
                 >
                   VIEW LIVE ALERTS <ArrowRight className="h-4 w-4" />
                 </Link>
                 <Link
                   href="/sos"
-                  className="inline-flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-6 py-3 text-xs font-bold tracking-wider text-red-600 shadow-sm transition-all hover:-translate-y-0.5 hover:bg-red-100 hover:border-red-300"
+                  className="inline-flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-7 py-3.5 text-sm font-bold tracking-wider text-red-600 shadow-sm transition-all hover:-translate-y-0.5 hover:bg-red-100 hover:border-red-300"
                 >
                   <Phone className="h-4 w-4" /> EMERGENCY SOS
                 </Link>
@@ -172,10 +172,10 @@ export default function Home() {
               <div className="animate-fade-in delay-500 mt-12 flex flex-wrap gap-8 border-t border-gray-200 pt-8">
                 {stats.map(({ value, label }) => (
                   <div key={label} className="group cursor-default">
-                    <div className="text-2xl font-black font-mono text-gray-900 group-hover:text-emerald-600 transition-colors">
+                    <div className="text-3xl font-black font-mono text-gray-900 group-hover:text-emerald-600 transition-colors">
                       {value}
                     </div>
-                    <div className="text-[10px] font-mono tracking-widest text-slate-500">
+                    <div className="text-xs font-mono tracking-widest text-slate-500">
                       {label}
                     </div>
                   </div>
@@ -190,13 +190,13 @@ export default function Home() {
                 <div className="w-48 rounded-xl border border-red-100 bg-white/95 backdrop-blur-md p-3 shadow-lg shadow-red-500/5">
                   <div className="flex items-center gap-2">
                     <span className="flex h-7 w-7 items-center justify-center rounded-md bg-red-500/10">
-                      <AlertTriangle className="h-3.5 w-3.5 text-red-400" />
+                      <AlertTriangle className="h-4 w-4 text-red-400" />
                     </span>
                     <div>
-                      <p className="text-[10px] font-bold text-slate-900">
+                      <p className="text-xs font-bold text-slate-900">
                         FLOOD ALERT
                       </p>
-                      <p className="text-[9px] text-slate-400 font-mono">
+                      <p className="text-[10px] text-slate-400 font-mono">
                         Sunsari District
                       </p>
                     </div>
@@ -205,7 +205,7 @@ export default function Home() {
                     <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-red-500/20">
                       <div className="h-full w-[72%] rounded-full bg-red-500" />
                     </div>
-                    <span className="text-[9px] font-mono font-bold text-red-400">
+                    <span className="text-xs font-mono font-bold text-red-400">
                       72%
                     </span>
                   </div>
@@ -216,18 +216,18 @@ export default function Home() {
                 <div className="w-44 rounded-xl border border-emerald-100 bg-white/95 backdrop-blur-md p-3 shadow-lg shadow-emerald-500/5">
                   <div className="flex items-center gap-2">
                     <span className="flex h-7 w-7 items-center justify-center rounded-md bg-emerald-500/10">
-                      <Zap className="h-3.5 w-3.5 text-emerald-400" />
+                      <Zap className="h-4 w-4 text-emerald-400" />
                     </span>
                     <div>
-                      <p className="text-[10px] font-bold text-slate-900">
+                      <p className="text-xs font-bold text-slate-900">
                         SOS RESOLVED
                       </p>
-                      <p className="text-[9px] text-slate-400 font-mono">
+                      <p className="text-[10px] text-slate-400 font-mono">
                         Makwanpur
                       </p>
                     </div>
                   </div>
-                  <p className="mt-1.5 text-[9px] font-mono text-emerald-400 font-medium bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full inline-block">
+                  <p className="mt-1.5 text-[10px] font-mono text-emerald-400 font-medium bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full inline-block">
                     Response: 4m 32s
                   </p>
                 </div>
@@ -237,13 +237,13 @@ export default function Home() {
                 <div className="w-40 rounded-xl border border-amber-100 bg-white/95 backdrop-blur-md p-3 shadow-lg shadow-amber-500/5">
                   <div className="flex items-center gap-2">
                     <span className="flex h-7 w-7 items-center justify-center rounded-md bg-amber-500/10">
-                      <TrendingUp className="h-3.5 w-3.5 text-amber-400" />
+                      <TrendingUp className="h-4 w-4 text-amber-400" />
                     </span>
                     <div>
-                      <p className="text-[10px] font-bold text-slate-900">
+                      <p className="text-xs font-bold text-slate-900">
                         AI RISK
                       </p>
-                      <p className="text-[9px] text-slate-400 font-mono">
+                      <p className="text-[10px] text-slate-400 font-mono">
                         Pokhara Valley
                       </p>
                     </div>
@@ -267,7 +267,7 @@ export default function Home() {
       <section className="bg-gray-50 px-4 py-24 sm:px-6 lg:px-8 border-y border-gray-100 overflow-hidden">
         <div className="mx-auto max-w-7xl reveal-up">
           <div className="mb-12 text-center sm:text-left">
-            <span className="inline-block rounded-full bg-emerald-50 border border-emerald-200 px-3 py-1 text-[10px] font-mono font-bold tracking-[0.2em] text-emerald-700">
+            <span className="inline-block rounded-full bg-emerald-50 border border-emerald-200 px-4 py-1.5 text-xs font-mono font-bold tracking-[0.2em] text-emerald-700">
               SYSTEMS
             </span>
             <h2 className="mt-3 text-3xl font-black tracking-tight text-gray-900 sm:text-4xl">
@@ -297,7 +297,7 @@ export default function Home() {
                     <mod.icon className="h-5 w-5 text-emerald-400" />
                   </div>
                   <span
-                    className={`rounded-full border px-2.5 py-0.5 text-[9px] font-mono font-bold tracking-widest ${mod.tagColor}`}
+                    className={`rounded-full border px-3 py-1 text-xs font-mono font-bold tracking-widest ${mod.tagColor}`}
                   >
                     {mod.tag}
                   </span>
@@ -308,8 +308,8 @@ export default function Home() {
                 <p className="mt-2 text-sm leading-relaxed text-slate-500">
                   {mod.desc}
                 </p>
-                <div className="mt-6 flex items-center gap-1.5 text-[10px] font-mono font-semibold tracking-wider text-emerald-700 opacity-0 group-hover:opacity-100 transition-all transform translate-x-[-10px] group-hover:translate-x-0">
-                  ENTER MODULE <ArrowRight className="h-3 w-3" />
+                <div className="mt-6 flex items-center gap-1.5 text-xs font-mono font-semibold tracking-wider text-emerald-700 opacity-0 group-hover:opacity-100 transition-all transform translate-x-[-10px] group-hover:translate-x-0">
+                  ENTER MODULE <ArrowRight className="h-3.5 w-3.5" />
                 </div>
               </Link>
             ))}
@@ -321,7 +321,7 @@ export default function Home() {
       <section className="px-4 py-24 sm:px-6 lg:px-8 overflow-hidden">
         <div className="mx-auto max-w-7xl">
           <div className="mb-16 text-center reveal-up">
-            <span className="inline-block rounded-full bg-gray-100 border border-gray-200 px-3 py-1 text-[10px] font-mono font-bold tracking-[0.2em] text-slate-500">
+            <span className="inline-block rounded-full bg-gray-100 border border-gray-200 px-4 py-1.5 text-xs font-mono font-bold tracking-[0.2em] text-slate-500">
               PROTOCOL
             </span>
             <h2 className="mt-3 text-3xl font-black tracking-tight text-gray-900 sm:text-4xl">
@@ -433,8 +433,8 @@ export default function Home() {
           {/* Subtle background decoration */}
 
           <div className="relative z-10">
-            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-1.5 text-[10px] font-mono font-bold tracking-widest text-slate-500">
-              <Shield className="h-3 w-3 text-emerald-400" /> HAMRO SURAKSHA
+            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 text-xs font-mono font-bold tracking-widest text-slate-500">
+              <Shield className="h-3.5 w-3.5 text-emerald-400" /> HAMRO SURAKSHA
             </div>
             <h2 className="text-3xl font-black text-gray-900 sm:text-4xl lg:text-5xl">
               Stay Safe.{" "}

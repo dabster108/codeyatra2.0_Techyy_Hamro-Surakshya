@@ -285,7 +285,7 @@ export default function ChatbotPage() {
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
                   <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
                 </span>
-                <span className="text-[10px] font-mono text-emerald-600">
+                <span className="text-xs font-mono text-emerald-600">
                   Online
                 </span>
               </div>
@@ -300,7 +300,7 @@ export default function ChatbotPage() {
                   key={e.num}
                   href={`tel:${e.num}`}
                   title={e.name}
-                  className="rounded-full border border-red-200 bg-red-50 px-2.5 py-0.5 text-[10px] font-mono font-bold text-red-600 hover:bg-red-100 transition-colors"
+                  className="rounded-full border border-red-200 bg-red-50 px-2.5 py-0.5 text-xs font-mono font-bold text-red-600 hover:bg-red-100 transition-colors"
                 >
                   {e.name.split(" ")[0]} {e.num}
                 </a>
@@ -309,9 +309,9 @@ export default function ChatbotPage() {
             {isChat && (
               <button
                 onClick={() => setMessages([])}
-                className="flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-[11px] font-medium text-slate-500 hover:border-red-200 hover:text-red-600 hover:bg-red-50 transition-colors"
+                className="flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-slate-500 hover:border-red-200 hover:text-red-600 hover:bg-red-50 transition-colors"
               >
-                <Trash2 className="h-3 w-3" /> Clear
+                <Trash2 className="h-3.5 w-3.5" /> Clear
               </button>
             )}
           </div>
@@ -349,12 +349,12 @@ export default function ChatbotPage() {
                 disaster-related question.
               </p>
               <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1 text-[10px] font-mono text-slate-500 shadow-sm">
-                  <Globe className="h-3 w-3 text-blue-500" /> 77 Districts
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-mono text-slate-500 shadow-sm">
+                  <Globe className="h-3.5 w-3.5 text-blue-500" /> 77 Districts
                   Coverage
                 </span>
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1 text-[10px] font-mono text-slate-500 shadow-sm">
-                  <Zap className="h-3 w-3 text-amber-500" /> Real-Time Guidance
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-mono text-slate-500 shadow-sm">
+                  <Zap className="h-3.5 w-3.5 text-amber-500" /> Real-Time Guidance
                 </span>
               </div>
             </div>
@@ -367,7 +367,7 @@ export default function ChatbotPage() {
                   : "opacity-0 translate-y-4"
               }`}
             >
-              <p className="mb-4 text-[11px] font-mono font-bold tracking-[0.15em] text-slate-400">
+              <p className="mb-4 text-xs font-mono font-bold tracking-[0.15em] text-slate-400">
                 QUICK PROMPTS
               </p>
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -380,7 +380,7 @@ export default function ChatbotPage() {
                     <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg bg-slate-100">
                       <Icon className="h-3.5 w-3.5 text-slate-500 group-hover:text-emerald-600 transition-colors" />
                     </span>
-                    <span className="flex-1 text-xs text-slate-600 group-hover:text-slate-900 transition-colors">
+                    <span className="flex-1 text-sm text-slate-600 group-hover:text-slate-900 transition-colors">
                       {prompt}
                     </span>
                     <ArrowRight className="h-3.5 w-3.5 flex-shrink-0 text-slate-300 group-hover:text-emerald-500 transition-colors" />
@@ -426,7 +426,7 @@ export default function ChatbotPage() {
                         {msg.content}
                       </div>
                     )}
-                    <p className="mt-2 text-[10px] font-mono text-slate-400">
+                    <p className="mt-2 text-xs font-mono text-slate-400">
                       {msg.role === "assistant" ? "AI Assistant" : "You"}
                     </p>
                   </div>
@@ -441,7 +441,7 @@ export default function ChatbotPage() {
                   </div>
                   <div className="rounded-2xl rounded-bl-md border border-slate-200 bg-slate-50 px-4 py-3 shadow-sm">
                     <TypingDots />
-                    <p className="mt-1 text-[10px] font-mono text-slate-400">
+                    <p className="mt-1 text-xs font-mono text-slate-400">
                       AI Assistant is thinking...
                     </p>
                   </div>
@@ -465,7 +465,7 @@ export default function ChatbotPage() {
                   key={label}
                   onClick={() => sendMessage(prompt)}
                   disabled={loading}
-                  className="flex-shrink-0 rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-[11px] text-slate-500 hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700 transition-colors disabled:opacity-40"
+                  className="flex-shrink-0 rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-xs text-slate-500 hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700 transition-colors disabled:opacity-40"
                 >
                   {label}
                 </button>
@@ -498,7 +498,7 @@ export default function ChatbotPage() {
               )}
             </button>
           </div>
-          <p className="mt-2 text-[10px] text-slate-400">
+          <p className="mt-2 text-xs text-slate-400">
             For real emergencies call{" "}
             <a
               href="tel:100"
@@ -535,14 +535,14 @@ export default function ChatbotPage() {
                   >
                     <cap.icon className={`h-4 w-4 ${cap.color}`} />
                   </div>
-                  <p className="text-xs font-bold text-gray-900 group-hover:text-emerald-700 transition-colors">
+                  <p className="text-sm font-bold text-gray-900 group-hover:text-emerald-700 transition-colors">
                     {cap.label}
                   </p>
-                  <p className="mt-1 text-[10px] leading-relaxed text-slate-500">
+                  <p className="mt-1 text-xs leading-relaxed text-slate-500">
                     {cap.desc}
                   </p>
-                  <div className="mt-2 flex items-center gap-1 text-[10px] font-semibold text-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity">
-                    Ask now <ChevronRight className="h-3 w-3" />
+                  <div className="mt-2 flex items-center gap-1 text-xs font-semibold text-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                    Ask now <ChevronRight className="h-3.5 w-3.5" />
                   </div>
                 </button>
               ))}
