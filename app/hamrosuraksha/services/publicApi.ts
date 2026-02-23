@@ -1,9 +1,4 @@
-// ─── API base ─────────────────────────────────────────────────────────────────
-// For Expo Go on mobile device, use your computer's local IP address
-// Change this IP if your network changes
 export const API_BASE = "http://10.5.5.182:8005";
-
-// ─── Types ────────────────────────────────────────────────────────────────────
 export interface PublicSummary {
   total_allocated: number;
   total_used: number;
@@ -74,19 +69,18 @@ export interface WildfirePrediction {
   latitude: number;
   longitude: number;
   valid_time: string;
-  fire_prob: number; // 0-1
-  prediction_class: number; // 0 or 1
-  fire_category: string; // minimal, low, medium, high, extreme
+  fire_prob: number;
+  prediction_class: number;
+  fire_category: string;
   gapa_napa?: string;
   district: string;
   pr_name?: string;
-  province: number; // 1-7
+  province: number;
   prediction_date: string;
   created_at?: string;
   updated_at?: string;
 }
 
-// ─── API calls ────────────────────────────────────────────────────────────────
 export async function getPublicSummary(): Promise<PublicSummary> {
   const res = await fetch(`${API_BASE}/public/summary`);
   if (!res.ok) throw new Error("Failed to fetch summary");
@@ -108,10 +102,6 @@ export async function getAllRecords(): Promise<AllRecordsData> {
 // Date offset: Database dates are 7 days behind actual dates
 const DATE_OFFSET_DAYS = 7;
 
-/**
- * Adjust date for database offset (subtract 7 days)
- * If user selects Feb 23, query for Feb 16 in the database
- */
 function getAdjustedDate(date: Date): string {
   const adjusted = new Date(date);
   adjusted.setDate(adjusted.getDate() - DATE_OFFSET_DAYS);
@@ -123,8 +113,9 @@ export async function getWildfirePredictions(params: {
   district?: string;
   fire_category?: string;
   min_fire_prob?: number;
-  date?: string; // Single prediction date (YYYY-MM-DD)
+  date?: string;
   limit?: number;
+  signal?: AbortSignal;
 }): Promise<WildfirePrediction[]> {
   const queryParams = new URLSearchParams();
 
@@ -148,9 +139,17 @@ export async function getWildfirePredictions(params: {
 
   // Use NEON endpoint (not Supabase) - this is where the wildfire data actually is
   const url = `${API_BASE}/predictions/neon/wildfire${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
-  const res = await fetch(url);
+  const res = await fetch(
+    url,
+    params.signal ? { signal: params.signal } : undefined,
+  );
 
-  if (!res.ok) throw new Error("Failed to fetch wildfire predictions");
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new Error(
+      `Failed to fetch wildfire predictions (HTTP ${res.status}): ${body}`,
+    );
+  }
   return res.json();
 }
 

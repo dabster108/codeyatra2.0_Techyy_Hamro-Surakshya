@@ -23,8 +23,6 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import BottomNav from "@/components/ui/BottomNav";
 import { useLang } from "@/context/LanguageContext";
 
-// ─── Nepal Location Data ───────────────────────────────────────────────────────
-
 type Municipality = string;
 
 interface DistrictData {
@@ -267,8 +265,6 @@ const NEPAL_DATA: ProvinceData = {
 
 const PROVINCES = Object.keys(NEPAL_DATA);
 
-// ─── Alert Data ────────────────────────────────────────────────────────────────
-
 type AlertCategory =
   | "Flood"
   | "Landslide"
@@ -380,8 +376,6 @@ const MOCK_ALERTS_BASE = [
   },
 ];
 
-// ─── Category Config ───────────────────────────────────────────────────────────
-
 const CATEGORY_CONFIG: Record<
   AlertCategory,
   {
@@ -444,8 +438,6 @@ const SEVERITY_KEY: Record<
   Medium: "medium",
   Low: "low",
 };
-
-// ─── Dropdown component ────────────────────────────────────────────────────────
 
 interface DropdownProps {
   label: string;
@@ -519,7 +511,6 @@ function FilterDropdown({
           bounces={false}
           style={styles.dropdownScroll}
         >
-          {/* Clear option */}
           <TouchableOpacity
             style={[styles.dropdownItem, !value && styles.activeItem]}
             onPress={() => onSelect(null)}
@@ -550,14 +541,11 @@ function FilterDropdown({
   );
 }
 
-// ─── Screen ────────────────────────────────────────────────────────────────────
-
 export default function AlertScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { t, lang, toggleLang } = useLang();
 
-  // Build translated alert list
   const MOCK_ALERTS: AlertItem[] = MOCK_ALERTS_BASE.map((a) => ({
     id: a.id,
     title: t[a.titleKey] as string,
@@ -570,7 +558,6 @@ export default function AlertScreen() {
     severity: a.severity,
   }));
 
-  // ── Location filter state
   const [province, setProvince] = useState<string | null>(null);
   const [district, setDistrict] = useState<string | null>(null);
   const [municipality, setMunicipality] = useState<string | null>(null);
@@ -579,7 +566,6 @@ export default function AlertScreen() {
     "province" | "district" | "municipality" | null
   >(null);
 
-  // ── Date filter state
   const today = new Date();
   const oneWeekAgo = new Date(today);
   oneWeekAgo.setDate(today.getDate() - 7);
@@ -589,14 +575,12 @@ export default function AlertScreen() {
   const [showFromPicker, setShowFromPicker] = useState(false);
   const [showToPicker, setShowToPicker] = useState(false);
 
-  // ── Derived option lists
   const districtOptions = province
     ? Object.keys(NEPAL_DATA[province] ?? {})
     : [];
   const municipalityOptions =
     province && district ? (NEPAL_DATA[province]?.[district] ?? []) : [];
 
-  // ── Toggle helpers
   const toggle = (key: "province" | "district" | "municipality") => {
     setOpenDropdown((prev) => (prev === key ? null : key));
   };
@@ -619,17 +603,14 @@ export default function AlertScreen() {
     setOpenDropdown(null);
   };
 
-  // ── Filtered alerts
   const filteredAlerts = MOCK_ALERTS.filter((alert) => {
     if (province && alert.province !== province) return false;
     if (district && alert.district !== district) return false;
-    // Municipality is a sub-filter; MOCK data only has district so we treat it as no-op
     const alertDate = new Date(alert.date);
     if (alertDate < fromDate || alertDate > toDate) return false;
     return true;
   });
 
-  // ── Bell badge bounce animation
   const badgeScale = useSharedValue(1);
   const prevCount = useRef(filteredAlerts.length);
   useEffect(() => {
@@ -645,11 +626,9 @@ export default function AlertScreen() {
     transform: [{ scale: badgeScale.value }],
   }));
 
-  // ── Translated dropdown labels
   const evacOptions = [t.police, t.hospital, t.area3];
   const disasterOptions = [t.flood, t.landslide, t.fire, t.other];
 
-  // ── Renderers
   const renderAlertItem = ({
     item,
     index,
@@ -731,7 +710,6 @@ export default function AlertScreen() {
 
   return (
     <Animated.View style={styles.container} entering={FadeIn.duration(350)}>
-      {/* Header */}
       <View style={[styles.header, { paddingTop: insets.top }]}>
         <TouchableOpacity
           onPress={() => router.back()}
@@ -766,15 +744,12 @@ export default function AlertScreen() {
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={
           <View>
-            {/* ── Filters Section ───────────────────────────── */}
             <View style={styles.filtersWrapper}>
-              {/* Section Title */}
               <View style={styles.sectionTitleRow}>
                 <Ionicons name="funnel-outline" size={16} color="#007AFF" />
                 <Text style={styles.sectionTitle}>{t.filterByLocation}</Text>
               </View>
 
-              {/* Province */}
               <FilterDropdown
                 label={t.province}
                 placeholder={t.selectProvince}
@@ -786,7 +761,6 @@ export default function AlertScreen() {
                 onSelect={onProvinceSelect}
               />
 
-              {/* District */}
               <FilterDropdown
                 label={t.district}
                 placeholder={t.selectDistrict}
@@ -799,7 +773,6 @@ export default function AlertScreen() {
                 disabled={!province}
               />
 
-              {/* Municipality */}
               <FilterDropdown
                 label={t.municipality}
                 placeholder={t.selectMunicipality}
@@ -812,14 +785,12 @@ export default function AlertScreen() {
                 disabled={!district}
               />
 
-              {/* ── Date Range ─────────────────────────────── */}
               <View style={styles.sectionTitleRow}>
                 <Ionicons name="calendar-outline" size={16} color="#007AFF" />
                 <Text style={styles.sectionTitle}>{t.filterByDate}</Text>
               </View>
 
               <View style={styles.dateRangeRow}>
-                {/* From Date */}
                 <View style={styles.datePickerBlock}>
                   <Text style={styles.dateRangeLabel}>{t.from}</Text>
                   <TouchableOpacity
@@ -858,7 +829,6 @@ export default function AlertScreen() {
                   <Ionicons name="arrow-forward" size={16} color="#ccc" />
                 </View>
 
-                {/* To Date */}
                 <View style={styles.datePickerBlock}>
                   <Text style={styles.dateRangeLabel}>{t.to}</Text>
                   <TouchableOpacity
@@ -896,7 +866,6 @@ export default function AlertScreen() {
               </View>
             </View>
 
-            {/* ── Alerts List Header ─────────────────────── */}
             <View style={styles.alertsHeaderRow}>
               <Text style={styles.alertsHeaderText}>
                 {filteredAlerts.length === 0
@@ -931,8 +900,6 @@ export default function AlertScreen() {
     </Animated.View>
   );
 }
-
-// ─── Styles ────────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   container: {
@@ -1009,7 +976,6 @@ const styles = StyleSheet.create({
     lineHeight: 12,
   },
 
-  // ── Filters
   filtersWrapper: {
     padding: 16,
     backgroundColor: "#fff",
@@ -1088,7 +1054,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
 
-  // ── Date Range
   dateRangeRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -1128,7 +1093,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
 
-  // ── Alerts header row
   alertsHeaderRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -1147,7 +1111,6 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
 
-  // ── Alert cards
   listContent: {
     paddingHorizontal: 16,
     paddingTop: 12,
@@ -1240,7 +1203,6 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
 
-  // ── Empty
   emptyState: {
     alignItems: "center",
     paddingVertical: 48,

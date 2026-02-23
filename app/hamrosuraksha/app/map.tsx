@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { WebView } from "react-native-webview";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -28,10 +28,88 @@ import {
 type EvacuationType = "Police" | "Hospital" | "Area 3" | null;
 type DisasterType = "Flood" | "Landslide" | "Fire" | "Other" | null;
 
+// Real Kathmandu evacuation assembly zones with coordinates
+const EVACUATION_ZONES = [
+  {
+    name: "Tudikhel Ground",
+    lat: 27.706,
+    lng: 85.3152,
+    capacity: 50000,
+    type: "Open Ground",
+    color: "#4CAF50",
+    radius: 250,
+    facilities: "Water, Medical Aid, Tents, Toilets",
+  },
+  {
+    name: "Dasharath Stadium",
+    lat: 27.6952,
+    lng: 85.326,
+    capacity: 30000,
+    type: "Stadium",
+    color: "#2196F3",
+    radius: 180,
+    facilities: "Shelter, Medical, Food Distribution",
+  },
+  {
+    name: "UN Park",
+    lat: 27.6753,
+    lng: 85.3191,
+    capacity: 10000,
+    type: "Park",
+    color: "#9C27B0",
+    radius: 120,
+    facilities: "Open Space, Water, Basic Aid",
+  },
+  {
+    name: "Bhrikutimandap",
+    lat: 27.702,
+    lng: 85.3195,
+    capacity: 20000,
+    type: "Exhibition Ground",
+    color: "#FF9800",
+    radius: 150,
+    facilities: "Shelter, Food Distribution, Medical",
+  },
+  {
+    name: "Ratnapark",
+    lat: 27.7049,
+    lng: 85.3165,
+    capacity: 15000,
+    type: "Open Area",
+    color: "#00BCD4",
+    radius: 100,
+    facilities: "Water, Basic Aid, Registration",
+  },
+  {
+    name: "CAN Complex",
+    lat: 27.6988,
+    lng: 85.3422,
+    capacity: 8000,
+    type: "Exhibition Area",
+    color: "#F44336",
+    radius: 100,
+    facilities: "Temporary Shelter, Food",
+  },
+  {
+    name: "TU Teaching Hospital",
+    lat: 27.7172,
+    lng: 85.324,
+    capacity: 5000,
+    type: "Medical Center",
+    color: "#E91E63",
+    radius: 80,
+    facilities: "Emergency Medical Care",
+  },
+];
+
 export default function MapScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { t, lang, toggleLang } = useLang();
+  const { view, focus } = useLocalSearchParams<{
+    view?: string;
+    focus?: string;
+  }>();
 
   // State
   const [evacuationFilter, setEvacuationFilter] =
@@ -43,6 +121,14 @@ export default function MapScreen() {
     WildfirePrediction[]
   >([]);
   const [loadingWildfire, setLoadingWildfire] = useState(false);
+  const [showEvacuationZones, setShowEvacuationZones] = useState(false);
+
+  // Init from URL params (e.g. from HomeScreen "See Map" button)
+  useEffect(() => {
+    if (view === "evacuation") {
+      setShowEvacuationZones(true);
+    }
+  }, [view]);
 
   // UI State
   const [isEvacDropdownOpen, setIsEvacDropdownOpen] = useState(false);
@@ -101,13 +187,15 @@ export default function MapScreen() {
   // Fetch wildfire predictions when Fire disaster type is selected
   useEffect(() => {
     if (disasterFilter === t.fire || disasterFilter === "Fire") {
-      fetchWildfireData();
+      const controller = new AbortController();
+      fetchWildfireData(controller.signal);
+      return () => controller.abort();
     } else {
       setWildfirePredictions([]);
     }
   }, [disasterFilter, selectedDate]);
 
-  const fetchWildfireData = async () => {
+  const fetchWildfireData = async (signal?: AbortSignal) => {
     setLoadingWildfire(true);
     try {
       // Format date to YYYY-MM-DD
@@ -117,13 +205,15 @@ export default function MapScreen() {
         date: dateStr, // Use single date for prediction day
         min_fire_prob: 0.5, // Show predictions with 50%+ probability for better visualization
         limit: 500, // Limit to 500 predictions
+        signal,
       });
 
       setWildfirePredictions(predictions);
       console.log(
         `Fetched ${predictions.length} wildfire predictions for ${dateStr}`,
       );
-    } catch (error) {
+    } catch (error: any) {
+      if (error?.name === "AbortError") return; // Ignore cancelled requests
       console.error("Failed to fetch wildfire predictions:", error);
       setWildfirePredictions([]);
     } finally {
@@ -291,6 +381,55 @@ export default function MapScreen() {
                 });
                 group.addTo(map);
                 map.fitBounds(group.getBounds().pad(0.1));
+            }
+
+            // ── Evacuation Zones ──────────────────────────────────────────────
+            const showEvacZones = ${showEvacuationZones};
+            const focusZone = "${focus || ""}";
+            const evacuationZones = ${JSON.stringify(EVACUATION_ZONES)};
+            if (showEvacZones) {
+              const evacGroup = new L.featureGroup();
+              evacuationZones.forEach(zone => {
+                const circle = L.circle([zone.lat, zone.lng], {
+                  color: zone.color,
+                  fillColor: zone.color,
+                  fillOpacity: 0.28,
+                  weight: 2.5,
+                  radius: zone.radius
+                });
+                const popup =
+                  '<div style="min-width:195px;font-family:sans-serif;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.15)">' +
+                  '<div style="background:' + zone.color + ';color:white;padding:8px 12px;font-size:14px;font-weight:700">🏕 ' + zone.name + '</div>' +
+                  '<div style="padding:8px 12px;background:#fff">' +
+                  '<table style="font-size:12px;width:100%;border-collapse:collapse">' +
+                  '<tr><td style="color:#888;padding:2px 0">Type</td><td style="font-weight:600">' + zone.type + '</td></tr>' +
+                  '<tr><td style="color:#888;padding:2px 0">Capacity</td><td style="font-weight:700;color:' + zone.color + '">' + zone.capacity.toLocaleString() + ' people</td></tr>' +
+                  '<tr><td style="color:#888;padding:2px 0;vertical-align:top">Facilities</td><td style="font-weight:500">' + zone.facilities + '</td></tr>' +
+                  '</table></div></div>';
+                circle.bindPopup(popup, { maxWidth: 240 });
+                // Label marker at zone center
+                const label = L.marker([zone.lat, zone.lng], {
+                  icon: L.divIcon({
+                    className: '',
+                    html: '<div style="background:' + zone.color + ';color:white;padding:3px 9px;border-radius:12px;font-size:11px;font-weight:700;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,0.3);border:1.5px solid rgba(255,255,255,0.5)">' + zone.name + '</div>',
+                    iconSize: [0, 0],
+                    iconAnchor: [-4, 8]
+                  })
+                });
+                label.addTo(map);
+                circle.addTo(map);
+                evacGroup.addLayer(circle);
+              });
+              evacGroup.addTo(map);
+              if (evacGroup.getLayers().length > 0) {
+                if (focusZone) {
+                  const target = evacuationZones.find(z => z.name.includes(focusZone));
+                  if (target) { map.setView([target.lat, target.lng], 16); }
+                  else { map.fitBounds(evacGroup.getBounds().pad(0.15)); }
+                } else {
+                  map.fitBounds(evacGroup.getBounds().pad(0.15));
+                }
+              }
             }
           } catch (e) {
             console.error(e);
@@ -474,6 +613,32 @@ export default function MapScreen() {
                   )}
                 </View>
               )}
+
+              {/* Evacuation Zones Toggle */}
+              <TouchableOpacity
+                style={[
+                  styles.evacToggleBtn,
+                  showEvacuationZones && styles.evacToggleBtnActive,
+                ]}
+                onPress={() => setShowEvacuationZones((v) => !v)}
+                activeOpacity={0.8}
+              >
+                <Ionicons
+                  name="location"
+                  size={18}
+                  color={showEvacuationZones ? "#fff" : "#4CAF50"}
+                />
+                <Text
+                  style={[
+                    styles.evacToggleTxt,
+                    showEvacuationZones && styles.evacToggleTxtActive,
+                  ]}
+                >
+                  {showEvacuationZones
+                    ? "Hide Evacuation Zones"
+                    : "Show Evacuation Zones"}
+                </Text>
+              </TouchableOpacity>
             </View>
           </View>
         )}
@@ -749,5 +914,29 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#FF5722",
     fontWeight: "600",
+  },
+  evacToggleBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    backgroundColor: "#f0faf0",
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: "#4CAF50",
+    marginTop: 8,
+  },
+  evacToggleBtnActive: {
+    backgroundColor: "#4CAF50",
+    borderColor: "#388E3C",
+  },
+  evacToggleTxt: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#4CAF50",
+  },
+  evacToggleTxtActive: {
+    color: "#fff",
   },
 });
