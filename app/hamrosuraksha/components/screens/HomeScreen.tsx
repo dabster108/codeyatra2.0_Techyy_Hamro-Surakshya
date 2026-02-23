@@ -203,7 +203,9 @@ export default function HomeScreen() {
         <View style={styles.sectionContainer}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>{t.evacuationAreas}</Text>
-            <TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => router.push("/map?view=evacuation" as any)}
+            >
               <Text style={styles.seeAllText}>{t.seeMap}</Text>
             </TouchableOpacity>
           </View>
@@ -213,44 +215,129 @@ export default function HomeScreen() {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.evacuationList}
           >
-            <TouchableOpacity style={styles.evacuationCard}>
-              <View style={styles.imagePlaceholder}>
-                <Ionicons name="image-outline" size={32} color="#ccc" />
-                <Text style={styles.placeholderLabel}>Tudikhel</Text>
+            <TouchableOpacity
+              style={styles.evacuationCard}
+              activeOpacity={0.85}
+              onPress={() =>
+                router.push("/map?view=evacuation&focus=Tudikhel" as any)
+              }
+            >
+              <View
+                style={[
+                  styles.imagePlaceholder,
+                  { backgroundColor: "#e8f5e9" },
+                ]}
+              >
+                <View style={styles.mapPinBadge}>
+                  <Ionicons name="location" size={22} color="#fff" />
+                </View>
+                <View
+                  style={[styles.zoneColorBar, { backgroundColor: "#4CAF50" }]}
+                />
+                <Text
+                  style={[
+                    styles.placeholderLabel,
+                    { color: "#388E3C", fontWeight: "700" },
+                  ]}
+                >
+                  Open Ground
+                </Text>
               </View>
               <View style={styles.evacuationInfo}>
                 <Text style={styles.evacuationName}>{t.evac1Name}</Text>
                 <View style={styles.evacuationMeta}>
                   <Ionicons name="location-sharp" size={14} color="#4CAF50" />
                   <Text style={styles.evacuationDistance}>0.5 km</Text>
+                  <View
+                    style={[styles.capacityDot, { backgroundColor: "#4CAF50" }]}
+                  />
+                  <Text style={styles.capacityText}>50K cap</Text>
                 </View>
               </View>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.evacuationCard}>
-              <View style={styles.imagePlaceholder}>
-                <Ionicons name="image-outline" size={32} color="#ccc" />
-                <Text style={styles.placeholderLabel}>Dasharath</Text>
+            <TouchableOpacity
+              style={styles.evacuationCard}
+              activeOpacity={0.85}
+              onPress={() =>
+                router.push("/map?view=evacuation&focus=Dasharath" as any)
+              }
+            >
+              <View
+                style={[
+                  styles.imagePlaceholder,
+                  { backgroundColor: "#e3f2fd" },
+                ]}
+              >
+                <View
+                  style={[styles.mapPinBadge, { backgroundColor: "#2196F3" }]}
+                >
+                  <Ionicons name="business" size={22} color="#fff" />
+                </View>
+                <View
+                  style={[styles.zoneColorBar, { backgroundColor: "#2196F3" }]}
+                />
+                <Text
+                  style={[
+                    styles.placeholderLabel,
+                    { color: "#1565C0", fontWeight: "700" },
+                  ]}
+                >
+                  Stadium
+                </Text>
               </View>
               <View style={styles.evacuationInfo}>
                 <Text style={styles.evacuationName}>{t.evac2Name}</Text>
                 <View style={styles.evacuationMeta}>
-                  <Ionicons name="location-sharp" size={14} color="#4CAF50" />
+                  <Ionicons name="location-sharp" size={14} color="#2196F3" />
                   <Text style={styles.evacuationDistance}>2.1 km</Text>
+                  <View
+                    style={[styles.capacityDot, { backgroundColor: "#2196F3" }]}
+                  />
+                  <Text style={styles.capacityText}>30K cap</Text>
                 </View>
               </View>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.evacuationCard}>
-              <View style={styles.imagePlaceholder}>
-                <Ionicons name="image-outline" size={32} color="#ccc" />
-                <Text style={styles.placeholderLabel}>UN Park</Text>
+            <TouchableOpacity
+              style={styles.evacuationCard}
+              activeOpacity={0.85}
+              onPress={() =>
+                router.push("/map?view=evacuation&focus=UN%20Park" as any)
+              }
+            >
+              <View
+                style={[
+                  styles.imagePlaceholder,
+                  { backgroundColor: "#f3e5f5" },
+                ]}
+              >
+                <View
+                  style={[styles.mapPinBadge, { backgroundColor: "#9C27B0" }]}
+                >
+                  <Ionicons name="leaf" size={22} color="#fff" />
+                </View>
+                <View
+                  style={[styles.zoneColorBar, { backgroundColor: "#9C27B0" }]}
+                />
+                <Text
+                  style={[
+                    styles.placeholderLabel,
+                    { color: "#6A1B9A", fontWeight: "700" },
+                  ]}
+                >
+                  Park
+                </Text>
               </View>
               <View style={styles.evacuationInfo}>
                 <Text style={styles.evacuationName}>{t.evac3Name}</Text>
                 <View style={styles.evacuationMeta}>
-                  <Ionicons name="location-sharp" size={14} color="#4CAF50" />
+                  <Ionicons name="location-sharp" size={14} color="#9C27B0" />
                   <Text style={styles.evacuationDistance}>3.4 km</Text>
+                  <View
+                    style={[styles.capacityDot, { backgroundColor: "#9C27B0" }]}
+                  />
+                  <Text style={styles.capacityText}>10K cap</Text>
                 </View>
               </View>
             </TouchableOpacity>
@@ -468,6 +555,36 @@ const styles = StyleSheet.create({
     backgroundColor: "#f5f5f5",
     justifyContent: "center",
     alignItems: "center",
+    position: "relative",
+    overflow: "hidden",
+  },
+  mapPinBadge: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#4CAF50",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 4,
+    boxShadow: "0px 2px 6px rgba(0,0,0,0.2)",
+  },
+  zoneColorBar: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 4,
+  },
+  capacityDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 3,
+    marginLeft: 6,
+  },
+  capacityText: {
+    fontSize: 11,
+    color: "#888",
+    fontWeight: "500",
   },
   placeholderLabel: {
     marginTop: 5,
