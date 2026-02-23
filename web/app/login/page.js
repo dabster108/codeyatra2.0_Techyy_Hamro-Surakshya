@@ -55,10 +55,10 @@ export default function LoginPage() {
   };
 
   if (loading) return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
+    <div className="flex min-h-screen items-center justify-center bg-white">
       <div className="text-center">
         <div className="mx-auto h-6 w-6 border-2 border-emerald-500 border-t-transparent animate-spin" />
-        <p className="mt-3 text-xs font-mono text-muted">AUTHENTICATING...</p>
+        <p className="mt-3 text-xs font-mono text-gray-500">AUTHENTICATING...</p>
       </div>
     </div>
   );
@@ -70,15 +70,15 @@ export default function LoginPage() {
     : null;
 
   return (
-    <div className="min-h-screen bg-background cmd-grid flex items-center justify-center px-4 py-16">
+    <div className="min-h-screen bg-white flex items-center justify-center px-4 py-16">
       <div className="w-full max-w-lg">
         {/* Header */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 border border-emerald-500/30 bg-emerald-500/5 px-3 py-1.5 text-[10px] font-mono font-bold tracking-widest text-emerald-400 mb-4">
             <Lock className="h-3 w-3" /> SECURE ACCESS
           </div>
-          <h1 className="text-2xl font-black text-white">System Authentication</h1>
-          <p className="mt-2 text-sm text-muted">Select your access level to enter the command center</p>
+          <h1 className="text-2xl font-black text-gray-900">System Authentication</h1>
+          <p className="mt-2 text-sm text-gray-500">Select your access level to enter the command center</p>
         </div>
 
         {/* Role selection */}
@@ -88,24 +88,24 @@ export default function LoginPage() {
               className={`w-full text-left border transition-all p-4 ${
                 selectedRole === role.key
                   ? `${role.border} ${role.bg}`
-                  : "border-border bg-[#0d1117] hover:bg-surface-hover"
+                  : "border-gray-200 bg-gray-50 hover:bg-gray-100"
               }`}>
               <div className="flex items-center gap-3">
                 <div className={`flex h-10 w-10 items-center justify-center border ${
-                  selectedRole === role.key ? role.border : "border-border"
+                  selectedRole === role.key ? role.border : "border-gray-200"
                 }`}>
-                  <role.icon className={`h-5 w-5 ${selectedRole === role.key ? role.color : "text-muted"}`} />
+                  <role.icon className={`h-5 w-5 ${selectedRole === role.key ? role.color : "text-gray-500"}`} />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className={`text-sm font-bold ${selectedRole === role.key ? "text-white" : "text-gray-300"}`}>
+                    <span className={`text-sm font-bold ${selectedRole === role.key ? "text-gray-900" : "text-gray-600"}`}>
                       {role.label}
                     </span>
                     {selectedRole === role.key && (
                       <span className={`h-1.5 w-1.5 ${role.color.replace("text-", "bg-")}`} />
                     )}
                   </div>
-                  <p className="text-[11px] text-muted mt-0.5">{role.desc}</p>
+                  <p className="text-[11px] text-gray-500 mt-0.5">{role.desc}</p>
                 </div>
               </div>
             </button>
@@ -120,32 +120,32 @@ export default function LoginPage() {
             </label>
             <div className="relative">
               <select value={selectedProvince} onChange={(e) => setSelectedProvince(e.target.value)}
-                className="w-full appearance-none border border-border bg-surface px-3 py-2.5 pr-8 text-sm text-white focus:border-amber-500/50 focus:outline-none">
+                className="w-full appearance-none border border-gray-200 bg-gray-50 px-3 py-2.5 pr-8 text-sm text-gray-900 focus:border-amber-500/50 focus:outline-none">
                 {PROVINCE_LOGINS.map((p) => (
                   <option key={p.key} value={p.key}>{p.label}</option>
                 ))}
               </select>
-              <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+              <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
             </div>
           </div>
         )}
 
         {/* Demo credentials */}
         {demoUser && (
-          <div className="border border-border bg-[#0d1117] p-4 mb-6">
-            <span className="text-[10px] font-mono font-bold tracking-widest text-muted">DEMO CREDENTIALS</span>
+          <div className="border border-gray-200 bg-white p-4 mb-6">
+            <span className="text-[10px] font-mono font-bold tracking-widest text-gray-500">DEMO CREDENTIALS</span>
             <div className="mt-3 space-y-2">
               <div>
-                <label className="block text-[10px] font-mono text-muted mb-1">EMAIL</label>
+                <label className="block text-[10px] font-mono text-gray-500 mb-1">EMAIL</label>
                 <input readOnly value={demoUser.email}
-                  className="w-full border border-border bg-surface px-3 py-2 text-xs font-mono text-emerald-400" />
+                  className="w-full border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-mono text-emerald-600" />
               </div>
               <div>
-                <label className="block text-[10px] font-mono text-muted mb-1">PASSWORD</label>
+                <label className="block text-[10px] font-mono text-gray-500 mb-1">PASSWORD</label>
                 <input readOnly value="••••••••" type="password"
-                  className="w-full border border-border bg-surface px-3 py-2 text-xs font-mono text-emerald-400" />
+                  className="w-full border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-mono text-emerald-600" />
               </div>
-              <div className="flex items-center gap-2 text-[10px] text-muted">
+              <div className="flex items-center gap-2 text-[10px] text-gray-500">
                 <Eye className="h-3 w-3" />
                 <span>Demo mode — no real credentials required</span>
               </div>
@@ -168,7 +168,7 @@ export default function LoginPage() {
           )}
         </button>
 
-        <p className="mt-4 text-center text-[10px] font-mono text-muted/50">
+        <p className="mt-4 text-center text-[10px] font-mono text-gray-400">
           HAMRO SURAKSHA — AUTHORIZED ACCESS ONLY
         </p>
       </div>

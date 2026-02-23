@@ -8,8 +8,12 @@ import {
 } from "lucide-react";
 import { PROVINCES, AID_TYPES } from "../data/budget";
 
-const fmtNPR = (n) => `NPR ${(n / 1_000_000_000).toFixed(2)}B`;
-const fmtNPRm = (n) => n >= 1_000_000 ? `NPR ${(n / 1_000_000).toFixed(1)}M` : `NPR ${(n || 0).toLocaleString()}`;
+const fmtNPR = (n) => {
+  if (n >= 1_000_000_000) return `NPR ${(n / 1_000_000_000).toFixed(2)}B`;
+  if (n >= 1_000_000) return `NPR ${(n / 1_000_000).toFixed(2)}M`;
+  if (n >= 1_000) return `NPR ${(n / 1_000).toFixed(2)}K`;
+  return `NPR ${(n || 0).toLocaleString()}`;
+};
 const pct = (a, b) => b ? Math.round((a / b) * 100) : 0;
 
 const AID_ICONS = { money: Banknote, food: UtensilsCrossed, shelter: Tent, clothes: Shirt };
@@ -340,7 +344,7 @@ export default function TransparencyPage() {
                         </td>
                         <td className="px-5 py-4">
                            <span className="font-mono font-bold text-gray-900 bg-gray-100 px-2.5 py-1 rounded-md border border-gray-200">
-                              {r.type === "money" ? fmtNPRm(r.amount) : `${r.amount} ${r.unit}`}
+                              {r.type === "money" ? fmtNPR(r.amount) : `${r.amount} ${r.unit}`}
                            </span>
                         </td>
                         <td className="px-5 py-4 font-semibold text-slate-600">

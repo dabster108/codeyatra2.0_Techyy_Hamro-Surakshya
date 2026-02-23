@@ -6,14 +6,16 @@ import { useAuth } from "../context/AuthContext";
 import {
   Landmark, TrendingUp, Users, AlertTriangle, ArrowUpRight,
   DollarSign, Building2, ChevronDown, X, Send, Shield,
-  BarChart3, MapPin,
+  BarChart3, MapPin, RefreshCw,
 } from "lucide-react";
-import {
-  NATIONAL_BUDGET, PROVINCE_BUDGETS, AID_RECORDS, PROVINCES,
-} from "../data/budget";
+import { getNationalDashboard, getAllProvinces, getRecentAid } from "../lib/government-api";
 
-const fmtNPR = (n) => `NPR ${(n / 1_000_000_000).toFixed(2)}B`;
-const fmtNPRm = (n) => n >= 1_000_000 ? `NPR ${(n / 1_000_000).toFixed(1)}M` : `NPR ${n.toLocaleString()}`;
+const fmtNPR = (n) => {
+  if (n >= 1_000_000_000) return `NPR ${(n / 1_000_000_000).toFixed(2)}B`;
+  if (n >= 1_000_000) return `NPR ${(n / 1_000_000).toFixed(2)}M`;
+  if (n >= 1_000) return `NPR ${(n / 1_000).toFixed(2)}K`;
+  return `NPR ${n.toLocaleString()}`;
+};
 const pct = (a, b) => b ? Math.round((a / b) * 100) : 0;
 
 export default function GovernmentPage() {
@@ -23,6 +25,36 @@ export default function GovernmentPage() {
   const [distProvince, setDistProvince] = useState("Koshi");
   const [distAmount, setDistAmount] = useState("");
   const [distributions, setDistributions] = useState([]);
+  
+  // Dynamic data state
+  const [nationalData, setNationalData] = useState(null);
+  const [provincesData, setProvincesData] = useState([]);
+  const [recentAid, setRecentAid] = useState([]);
+  const [dataLoading, setDataLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const PROVINCES = ["Koshi", "Madhesh", "Bagmati", "Gandaki", "Lumbini", "Karnali", "Sudurpashchim"];
+
+  // Fetch dashboard data
+  const fetchDashboardData = async (showRefresh = false) => {
+    if (showRefresh) setRefreshing(true);
+    try {
+      const [national, provinces, aid] = await Promise.all([
+        getNationalDashboard(),
+        getAllProvinces(),
+        getRecentAid(8),
+      ]);
+      
+      setNationalData(national);
+      setProvincesData(provinces);
+      setRecentAid(aid);
+    } catch (error) {
+      console.error("Failed to fetch dashboard data:", error);
+    } finally {
+      setDataLoading(false);
+      if (showRefresh) setRefreshing(false);
+    }
+  };
 
   useEffect(() => {
     if (!loading && (!user || user.role !== "government")) {
@@ -30,15 +62,29 @@ export default function GovernmentPage() {
     }
   }, [user, loading, router]);
 
+  useEffect(() => {
+    if (user && user.role === "government") {
+      fetchDashboardData();
+    }
+  }, [user]);
+
   if (loading || !user || user.role !== "government") return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
+    <div className="flex min-h-screen items-center justify-center bg-white">
       <div className="h-6 w-6 border-2 border-emerald-500 border-t-transparent animate-spin" />
     </div>
   );
 
-  const totalAffected = Object.values(PROVINCE_BUDGETS).reduce((s, p) => s + p.affected, 0);
-  const totalDisasters = Object.values(PROVINCE_BUDGETS).reduce((s, p) => s + p.disasters, 0);
-  const recentAid = AID_RECORDS.slice(0, 8);
+  if (dataLoading) return (
+    <div className="flex min-h-screen items-center justify-center bg-white">
+      <div className="text-center">
+        <div className="h-8 w-8 border-2 border-blue-500 border-t-transparent animate-spin mx-auto mb-3" />
+        <p className="text-sm text-gray-500">Loading dashboard data...</p>
+      </div>
+    </div>
+  );
+
+  const totalAffected = provincesData.reduce((s, p) => s + (p.affected || 0), 0);
+  const totalDisasters = provincesData.reduce((s, p) => s + (p.disasters || 0), 0);
 
   const handleDistribute = () => {
     if (!distAmount || isNaN(Number(distAmount))) return;
@@ -54,7 +100,7 @@ export default function GovernmentPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background cmd-grid">
+    <div className="min-h-screen bg-white">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between mb-8">
@@ -63,30 +109,37 @@ export default function GovernmentPage() {
               <Landmark className="h-4 w-4 text-blue-400" />
               <span className="text-[10px] font-mono font-bold tracking-[0.2em] text-blue-400">CENTRAL COMMAND</span>
             </div>
-            <h1 className="text-2xl font-black text-white">Government Dashboard</h1>
-            <p className="mt-1 text-xs text-muted font-mono">
-              Operator: {user.name} — FY {NATIONAL_BUDGET.fiscalYear}
+            <h1 className="text-2xl font-black text-gray-900">Government Dashboard</h1>
+            <p className="mt-1 text-xs text-gray-500 font-mono">
+              Operator: {user.name} — FY {nationalData?.fiscal_year || "2082/83"}
             </p>
           </div>
-          <button onClick={() => setShowDistribute(true)}
-            className="inline-flex items-center gap-2 bg-emerald-600 px-5 py-2.5 text-xs font-bold tracking-wider text-white hover:bg-emerald-500">
-            <Send className="h-4 w-4" /> ALLOCATE FUNDS
-          </button>
+          <div className="flex items-center gap-2">
+            <button onClick={() => fetchDashboardData(true)} disabled={refreshing}
+              className="inline-flex items-center gap-2 bg-gray-100 border border-gray-200 px-4 py-2.5 text-xs font-bold tracking-wider text-gray-700 hover:bg-gray-200 disabled:opacity-50">
+              <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? 'animate-spin' : ''}`} /> 
+              {refreshing ? 'REFRESHING...' : 'REFRESH'}
+            </button>
+            <button onClick={() => setShowDistribute(true)}
+              className="inline-flex items-center gap-2 bg-emerald-600 px-5 py-2.5 text-xs font-bold tracking-wider text-white hover:bg-emerald-500">
+              <Send className="h-4 w-4" /> ALLOCATE FUNDS
+            </button>
+          </div>
         </div>
 
         {/* National stats */}
-        <div className="grid grid-cols-2 gap-px bg-border sm:grid-cols-5 mb-8">
+        <div className="grid grid-cols-2 gap-px bg-gray-200 sm:grid-cols-5 mb-8">
           {[
-            { label: "TOTAL BUDGET", value: fmtNPR(NATIONAL_BUDGET.total), color: "text-white", icon: DollarSign },
-            { label: "ALLOCATED", value: fmtNPR(NATIONAL_BUDGET.allocated), color: "text-emerald-400", icon: TrendingUp },
-            { label: "DISBURSED", value: fmtNPR(NATIONAL_BUDGET.disbursed), color: "text-blue-400", icon: ArrowUpRight },
+            { label: "TOTAL BUDGET", value: fmtNPR(nationalData?.total || 0), color: "text-gray-900", icon: DollarSign },
+            { label: "ALLOCATED", value: fmtNPR(nationalData?.allocated || 0), color: "text-emerald-400", icon: TrendingUp },
+            { label: "DISBURSED", value: fmtNPR(nationalData?.disbursed || 0), color: "text-blue-400", icon: ArrowUpRight },
             { label: "DISASTERS", value: totalDisasters, color: "text-amber-400", icon: AlertTriangle },
             { label: "AFFECTED", value: totalAffected.toLocaleString(), color: "text-red-400", icon: Users },
           ].map((s) => (
-            <div key={s.label} className="bg-[#0d1117] p-4">
+            <div key={s.label} className="bg-white p-4">
               <div className="flex items-center gap-2 mb-1">
                 <s.icon className={`h-3.5 w-3.5 ${s.color}`} />
-                <span className="text-[9px] font-mono tracking-widest text-muted">{s.label}</span>
+                <span className="text-[9px] font-mono tracking-widest text-gray-500">{s.label}</span>
               </div>
               <p className={`text-lg font-black font-mono ${s.color}`}>{s.value}</p>
             </div>
@@ -94,21 +147,21 @@ export default function GovernmentPage() {
         </div>
 
         {/* Budget utilization bars */}
-        <div className="border border-border bg-[#0d1117] p-5 mb-8">
-          <h2 className="text-xs font-bold text-white mb-4 flex items-center gap-2">
+        <div className="border border-gray-200 bg-white p-5 mb-8">
+          <h2 className="text-xs font-bold text-gray-900 mb-4 flex items-center gap-2">
             <BarChart3 className="h-4 w-4 text-emerald-500" />
             National Budget Utilization
           </h2>
           <div className="space-y-3">
             {[
-              { label: "Allocated / Total", value: pct(NATIONAL_BUDGET.allocated, NATIONAL_BUDGET.total), a: fmtNPR(NATIONAL_BUDGET.allocated), b: fmtNPR(NATIONAL_BUDGET.total) },
-              { label: "Disbursed / Allocated", value: pct(NATIONAL_BUDGET.disbursed, NATIONAL_BUDGET.allocated), a: fmtNPR(NATIONAL_BUDGET.disbursed), b: fmtNPR(NATIONAL_BUDGET.allocated) },
-              { label: "Disbursed / Total", value: pct(NATIONAL_BUDGET.disbursed, NATIONAL_BUDGET.total), a: fmtNPR(NATIONAL_BUDGET.disbursed), b: fmtNPR(NATIONAL_BUDGET.total) },
+              { label: "Allocated / Total", value: pct(nationalData?.allocated || 0, nationalData?.total || 1), a: fmtNPR(nationalData?.allocated || 0), b: fmtNPR(nationalData?.total || 0) },
+              { label: "Disbursed / Allocated", value: pct(nationalData?.disbursed || 0, nationalData?.allocated || 1), a: fmtNPR(nationalData?.disbursed || 0), b: fmtNPR(nationalData?.allocated || 0) },
+              { label: "Disbursed / Total", value: pct(nationalData?.disbursed || 0, nationalData?.total || 1), a: fmtNPR(nationalData?.disbursed || 0), b: fmtNPR(nationalData?.total || 0) },
             ].map((bar) => (
               <div key={bar.label}>
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-[10px] font-mono text-muted">{bar.label}</span>
-                  <span className="text-[10px] font-mono text-muted">{bar.a} / {bar.b}</span>
+                  <span className="text-[10px] font-mono text-gray-500">{bar.label}</span>
+                  <span className="text-[10px] font-mono text-gray-500">{bar.a} / {bar.b}</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="flex-1 h-2 bg-gray-800">
@@ -127,36 +180,35 @@ export default function GovernmentPage() {
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_380px]">
           {/* Province allocation table */}
           <div>
-            <h2 className="text-xs font-bold text-white mb-4 flex items-center gap-2">
+            <h2 className="text-xs font-bold text-gray-900 mb-4 flex items-center gap-2">
               <Building2 className="h-4 w-4 text-emerald-500" />
               Province Fund Allocation
             </h2>
-            <div className="border border-border overflow-x-auto">
+            <div className="border border-gray-200 overflow-x-auto">
               <table className="w-full text-xs">
                 <thead>
-                  <tr className="border-b border-border bg-surface">
-                    <th className="px-4 py-3 text-left text-[10px] font-mono font-bold tracking-widest text-muted">PROVINCE</th>
-                    <th className="px-4 py-3 text-right text-[10px] font-mono font-bold tracking-widest text-muted">ALLOCATED</th>
-                    <th className="px-4 py-3 text-right text-[10px] font-mono font-bold tracking-widest text-muted">DISBURSED</th>
-                    <th className="px-4 py-3 text-center text-[10px] font-mono font-bold tracking-widest text-muted">UTIL %</th>
-                    <th className="px-4 py-3 text-right text-[10px] font-mono font-bold tracking-widest text-muted">EVENTS</th>
-                    <th className="px-4 py-3 text-right text-[10px] font-mono font-bold tracking-widest text-muted">AFFECTED</th>
+                  <tr className="border-b border-gray-200 bg-gray-50">
+                    <th className="px-4 py-3 text-left text-[10px] font-mono font-bold tracking-widest text-gray-500">PROVINCE</th>
+                    <th className="px-4 py-3 text-right text-[10px] font-mono font-bold tracking-widest text-gray-500">ALLOCATED</th>
+                    <th className="px-4 py-3 text-right text-[10px] font-mono font-bold tracking-widest text-gray-500">DISBURSED</th>
+                    <th className="px-4 py-3 text-center text-[10px] font-mono font-bold tracking-widest text-gray-500">UTIL %</th>
+                    <th className="px-4 py-3 text-right text-[10px] font-mono font-bold tracking-widest text-gray-500">EVENTS</th>
+                    <th className="px-4 py-3 text-right text-[10px] font-mono font-bold tracking-widest text-gray-500">AFFECTED</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {PROVINCES.map((prov) => {
-                    const b = PROVINCE_BUDGETS[prov];
-                    const util = pct(b.disbursed, b.allocated);
+                  {provincesData.map((province) => {
+                    const util = pct(province.disbursed, province.allocated);
                     return (
-                      <tr key={prov} className="border-b border-border bg-[#0d1117] hover:bg-surface-hover transition-colors">
+                      <tr key={province.province} className="border-b border-gray-200 bg-white hover:bg-gray-50 transition-colors">
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
-                            <MapPin className="h-3.5 w-3.5 text-muted" />
-                            <span className="font-bold text-white">{prov}</span>
+                            <MapPin className="h-3.5 w-3.5 text-gray-500" />
+                            <span className="font-bold text-gray-900">{province.province}</span>
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-right font-mono text-white">{fmtNPR(b.allocated)}</td>
-                        <td className="px-4 py-3 text-right font-mono text-white">{fmtNPR(b.disbursed)}</td>
+                        <td className="px-4 py-3 text-right font-mono text-gray-900">{fmtNPR(province.allocated)}</td>
+                        <td className="px-4 py-3 text-right font-mono text-gray-900">{fmtNPR(province.disbursed)}</td>
                         <td className="px-4 py-3">
                           <div className="flex items-center justify-center gap-2">
                             <div className="w-16 h-1.5 bg-gray-800">
@@ -168,8 +220,8 @@ export default function GovernmentPage() {
                             </span>
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-right font-mono text-amber-400">{b.disasters}</td>
-                        <td className="px-4 py-3 text-right font-mono text-red-400">{b.affected.toLocaleString()}</td>
+                        <td className="px-4 py-3 text-right font-mono text-amber-400">{province.disasters || 0}</td>
+                        <td className="px-4 py-3 text-right font-mono text-red-400">{(province.affected || 0).toLocaleString()}</td>
                       </tr>
                     );
                   })}
@@ -180,7 +232,7 @@ export default function GovernmentPage() {
             {/* Local distributions */}
             {distributions.length > 0 && (
               <div className="mt-6">
-                <h3 className="text-xs font-bold text-white mb-3 flex items-center gap-2">
+                <h3 className="text-xs font-bold text-gray-900 mb-3 flex items-center gap-2">
                   <Send className="h-3.5 w-3.5 text-emerald-500" />
                   Session Distributions
                 </h3>
@@ -189,10 +241,10 @@ export default function GovernmentPage() {
                     <div key={d.id} className="flex items-center justify-between border border-emerald-500/20 bg-emerald-500/5 p-3">
                       <div className="flex items-center gap-3">
                         <span className="h-2 w-2 bg-emerald-400" />
-                        <span className="text-xs font-bold text-white">{d.province}</span>
-                        <span className="text-[10px] font-mono text-muted">{d.date} {d.time}</span>
+                        <span className="text-xs font-bold text-gray-900">{d.province}</span>
+                        <span className="text-[10px] font-mono text-gray-500">{d.date} {d.time}</span>
                       </div>
-                      <span className="font-mono text-sm font-bold text-emerald-400">{fmtNPRm(d.amount)}</span>
+                      <span className="font-mono text-sm font-bold text-emerald-400">{fmtNPR(d.amount)}</span>
                     </div>
                   ))}
                 </div>
@@ -202,7 +254,7 @@ export default function GovernmentPage() {
 
           {/* Recent Aid Dispatches */}
           <div>
-            <h2 className="text-xs font-bold text-white mb-4 flex items-center gap-2">
+            <h2 className="text-xs font-bold text-gray-900 mb-4 flex items-center gap-2">
               <Shield className="h-4 w-4 text-emerald-500" />
               Recent Aid Dispatches
             </h2>
@@ -210,12 +262,12 @@ export default function GovernmentPage() {
               {recentAid.map((r) => {
                 const st = r.status === "delivered" ? "text-emerald-400" : r.status === "in-transit" ? "text-amber-400" : "text-blue-400";
                 return (
-                  <div key={r.id} className="border border-border bg-[#0d1117] p-3">
+                  <div key={r.id} className="border border-gray-200 bg-white p-3">
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs font-bold text-white truncate pr-2">{r.recipient}</span>
+                      <span className="text-xs font-bold text-gray-900 truncate pr-2">{r.recipient}</span>
                       <span className={`text-[9px] font-mono font-bold ${st}`}>{r.status.toUpperCase()}</span>
                     </div>
-                    <div className="flex items-center justify-between text-[10px] font-mono text-muted">
+                    <div className="flex items-center justify-between text-[10px] font-mono text-gray-500">
                       <span>{r.district}, {r.province}</span>
                       <span>{r.date}</span>
                     </div>
@@ -230,35 +282,35 @@ export default function GovernmentPage() {
       {/* Distribution Modal */}
       {showDistribute && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4" onClick={() => setShowDistribute(false)}>
-          <div className="w-full max-w-md border border-border bg-[#0d1117]" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between border-b border-border p-5">
+          <div className="w-full max-w-md border border-gray-200 bg-white" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-gray-200 p-5">
               <div>
-                <h2 className="text-sm font-bold text-white">Allocate Funds</h2>
-                <p className="text-[10px] font-mono text-muted mt-0.5">Distribute budget to province</p>
+                <h2 className="text-sm font-bold text-gray-900">Allocate Funds</h2>
+                <p className="text-[10px] font-mono text-gray-500 mt-0.5">Distribute budget to province</p>
               </div>
               <button onClick={() => setShowDistribute(false)}
-                className="flex h-8 w-8 items-center justify-center border border-border text-muted hover:text-white transition-colors">
+                className="flex h-8 w-8 items-center justify-center border border-gray-200 text-gray-500 hover:text-gray-900 transition-colors">
                 <X className="h-4 w-4" />
               </button>
             </div>
             <div className="p-5 space-y-4">
               <div>
-                <label className="block text-[10px] font-mono font-bold tracking-widest text-muted mb-1.5">TARGET PROVINCE</label>
+                <label className="block text-[10px] font-mono font-bold tracking-widest text-gray-500 mb-1.5">TARGET PROVINCE</label>
                 <div className="relative">
                   <select value={distProvince} onChange={(e) => setDistProvince(e.target.value)}
-                    className="w-full appearance-none border border-border bg-surface px-3 py-2.5 pr-8 text-sm text-white focus:border-emerald-500/50 focus:outline-none">
+                    className="w-full appearance-none border border-gray-200 bg-gray-50 px-3 py-2.5 pr-8 text-sm text-gray-900 focus:border-emerald-500/50 focus:outline-none">
                     {PROVINCES.map((p) => <option key={p} value={p}>{p}</option>)}
                   </select>
-                  <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+                  <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
                 </div>
               </div>
               <div>
-                <label className="block text-[10px] font-mono font-bold tracking-widest text-muted mb-1.5">AMOUNT (NPR)</label>
+                <label className="block text-[10px] font-mono font-bold tracking-widest text-gray-500 mb-1.5">AMOUNT (NPR)</label>
                 <input type="number" value={distAmount} onChange={(e) => setDistAmount(e.target.value)}
                   placeholder="e.g. 50000000"
-                  className="w-full border border-border bg-surface px-3 py-2.5 text-sm font-mono text-white placeholder:text-muted/50 focus:border-emerald-500/50 focus:outline-none" />
+                  className="w-full border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm font-mono text-gray-900 placeholder:text-gray-400 focus:border-emerald-500/50 focus:outline-none" />
                 {distAmount && !isNaN(Number(distAmount)) && Number(distAmount) > 0 && (
-                  <p className="mt-1 text-[10px] font-mono text-emerald-400">{fmtNPRm(Number(distAmount))}</p>
+                  <p className="mt-1 text-[10px] font-mono text-emerald-400">{fmtNPR(Number(distAmount))}</p>
                 )}
               </div>
               <button onClick={handleDistribute} disabled={!distAmount || isNaN(Number(distAmount)) || Number(distAmount) <= 0}
