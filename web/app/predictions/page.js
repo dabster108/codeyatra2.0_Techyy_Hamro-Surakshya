@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
 import {
   CloudRain,
@@ -24,7 +24,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { PREDICTIONS } from "../data/predictions";
-import WildfireAPI from "../lib/wildfire-api";
+import WildfireAPI, { clearWildfireCache } from "../lib/wildfire-api";
 const NepalMap = dynamic(() => import("../components/NepalMap"), {
   ssr: false,
 });
@@ -255,7 +255,7 @@ function PredictionCard({ item, onClick }) {
 
 /* ────── DETAIL POPUP ────── */
 function DetailPopup({ item, onClose }) {
-  const sev = item ? (SEV[item.severity] || SEV.minimal) : null; // Fallback to minimal if undefined
+  const sev = item ? SEV[item.severity] || SEV.minimal : null; // Fallback to minimal if undefined
 
   useEffect(() => {
     if (item) {
@@ -313,7 +313,9 @@ function DetailPopup({ item, onClose }) {
         <div className="p-6 space-y-4">
           {/* Location Name */}
           <div className="text-center pb-4 border-b border-gray-200">
-            <h2 className="text-2xl font-black text-gray-900 tracking-tight">{item.name}</h2>
+            <h2 className="text-2xl font-black text-gray-900 tracking-tight">
+              {item.name}
+            </h2>
           </div>
 
           {/* Location Details */}
@@ -352,80 +354,85 @@ export default function PredictionsPage() {
   const [date, setDate] = useState("");
   const [selected, setSelected] = useState(null);
   const [hovered, setHovered] = useState(null);
-  
+
   // Wildfire data state
   const [useRealWildfireData, setUseRealWildfireData] = useState(false);
   const [wildfireData, setWildfireData] = useState([]);
   const [wildfireLoading, setWildfireLoading] = useState(false);
   const [wildfireStats, setWildfireStats] = useState(null);
   const [wildfireError, setWildfireError] = useState(null);
+  const debounceTimer = useRef(null);
 
-  // Auto-enable and fetch real wildfire data when Wildfire type is selected
+  const fetchWildfireData = useCallback(
+    async (currentProvince, currentDistrict) => {
+      setWildfireLoading(true);
+      setWildfireError(null);
+
+      try {
+        // Build filters — skip health-check preflight (it only doubles latency)
+        const filters = {
+          minFireProb: 0.8, // Show predictions with 80%+ probability (medium risk and above)
+          limit: 1000,
+        };
+
+        if (currentProvince !== "All") {
+          const provinceNum = getProvinceNumber(currentProvince);
+          if (provinceNum) filters.province = provinceNum;
+        }
+
+        if (currentDistrict !== "All") {
+          filters.district = currentDistrict;
+        }
+
+        // Fetch predictions and stats in parallel — both calls benefit from the
+        // in-memory cache in wildfire-api.js so repeated identical requests are free
+        const [predictions, stats] = await Promise.all([
+          WildfireAPI.getPredictions(filters),
+          WildfireAPI.getStats(),
+        ]);
+
+        const transformedData =
+          WildfireAPI.transformToFrontendFormat(predictions);
+        setWildfireData(transformedData);
+        setWildfireStats(stats);
+        setWildfireError(null);
+      } catch (error) {
+        console.error("Failed to fetch wildfire data:", error);
+        setWildfireData([]);
+        setWildfireStats(null);
+        setWildfireError(
+          "Could not reach the backend API. Make sure the server is running on port 8005.",
+        );
+      } finally {
+        setWildfireLoading(false);
+      }
+    },
+    [],
+  );
+
+  // Debounce wildfire fetches so rapidly changing filters don't fire parallel requests
   useEffect(() => {
     if (type === "Wildfire") {
       setUseRealWildfireData(true);
-      fetchWildfireData();
+      clearTimeout(debounceTimer.current);
+      debounceTimer.current = setTimeout(() => {
+        fetchWildfireData(province, district);
+      }, 300); // 300 ms debounce — fast enough to feel instant, slow enough to batch
     } else {
       setUseRealWildfireData(false);
     }
-  }, [type, province, district]);
-
-  const fetchWildfireData = async () => {
-    setWildfireLoading(true);
-    setWildfireError(null);
-    
-    try {
-      // Check if backend is available first
-      const isHealthy = await WildfireAPI.checkHealth();
-      if (!isHealthy) {
-        throw new Error('Backend API is not running. Please start the backend server: python app/main.py');
-      }
-
-      // Build filters
-      const filters = {
-        minFireProb: 0.8, // Show predictions with 80%+ probability (medium risk and above)
-        limit: 1000
-      };
-      
-      if (province !== "All") {
-        const provinceNum = getProvinceNumber(province);
-        if (provinceNum) filters.province = provinceNum;
-      }
-      
-      if (district !== "All") {
-        filters.district = district;
-      }
-
-      // Fetch predictions and stats in parallel
-      const [predictions, stats] = await Promise.all([
-        WildfireAPI.getPredictions(filters),
-        WildfireAPI.getStats()
-      ]);
-
-      // Transform to frontend format (includes date adjustment)
-      const transformedData = WildfireAPI.transformToFrontendFormat(predictions);
-      setWildfireData(transformedData);
-      setWildfireStats(stats);
-      setWildfireError(null);
-    } catch (error) {
-      console.error('Failed to fetch wildfire data:', error);
-      setWildfireData([]);
-      setWildfireStats(null);
-      setWildfireError(error.message);
-    } finally {
-      setWildfireLoading(false);
-    }
-  };
+    return () => clearTimeout(debounceTimer.current);
+  }, [type, province, district, fetchWildfireData]);
 
   const getProvinceNumber = (provinceName) => {
     const provinceMap = {
-      "Koshi": 1,
-      "Madhesh": 2,
-      "Bagmati": 3,
-      "Gandaki": 4,
-      "Lumbini": 5,
-      "Karnali": 6,
-      "Sudurpashchim": 7
+      Koshi: 1,
+      Madhesh: 2,
+      Bagmati: 3,
+      Gandaki: 4,
+      Lumbini: 5,
+      Karnali: 6,
+      Sudurpashchim: 7,
     };
     return provinceMap[provinceName];
   };
@@ -464,9 +471,13 @@ export default function PredictionsPage() {
   const handleMarkerClick = useCallback((p) => setSelected(p), []);
 
   const counts = {
-    extreme: filtered.filter((p) => p.severity === "extreme" || p.severity === "critical").length, // Include old "critical"
+    extreme: filtered.filter(
+      (p) => p.severity === "extreme" || p.severity === "critical",
+    ).length, // Include old "critical"
     high: filtered.filter((p) => p.severity === "high").length,
-    medium: filtered.filter((p) => p.severity === "medium" || p.severity === "moderate").length, // Include old "moderate"
+    medium: filtered.filter(
+      (p) => p.severity === "medium" || p.severity === "moderate",
+    ).length, // Include old "moderate"
     low: filtered.filter((p) => p.severity === "low").length,
     minimal: filtered.filter((p) => p.severity === "minimal").length,
     total: filtered.length,
@@ -490,7 +501,8 @@ export default function PredictionsPage() {
               Disaster <span className="text-emerald-500">Risk Forecast</span>
             </h1>
             <p className="mt-3 text-sm sm:text-base text-slate-500 max-w-2xl">
-              Machine Learning powered local-level disaster risk forecasting for Nepal, analyzing multiple environmental factors in real-time.
+              Machine Learning powered local-level disaster risk forecasting for
+              Nepal, analyzing multiple environmental factors in real-time.
             </p>
           </div>
 
@@ -542,7 +554,7 @@ export default function PredictionsPage() {
         <div className="rounded-2xl border border-gray-200 bg-gray-50 p-6 shadow-sm mb-8 animate-slide-up-fade delay-200 transition-all hover:shadow-md hover:border-emerald-200">
           <div className="flex items-center gap-2 mb-5">
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100 border border-emerald-200">
-                <Filter className="h-3.5 w-3.5 text-emerald-500" />
+              <Filter className="h-3.5 w-3.5 text-emerald-500" />
             </div>
             <span className="text-[10px] font-mono font-bold tracking-[0.2em] text-emerald-600">
               FILTER PREDICTIONS
@@ -608,8 +620,82 @@ export default function PredictionsPage() {
           </div>
         </div>
 
+        {/* Wildfire data status banner — visible only when Wildfire type is active */}
+        {type === "Wildfire" && (
+          <div className="mb-4">
+            {wildfireLoading && (
+              <div className="flex items-center gap-3 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-xs font-semibold text-blue-700">
+                {/* Animated spinner */}
+                <svg
+                  className="h-4 w-4 animate-spin flex-none"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8v8H4z"
+                  />
+                </svg>
+                Fetching live wildfire predictions from the database…
+              </div>
+            )}
+
+            {wildfireError && !wildfireLoading && (
+              <div className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs font-semibold text-red-700">
+                <AlertCircle className="h-4 w-4 flex-none mt-0.5" />
+                <span>{wildfireError}</span>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Map */}
         <div className="relative overflow-hidden rounded-2xl border border-gray-200 bg-gray-50 shadow-sm animate-slide-up-fade delay-300 transition-all hover:shadow-md hover:border-emerald-200">
+          {/* Map loading skeleton — overlays the map while fetching */}
+          {wildfireLoading && (
+            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-4 bg-white/80 backdrop-blur-sm rounded-2xl">
+              <svg
+                className="h-10 w-10 animate-spin text-emerald-500"
+                viewBox="0 0 24 24"
+                fill="none"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                />
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8v8H4z"
+                />
+              </svg>
+              <p className="text-sm font-bold text-slate-600">
+                Loading wildfire data…
+              </p>
+              <div className="flex gap-2">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <div
+                    key={i}
+                    className="h-2 w-12 animate-pulse rounded-full bg-slate-200"
+                    style={{ animationDelay: `${i * 100}ms` }}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
           <div className="h-[500px] lg:h-[600px] w-full bg-slate-50/50">
             <NepalMap data={filtered} onMarkerClick={handleMarkerClick} />
           </div>
@@ -624,17 +710,43 @@ export default function PredictionsPage() {
             </div>
             <div className="space-y-2.5">
               {[
-                { label: "High", color: "bg-red-500", text: "text-red-700", bg: "bg-red-50" },
-                { label: "Medium", color: "bg-orange-500", text: "text-orange-700", bg: "bg-orange-50" },
-                { label: "Low", color: "bg-amber-400", text: "text-amber-700", bg: "bg-amber-50" },
+                {
+                  label: "High",
+                  color: "bg-red-500",
+                  text: "text-red-700",
+                  bg: "bg-red-50",
+                },
+                {
+                  label: "Medium",
+                  color: "bg-orange-500",
+                  text: "text-orange-700",
+                  bg: "bg-orange-50",
+                },
+                {
+                  label: "Low",
+                  color: "bg-amber-400",
+                  text: "text-amber-700",
+                  bg: "bg-amber-50",
+                },
                 // { label: "Low (50-80%)", color: "bg-blue-400", text: "text-blue-600", bg: "bg-blue-50" },
-                { label: "Minimal", color: "bg-gray-400", text: "text-gray-600", bg: "bg-gray-50" },
+                {
+                  label: "Minimal",
+                  color: "bg-gray-400",
+                  text: "text-gray-600",
+                  bg: "bg-gray-50",
+                },
               ].map((l) => (
                 <div key={l.label} className="flex items-center gap-2.5">
-                  <span className={`flex h-5 w-5 items-center justify-center rounded-md ${l.bg}`}>
-                    <span className={`h-2.5 w-2.5 rounded-full ${l.color} shadow-sm`} />
+                  <span
+                    className={`flex h-5 w-5 items-center justify-center rounded-md ${l.bg}`}
+                  >
+                    <span
+                      className={`h-2.5 w-2.5 rounded-full ${l.color} shadow-sm`}
+                    />
                   </span>
-                  <span className={`text-[11px] font-semibold ${l.text}`}>{l.label}</span>
+                  <span className={`text-[11px] font-semibold ${l.text}`}>
+                    {l.label}
+                  </span>
                 </div>
               ))}
             </div>
