@@ -9,9 +9,9 @@ import {
 } from "lucide-react";
 
 const ROLE_CARDS = [
-  { key: "user", icon: User, label: "CITIZEN", desc: "Public dashboard — view alerts, predictions, and relief transparency", color: "text-emerald-400", border: "border-emerald-500/30", bg: "bg-emerald-500/5" },
-  { key: "government", icon: Landmark, label: "CENTRAL GOV", desc: "Ministry of Home Affairs — national budget allocation and disaster command", color: "text-blue-400", border: "border-blue-500/30", bg: "bg-blue-500/5" },
-  { key: "province", icon: MapPin, label: "PROVINCE GOV", desc: "Province administration — district management and local aid distribution", color: "text-amber-400", border: "border-amber-500/30", bg: "bg-amber-500/5" },
+  { key: "user", icon: User, label: "CITIZEN", desc: "Public dashboard — view alerts, predictions, and relief transparency", color: "text-emerald-600", border: "border-emerald-200", bg: "bg-emerald-50", iconBg: "bg-emerald-100" },
+  { key: "government", icon: Landmark, label: "CENTRAL GOV", desc: "Ministry of Home Affairs — national budget allocation and disaster command", color: "text-blue-600", border: "border-blue-200", bg: "bg-blue-50", iconBg: "bg-blue-100" },
+  { key: "province", icon: MapPin, label: "PROVINCE GOV", desc: "Province administration — district management and local aid distribution", color: "text-amber-600", border: "border-amber-200", bg: "bg-amber-50", iconBg: "bg-amber-100" },
 ];
 
 const PROVINCE_LOGINS = [
@@ -55,10 +55,10 @@ export default function LoginPage() {
   };
 
   if (loading) return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <div className="mx-auto h-6 w-6 border-2 border-emerald-500 border-t-transparent animate-spin" />
-        <p className="mt-3 text-xs font-mono text-muted">AUTHENTICATING...</p>
+    <div className="flex min-h-screen items-center justify-center bg-gray-50/50">
+      <div className="text-center animate-pulse">
+        <div className="mx-auto h-8 w-8 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin mb-4" />
+        <p className="text-xs font-mono font-bold tracking-widest text-slate-500">AUTHENTICATING ACCESS...</p>
       </div>
     </div>
   );
@@ -70,42 +70,42 @@ export default function LoginPage() {
     : null;
 
   return (
-    <div className="min-h-screen bg-background cmd-grid flex items-center justify-center px-4 py-16">
-      <div className="w-full max-w-lg">
+    <div className="min-h-screen bg-gray-50/50 flex flex-col justify-center items-center px-4 py-16">
+      <div className="w-full max-w-lg mb-8 animate-slide-up-fade">
         {/* Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 border border-emerald-500/30 bg-emerald-500/5 px-3 py-1.5 text-[10px] font-mono font-bold tracking-widest text-emerald-400 mb-4">
-            <Lock className="h-3 w-3" /> SECURE ACCESS
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center justify-center h-12 w-12 rounded-2xl bg-emerald-100 border border-emerald-200 mb-5 shadow-sm">
+            <Lock className="h-6 w-6 text-emerald-600" />
           </div>
-          <h1 className="text-2xl font-black text-white">System Authentication</h1>
-          <p className="mt-2 text-sm text-muted">Select your access level to enter the command center</p>
+          <h1 className="text-3xl font-black text-gray-900 tracking-tight">System <span className="text-emerald-500">Authentication</span></h1>
+          <p className="mt-3 text-sm font-medium text-slate-500">Select your authorization level to enter the command center</p>
         </div>
 
         {/* Role selection */}
-        <div className="space-y-3 mb-6">
+        <div className="space-y-3 mb-6 animate-slide-up-fade delay-300">
           {ROLE_CARDS.map((role) => (
             <button key={role.key} onClick={() => setSelectedRole(role.key)}
-              className={`w-full text-left border transition-all p-4 ${
+              className={`w-full text-left rounded-2xl border transition-all duration-500 p-5 ${
                 selectedRole === role.key
-                  ? `${role.border} ${role.bg}`
-                  : "border-border bg-[#0d1117] hover:bg-surface-hover"
+                  ? `${role.border} ${role.bg} shadow-md scale-[1.02]`
+                  : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm"
               }`}>
-              <div className="flex items-center gap-3">
-                <div className={`flex h-10 w-10 items-center justify-center border ${
-                  selectedRole === role.key ? role.border : "border-border"
+              <div className="flex items-center gap-4">
+                <div className={`flex h-12 w-12 flex-none items-center justify-center rounded-xl border transition-colors ${
+                  selectedRole === role.key ? `${role.border} ${role.iconBg}` : "border-gray-100 bg-gray-50"
                 }`}>
-                  <role.icon className={`h-5 w-5 ${selectedRole === role.key ? role.color : "text-muted"}`} />
+                  <role.icon className={`h-5 w-5 ${selectedRole === role.key ? role.color : "text-slate-400"}`} />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className={`text-sm font-bold ${selectedRole === role.key ? "text-white" : "text-gray-300"}`}>
+                    <span className={`text-base font-bold ${selectedRole === role.key ? "text-gray-900" : "text-gray-700"}`}>
                       {role.label}
                     </span>
                     {selectedRole === role.key && (
-                      <span className={`h-1.5 w-1.5 ${role.color.replace("text-", "bg-")}`} />
+                      <span className={`h-2 w-2 rounded-full ${role.color.replace("text-", "bg-")} animate-pulse`} />
                     )}
                   </div>
-                  <p className="text-[11px] text-muted mt-0.5">{role.desc}</p>
+                  <p className="text-xs font-medium text-slate-500 mt-1 leading-relaxed pr-2">{role.desc}</p>
                 </div>
               </div>
             </button>
@@ -114,40 +114,47 @@ export default function LoginPage() {
 
         {/* Province selector */}
         {selectedRole === "province" && (
-          <div className="border border-amber-500/20 bg-amber-500/5 p-4 mb-6">
-            <label className="block text-[10px] font-mono font-bold tracking-widest text-amber-400 mb-2">
-              SELECT PROVINCE
-            </label>
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 mb-6 shadow-sm animate-slide-up-fade delay-400">
+            <div className="flex items-center gap-2 mb-3">
+               <MapPin className="h-4 w-4 text-amber-600" />
+               <label className="text-xs font-mono font-bold tracking-widest text-amber-700">
+                 SELECT JURISDICTION
+               </label>
+            </div>
             <div className="relative">
               <select value={selectedProvince} onChange={(e) => setSelectedProvince(e.target.value)}
-                className="w-full appearance-none border border-border bg-surface px-3 py-2.5 pr-8 text-sm text-white focus:border-amber-500/50 focus:outline-none">
+                className="w-full appearance-none rounded-xl border border-amber-200 bg-white px-4 py-3 pr-10 text-sm font-semibold text-gray-800 shadow-sm focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-100 transition-all cursor-pointer">
                 {PROVINCE_LOGINS.map((p) => (
                   <option key={p.key} value={p.key}>{p.label}</option>
                 ))}
               </select>
-              <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+              <ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-amber-600/50" />
             </div>
           </div>
         )}
 
         {/* Demo credentials */}
         {demoUser && (
-          <div className="border border-border bg-[#0d1117] p-4 mb-6">
-            <span className="text-[10px] font-mono font-bold tracking-widest text-muted">DEMO CREDENTIALS</span>
-            <div className="mt-3 space-y-2">
+          <div className="rounded-2xl border border-gray-200 bg-white p-5 mb-8 shadow-sm animate-slide-up-fade delay-400">
+            <div className="flex items-center gap-2 mb-4 PB-1 border-b border-gray-100 pb-3">
+               <Shield className="h-4 w-4 text-emerald-500" />
+               <span className="text-[10px] font-mono font-bold tracking-widest text-emerald-600">DEMO CREDENTIALS LOADED</span>
+            </div>
+            
+            <div className="space-y-4">
               <div>
-                <label className="block text-[10px] font-mono text-muted mb-1">EMAIL</label>
+                <label className="block text-[10px] font-mono font-bold tracking-widest text-slate-400 mb-1.5 ml-1">AUTHORIZED EMAIL</label>
                 <input readOnly value={demoUser.email}
-                  className="w-full border border-border bg-surface px-3 py-2 text-xs font-mono text-emerald-400" />
+                  className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-xs font-mono font-semibold text-emerald-600 focus:outline-none" />
               </div>
               <div>
-                <label className="block text-[10px] font-mono text-muted mb-1">PASSWORD</label>
+                <label className="block text-[10px] font-mono font-bold tracking-widest text-slate-400 mb-1.5 ml-1">ACCESS TOKEN</label>
                 <input readOnly value="••••••••" type="password"
-                  className="w-full border border-border bg-surface px-3 py-2 text-xs font-mono text-emerald-400" />
+                  className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-xs font-mono font-semibold text-emerald-600 focus:outline-none tracking-widest" />
               </div>
-              <div className="flex items-center gap-2 text-[10px] text-muted">
-                <Eye className="h-3 w-3" />
-                <span>Demo mode — no real credentials required</span>
+              <div className="flex items-center gap-2 pt-2 px-1 text-[11px] font-medium text-slate-500">
+                <Eye className="h-3.5 w-3.5 text-emerald-500" />
+                <span>Demo mode active. One-click authentication enabled.</span>
               </div>
             </div>
           </div>
@@ -155,21 +162,27 @@ export default function LoginPage() {
 
         {/* Login button */}
         <button onClick={handleLogin} disabled={!selectedRole || signingIn}
-          className="w-full flex items-center justify-center gap-2 bg-emerald-600 py-3 text-sm font-bold tracking-wider text-white transition-all hover:bg-emerald-500 disabled:opacity-30">
+          className="group relative w-full flex items-center justify-center gap-2 overflow-hidden rounded-xl bg-gray-900 px-8 py-4 text-sm font-bold text-white transition-all duration-500 hover:bg-gray-800 disabled:opacity-50 hover:shadow-lg disabled:hover:shadow-none animate-slide-up-fade delay-500 outline-none focus:ring-4 focus:ring-gray-200">
+          <div className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-emerald-400 via-emerald-500 to-emerald-400 opacity-60" />
           {signingIn ? (
             <>
-              <div className="h-4 w-4 border-2 border-white border-t-transparent animate-spin" />
-              AUTHENTICATING...
+              <div className="h-4 w-4 rounded-full border-2 border-emerald-400 border-t-transparent animate-spin" />
+              <span className="tracking-widest font-mono">AUTHENTICATING...</span>
             </>
           ) : (
             <>
-              ENTER SYSTEM <ArrowRight className="h-4 w-4" />
+              <span className="tracking-wider">ENTER COMMAND CENTER</span>
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1 text-emerald-400" />
             </>
           )}
         </button>
 
-        <p className="mt-4 text-center text-[10px] font-mono text-muted/50">
-          HAMRO SURAKSHA — AUTHORIZED ACCESS ONLY
+      </div>
+      
+      {/* Footer Tag */}
+      <div className="fixed bottom-6 text-center animate-slide-up-fade delay-700">
+        <p className="text-[10px] font-mono font-bold tracking-[0.2em] text-slate-400">
+          HAMRO SURAKSHA — RESTRICTED ACCESS
         </p>
       </div>
     </div>
