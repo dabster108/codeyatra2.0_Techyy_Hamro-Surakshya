@@ -7,14 +7,39 @@ GET  /government/provinces    — All provinces budget data
 GET  /government/province/:id — Single province with districts
 """
 
+import logging
+from asyncio import get_event_loop
+from concurrent.futures import ThreadPoolExecutor
+from functools import partial
 from fastapi import APIRouter, HTTPException
 from app.db.supabase import get_supabase_admin
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/government", tags=["government"])
+
+# Thread pool for running blocking sync Supabase calls without blocking
+# FastAPI’s async event loop.
+_pool = ThreadPoolExecutor(max_workers=4)
 
 
 def _supabase():
     return get_supabase_admin()
+
+
+def _safe(fn, default=None):
+    """Execute a Supabase query safely; return default on any error."""
+    try:
+        result = fn()
+        return result
+    except Exception as e:
+        logger.warning("Supabase query skipped: %s", e)
+        return default
+
+
+async def _run(fn):
+    """Run a blocking callable in the thread pool without blocking the event loop."""
+    loop = get_event_loop()
+    return await loop.run_in_executor(_pool, fn)
 
 
 # Province ID mapping
@@ -45,27 +70,22 @@ async def get_national_dashboard():
     Get national-level budget summary.
     Returns: total allocated, disbursed, remaining, utilization %
     """
-    supabase = _supabase()
-    
     try:
-        # Get total allocated from budget_master
-        bm_res = supabase.table("budget_master").select("ndrrma_allocation").execute()
-        total_allocated = sum(float(r.get("ndrrma_allocation", 0)) for r in (bm_res.data or []))
-        
-        # Get total distributed from relief_records
-        rr_res = supabase.table("relief_records").select("relief_amount").execute()
-        total_distributed = sum(float(r.get("relief_amount", 0)) for r in (rr_res.data or []))
-        
-        # Count disasters - distinct disaster types
-        disasters_res = supabase.table("relief_records").select("disaster_type").execute()
-        disasters_count = len(set(r.get("disaster_type") for r in (disasters_res.data or [])))
-        
-        # Count affected people (assuming each record represents individuals)
-        total_affected = len(rr_res.data or [])
-        
+        supabase = _supabase()
+
+        # Run blocking Supabase calls off the event loop
+        bm_res = await _run(lambda: _safe(lambda: supabase.table("budget_master").select("ndrrma_allocation").execute()))
+        total_allocated = sum(float(r.get("ndrrma_allocation", 0)) for r in (bm_res.data if bm_res else []))
+
+        rr_res = await _run(lambda: _safe(lambda: supabase.table("relief_records").select("relief_amount, disaster_type").execute()))
+        records = rr_res.data if rr_res else []
+        total_distributed = sum(float(r.get("relief_amount", 0)) for r in records)
+        disasters_count = len(set(r.get("disaster_type") for r in records if r.get("disaster_type")))
+        total_affected = len(records)
+
         remaining = max(total_allocated - total_distributed, 0)
         utilization = round((total_distributed / total_allocated * 100) if total_allocated > 0 else 0, 2)
-        
+
         return {
             "fiscal_year": "2082/83",
             "total": total_allocated,
@@ -77,9 +97,14 @@ async def get_national_dashboard():
             "total_affected": total_affected,
         }
     except Exception as e:
-        import traceback
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail=f"Failed to fetch national data: {str(e)}")
+        logger.error("national dashboard failed: %s", e)
+        # Return sensible fallback so the frontend doesn't break
+        return {
+            "fiscal_year": "2082/83",
+            "total": 0, "allocated": 0, "disbursed": 0,
+            "remaining": 0, "utilization_percent": 0,
+            "total_disasters": 0, "total_affected": 0,
+        }
 
 
 @router.get("/provinces")
@@ -88,18 +113,17 @@ async def get_all_provinces():
     Get budget summary for all provinces.
     Returns array of province data with allocation, disbursed, disasters, affected
     """
-    supabase = _supabase()
-    
     try:
-        # Get all relief records grouped by province
-        rr_res = supabase.table("relief_records").select("province, relief_amount, disaster_type").execute()
-        records = rr_res.data or []
-        
-        # Get budget allocations by province from province_allocation table
-        pa_res = supabase.table("province_allocation").select("province_id, allocated_amount").execute()
-        # Aggregate allocations per province (may have multiple rows per province across fiscal years)
+        supabase = _supabase()
+
+        # Get all relief records grouped by province (single query, off event loop)
+        rr_res = await _run(lambda: _safe(lambda: supabase.table("relief_records").select("province, relief_amount, disaster_type").execute()))
+        records = rr_res.data if rr_res else []
+
+        # Try province_allocation table — optional, skip if missing
+        pa_res = await _run(lambda: _safe(lambda: supabase.table("province_allocation").select("province_id, allocated_amount").execute()))
         budget_by_province = {}
-        for r in (pa_res.data or []):
+        for r in (pa_res.data if pa_res else []):
             pid = r.get("province_id")
             budget_by_province[pid] = budget_by_province.get(pid, 0) + float(r.get("allocated_amount", 0))
         
@@ -151,13 +175,12 @@ async def get_all_provinces():
         
         # Sort by province name
         result.sort(key=lambda x: list(PROVINCE_MAP.keys()).index(x["province"]) if x["province"] in PROVINCE_MAP else 999)
-        
+
         return result
-        
+
     except Exception as e:
-        import traceback
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail=f"Failed to fetch provinces data: {str(e)}")
+        logger.error("provinces endpoint failed: %s", e)
+        return []
 
 
 @router.get("/province/{province_name}")
@@ -171,19 +194,17 @@ async def get_province_detail(province_name: str):
     try:
         # Normalize province name: DB stores provinces in lowercase
         normalized_name = province_name.strip().title()
-        # Use ilike for case-insensitive matching (handles 'bagmati', 'Bagmati', etc.)
-        rr_res = supabase.table("relief_records").select("*").eq(
+        rr_res = await _run(lambda: _safe(lambda: supabase.table("relief_records").select("*").eq(
             "province", province_name.strip().lower()
-        ).execute()
-        records = rr_res.data or []
+        ).execute()))
+        records = rr_res.data if rr_res else []
         
-        # Get budget for province from province_allocation table
-        # Try both title case and original for PROVINCE_MAP lookup
+        # Get budget for province from province_allocation table (optional)
         province_id = PROVINCE_MAP.get(normalized_name) or PROVINCE_MAP.get(province_name)
         province_budget = 0
         if province_id:
-            pa_res = supabase.table("province_allocation").select("allocated_amount").eq("province_id", province_id).execute()
-            if pa_res.data:
+            pa_res = await _run(lambda: _safe(lambda: supabase.table("province_allocation").select("allocated_amount").eq("province_id", province_id).execute()))
+            if pa_res and pa_res.data:
                 province_budget = sum(float(r.get("allocated_amount", 0)) for r in pa_res.data)
         
         # Aggregate province totals
@@ -243,8 +264,7 @@ async def get_province_detail(province_name: str):
         }
         
     except Exception as e:
-        import traceback
-        traceback.print_exc()
+        logger.error("province detail (%s) failed: %s", province_name, e)
         raise HTTPException(status_code=500, detail=f"Failed to fetch province detail: {str(e)}")
 
 
@@ -257,8 +277,8 @@ async def get_recent_aid(limit: int = 20):
     supabase = _supabase()
     
     try:
-        res = supabase.table("relief_records").select("*").order("created_at", desc=True).limit(limit).execute()
-        records = res.data or []
+        res = await _run(lambda: _safe(lambda: supabase.table("relief_records").select("*").order("created_at", desc=True).limit(limit).execute()))
+        records = res.data if res else []
         
         return [
             {
@@ -274,6 +294,5 @@ async def get_recent_aid(limit: int = 20):
             for r in records
         ]
     except Exception as e:
-        import traceback
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail=f"Failed to fetch recent aid: {str(e)}")
+        logger.error("recent-aid failed: %s", e)
+        return []

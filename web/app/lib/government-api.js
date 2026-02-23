@@ -8,10 +8,13 @@ const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8005";
 /**
  * Fetch with timeout helper
  */
-async function fetchWithTimeout(url, options = {}, timeout = 10000) {
+async function fetchWithTimeout(url, options = {}, timeout = 30000) {
   const controller = new AbortController();
-  const id = setTimeout(() => controller.abort(), timeout);
-  
+  const id = setTimeout(
+    () => controller.abort(new DOMException("Request timed out", "TimeoutError")),
+    timeout,
+  );
+
   try {
     const response = await fetch(url, {
       ...options,
@@ -21,6 +24,9 @@ async function fetchWithTimeout(url, options = {}, timeout = 10000) {
     return response;
   } catch (error) {
     clearTimeout(id);
+    if (error?.name === "AbortError" || error?.name === "TimeoutError") {
+      throw new Error(`Request to ${url} timed out after ${timeout}ms`);
+    }
     throw error;
   }
 }
@@ -33,7 +39,7 @@ export async function getNationalDashboard() {
   try {
     const response = await fetchWithTimeout(`${BASE_URL}/government/national`, {
       cache: "no-store",
-    });
+    }, 8000);
     
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -64,7 +70,7 @@ export async function getAllProvinces() {
   try {
     const response = await fetchWithTimeout(`${BASE_URL}/government/provinces`, {
       cache: "no-store",
-    });
+    }, 8000);
     
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -95,7 +101,7 @@ export async function getProvinceDetail(provinceName) {
   try {
     const response = await fetchWithTimeout(`${BASE_URL}/government/province/${encodeURIComponent(provinceName)}`, {
       cache: "no-store",
-    });
+    }, 8000);
     
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -118,7 +124,7 @@ export async function getRecentAid(limit = 20) {
   try {
     const response = await fetchWithTimeout(`${BASE_URL}/government/recent-aid?limit=${limit}`, {
       cache: "no-store",
-    });
+    }, 8000);
     
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
