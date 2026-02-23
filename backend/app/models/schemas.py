@@ -107,3 +107,41 @@ class ReliefRecordOut(BaseModel):
     officer_id: str
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
+
+
+# Wildfire Prediction Schemas
+class WildfirePrediction(BaseModel):
+    id: Optional[str] = None
+    latitude: float
+    longitude: float
+    valid_time: datetime
+    fire_prob: float = Field(ge=0.0, le=1.0, description="Fire probability (0-1)")
+    prediction_class: int = Field(ge=0, le=1, description="Binary classification (0 or 1)")
+    fire_category: str = Field(description="minimal, low, medium, high, or extreme")
+    gapa_napa: Optional[str] = None
+    district: str
+    pr_name: Optional[str] = None
+    province: int = Field(ge=1, le=7, description="Province number (1-7)")
+    prediction_date: datetime
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+
+
+class WildfirePredictionQuery(BaseModel):
+    province: Optional[int] = Field(None, ge=1, le=7)
+    district: Optional[str] = None
+    fire_category: Optional[str] = None
+    min_fire_prob: Optional[float] = Field(None, ge=0.0, le=1.0)
+    start_date: Optional[datetime] = None
+    end_date: Optional[datetime] = None
+    limit: Optional[int] = Field(100, le=1000, description="Max results to return")
+
+
+class WildfireDistrictSummary(BaseModel):
+    district: str
+    province: int
+    pr_name: Optional[str] = None
+    total_predictions: int
+    avg_fire_prob: float
+    max_fire_prob: float
+    prediction_date: datetime
