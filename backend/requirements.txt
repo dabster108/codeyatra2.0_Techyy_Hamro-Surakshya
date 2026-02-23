@@ -12,4 +12,5 @@ pytest
 httpx
 pandas
 psycopg2-binary
+asyncpg
 sqlalchemy

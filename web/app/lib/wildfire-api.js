@@ -1,9 +1,66 @@
 // API service for wildfire predictions from Neon database
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8005';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8005";
 
 // Date offset: Database dates are 7 days behind actual dates
 const DATE_OFFSET_DAYS = 7;
+
+// ─── Client-side cache ────────────────────────────────────────────────────────
+// Prediction data is semi-static (updated once per day).  A 5-minute TTL avoids
+// redundant requests when the user switches filters back and forth.
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+const _cache = new Map(); // url → { data, ts }
+const _inflight = new Map(); // url → Promise  (request deduplication)
+
+function _getCached(url) {
+  const entry = _cache.get(url);
+  if (!entry) return null;
+  if (Date.now() - entry.ts > CACHE_TTL_MS) {
+    _cache.delete(url);
+    return null;
+  }
+  return entry.data;
+}
+
+/**
+ * Fetch JSON from `url` with:
+ *  - in-memory TTL caching (avoids re-fetch on repeated identical requests)
+ *  - request deduplication    (concurrent identical calls share one fetch)
+ *  - configurable timeout
+ */
+async function _cachedFetch(url, timeoutMs = 10000) {
+  // 1. Serve from cache when fresh
+  const cached = _getCached(url);
+  if (cached !== null) return cached;
+
+  // 2. If the same URL is already in-flight, reuse that promise
+  if (_inflight.has(url)) return _inflight.get(url);
+
+  // 3. Start a new request
+  const promise = fetch(url, { signal: AbortSignal.timeout(timeoutMs) })
+    .then((res) => {
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return res.json();
+    })
+    .then((data) => {
+      _cache.set(url, { data, ts: Date.now() });
+      return data;
+    })
+    .finally(() => {
+      _inflight.delete(url);
+    });
+
+  _inflight.set(url, promise);
+  return promise;
+}
+
+/** Manually invalidate all cached wildfire responses (e.g., after a refresh). */
+export function clearWildfireCache() {
+  for (const key of _cache.keys()) {
+    if (key.includes("/predictions/")) _cache.delete(key);
+  }
+}
+// ─────────────────────────────────────────────────────────────────────────────
 
 export class WildfireAPI {
   /**
@@ -12,12 +69,12 @@ export class WildfireAPI {
   static async checkHealth() {
     try {
       const response = await fetch(`${API_BASE_URL}/predictions/neon/health`, {
-        method: 'GET',
-        signal: AbortSignal.timeout(5000) // 5 second timeout
+        method: "GET",
+        signal: AbortSignal.timeout(5000),
       });
       return response.ok;
     } catch (error) {
-      console.warn('Backend API is not available:', error.message);
+      console.warn("Backend API is not available:", error.message);
       return false;
     }
   }
@@ -29,7 +86,7 @@ export class WildfireAPI {
   static getAdjustedDate(date = new Date()) {
     const adjusted = new Date(date);
     adjusted.setDate(adjusted.getDate() - DATE_OFFSET_DAYS);
-    return adjusted.toISOString().split('T')[0]; // YYYY-MM-DD
+    return adjusted.toISOString().split("T")[0]; // YYYY-MM-DD
   }
 
   /**
@@ -38,7 +95,7 @@ export class WildfireAPI {
   static getActualDate(dbDateString) {
     const dbDate = new Date(dbDateString);
     dbDate.setDate(dbDate.getDate() + DATE_OFFSET_DAYS);
-    return dbDate.toISOString().split('T')[0];
+    return dbDate.toISOString().split("T")[0];
   }
 
   /**
@@ -46,27 +103,27 @@ export class WildfireAPI {
    */
   static async getPredictions(filters = {}) {
     const params = new URLSearchParams();
-    
-    if (filters.province) params.append('province', filters.province);
-    if (filters.district) params.append('district', filters.district);
-    if (filters.minFireProb !== undefined) params.append('min_fire_prob', filters.minFireProb);
-    if (filters.fireCategory) params.append('fire_category', filters.fireCategory);
-    if (filters.startDate) params.append('start_date', filters.startDate);
-    if (filters.endDate) params.append('end_date', filters.endDate);
-    if (filters.limit) params.append('limit', filters.limit);
-    
+
+    if (filters.province) params.append("province", filters.province);
+    if (filters.district) params.append("district", filters.district);
+    if (filters.minFireProb !== undefined)
+      params.append("min_fire_prob", filters.minFireProb);
+    if (filters.fireCategory)
+      params.append("fire_category", filters.fireCategory);
+    if (filters.startDate) params.append("start_date", filters.startDate);
+    if (filters.endDate) params.append("end_date", filters.endDate);
+    if (filters.limit) params.append("limit", filters.limit);
+
     const url = `${API_BASE_URL}/predictions/neon/wildfire?${params}`;
-    
+
     try {
-      const response = await fetch(url, {
-        method: 'GET',
-        signal: AbortSignal.timeout(10000) // 10 second timeout
-      });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      return await response.json();
+      return await _cachedFetch(url, 15000);
     } catch (error) {
-      console.error('Failed to fetch wildfire predictions:', error);
-      throw new Error('Backend API is not accessible. Make sure the backend server is running on ' + API_BASE_URL);
+      console.error("Failed to fetch wildfire predictions:", error);
+      throw new Error(
+        "Backend API is not accessible. Make sure the backend server is running on " +
+          API_BASE_URL,
+      );
     }
   }
 
@@ -75,19 +132,14 @@ export class WildfireAPI {
    */
   static async getHighRiskAreas(province = null, limit = 100) {
     const params = new URLSearchParams({ limit });
-    if (province) params.append('province', province);
-    
+    if (province) params.append("province", province);
+
     const url = `${API_BASE_URL}/predictions/neon/wildfire/high-risk?${params}`;
-    
+
     try {
-      const response = await fetch(url, {
-        method: 'GET',
-        signal: AbortSignal.timeout(10000)
-      });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      return await response.json();
+      return await _cachedFetch(url);
     } catch (error) {
-      console.error('Failed to fetch high-risk areas:', error);
+      console.error("Failed to fetch high-risk areas:", error);
       throw error;
     }
   }
@@ -97,19 +149,14 @@ export class WildfireAPI {
    */
   static async getByDistrict(province = null) {
     const params = new URLSearchParams();
-    if (province) params.append('province', province);
-    
+    if (province) params.append("province", province);
+
     const url = `${API_BASE_URL}/predictions/neon/wildfire/by-district?${params}`;
-    
+
     try {
-      const response = await fetch(url, {
-        method: 'GET',
-        signal: AbortSignal.timeout(10000)
-      });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      return await response.json();
+      return await _cachedFetch(url);
     } catch (error) {
-      console.error('Failed to fetch district data:', error);
+      console.error("Failed to fetch district data:", error);
       throw error;
     }
   }
@@ -119,16 +166,11 @@ export class WildfireAPI {
    */
   static async getByProvince() {
     const url = `${API_BASE_URL}/predictions/neon/wildfire/by-province`;
-    
+
     try {
-      const response = await fetch(url, {
-        method: 'GET',
-        signal: AbortSignal.timeout(10000)
-      });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      return await response.json();
+      return await _cachedFetch(url);
     } catch (error) {
-      console.error('Failed to fetch province data:', error);
+      console.error("Failed to fetch province data:", error);
       throw error;
     }
   }
@@ -139,22 +181,17 @@ export class WildfireAPI {
   static async getMapData(filters = {}) {
     const params = new URLSearchParams({
       min_fire_prob: filters.minFireProb || 0.5,
-      latest_only: filters.latestOnly !== false ? 'true' : 'false'
+      latest_only: filters.latestOnly !== false ? "true" : "false",
     });
-    
-    if (filters.province) params.append('province', filters.province);
-    
+
+    if (filters.province) params.append("province", filters.province);
+
     const url = `${API_BASE_URL}/predictions/neon/wildfire/map-data?${params}`;
-    
+
     try {
-      const response = await fetch(url, {
-        method: 'GET',
-        signal: AbortSignal.timeout(10000)
-      });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      return await response.json();
+      return await _cachedFetch(url);
     } catch (error) {
-      console.error('Failed to fetch map data:', error);
+      console.error("Failed to fetch map data:", error);
       throw error;
     }
   }
@@ -164,16 +201,11 @@ export class WildfireAPI {
    */
   static async getStats() {
     const url = `${API_BASE_URL}/predictions/neon/wildfire/stats`;
-    
+
     try {
-      const response = await fetch(url, {
-        method: 'GET',
-        signal: AbortSignal.timeout(10000)
-      });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      return await response.json();
+      return await _cachedFetch(url);
     } catch (error) {
-      console.error('Failed to fetch stats:', error);
+      console.error("Failed to fetch stats:", error);
       throw error;
     }
   }
@@ -183,16 +215,11 @@ export class WildfireAPI {
    */
   static async getLatestDate() {
     const url = `${API_BASE_URL}/predictions/neon/wildfire/latest-date`;
-    
+
     try {
-      const response = await fetch(url, {
-        method: 'GET',
-        signal: AbortSignal.timeout(10000)
-      });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      return await response.json();
+      return await _cachedFetch(url);
     } catch (error) {
-      console.error('Failed to fetch latest date:', error);
+      console.error("Failed to fetch latest date:", error);
       throw error;
     }
   }
@@ -203,8 +230,10 @@ export class WildfireAPI {
   static transformToFrontendFormat(neonData) {
     return neonData.map((item, index) => {
       // Adjust date: Database date + 7 days = actual date
-      const actualDate = item.valid_time ? this.getActualDate(item.valid_time) : null;
-      
+      const actualDate = item.valid_time
+        ? this.getActualDate(item.valid_time)
+        : null;
+
       return {
         id: `wildfire-${index}`,
         name: item.gapa_napa || item.district,
@@ -217,10 +246,12 @@ export class WildfireAPI {
         risk: Math.round(item.fire_prob * 100),
         severity: this.getRiskSeverity(item.fire_prob),
         date: actualDate, // Display actual date (7 days ahead of DB date)
-        dbDate: item.valid_time ? new Date(item.valid_time).toISOString().split('T')[0] : null, // Store original DB date
+        dbDate: item.valid_time
+          ? new Date(item.valid_time).toISOString().split("T")[0]
+          : null, // Store original DB date
         elevation: item.elevation,
         fire_category: item.fire_category,
-        prediction_class: item.prediction_class
+        prediction_class: item.prediction_class,
       };
     });
   }
@@ -236,7 +267,7 @@ export class WildfireAPI {
       4: "Gandaki",
       5: "Lumbini",
       6: "Karnali",
-      7: "Sudurpashchim"
+      7: "Sudurpashchim",
     };
     return provinceMap[provinceNum] || `Province ${provinceNum}`;
   }
