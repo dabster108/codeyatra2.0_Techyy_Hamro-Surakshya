@@ -13,3 +13,5 @@ httpx
 pandas
 psycopg2-binary
 sqlalchemy
+solana>=0.34.0
+solders>=0.21.0

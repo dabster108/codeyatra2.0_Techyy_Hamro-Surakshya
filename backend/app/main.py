@@ -9,7 +9,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from fastapi import FastAPI, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
-from app.api import auth, dashboard, relief, public, records, predictions, predictions_neon, government, sos
+from app.api import auth, dashboard, relief, public, records, predictions, predictions_neon, government, sos, blockchain
 from app.core.config import settings
 
 app = FastAPI(title=settings.PROJECT_NAME)
@@ -43,6 +43,7 @@ app.include_router(predictions.router)
 app.include_router(predictions_neon.router)  # Neon database for wildfire predictions
 app.include_router(government.router)  # Government & province dashboards
 app.include_router(sos.router)  # SOS emergency requests
+app.include_router(blockchain.router)  # Solana blockchain verification
 
 if __name__ == "__main__":
     def open_browser():

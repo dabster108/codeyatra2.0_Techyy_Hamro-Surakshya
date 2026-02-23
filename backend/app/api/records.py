@@ -9,6 +9,7 @@ GET  /records/by-district — District-wise totals (no auth)
 GET  /records/by-officer  — Officer-wise records (no auth)
 """
 
+import threading
 from fastapi import APIRouter, HTTPException
 from app.db.supabase import get_supabase_admin
 from app.models.schemas import ReliefRecordCreate, ReliefRecordOut
@@ -36,6 +37,26 @@ async def create_record(data: ReliefRecordCreate):
         row = res.data[0]
         # Ensure optional fields have defaults so Pydantic doesn't fail
         row.setdefault("updated_at", row.get("created_at"))
+        row.setdefault("solana_tx_signature", None)
+        row.setdefault("record_hash", None)
+
+        # Anchor to Solana blockchain in background (non-blocking)
+        def _anchor_async(record_row):
+            try:
+                from app.services.blockchain_service import hash_record, anchor_to_solana
+                record_hash = hash_record(record_row)
+                tx_sig = anchor_to_solana(str(record_row["id"]), record_hash)
+                if tx_sig:
+                    _supabase().table("relief_records").update({
+                        "solana_tx_signature": tx_sig,
+                        "record_hash": record_hash,
+                    }).eq("id", record_row["id"]).execute()
+                    print(f"[Blockchain] Record {record_row['id']} anchored: {tx_sig}")
+            except Exception as ex:
+                print(f"[Blockchain] Background anchor failed: {ex}")
+
+        threading.Thread(target=_anchor_async, args=(dict(row),), daemon=True).start()
+
         return row
     except HTTPException:
         raise

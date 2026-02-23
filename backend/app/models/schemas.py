@@ -107,6 +107,8 @@ class ReliefRecordOut(BaseModel):
     officer_id: str
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
+    solana_tx_signature: Optional[str] = None
+    record_hash: Optional[str] = None
 
 
 # Wildfire Prediction Schemas
